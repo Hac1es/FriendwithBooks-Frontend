@@ -1,7 +1,7 @@
 <script setup>
-import Navigation from "./components/Navigation.vue";
+import index from "./components/Header/index.vue";
 </script>
 
 <template>
-  <Navigation />
+  <index />
 </template>

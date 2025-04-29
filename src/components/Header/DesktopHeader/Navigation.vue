@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="w-full md:w-[calc(100%-270px)] mx-auto bg-[#f2f6f8] border border-t-1 py-2 px-16 font-instrument relative"
+    class="w-full md:w-[calc(100%-224px)] mx-auto bg-[#f2f6f8] border border-t-1 py-2 font-instrument relative"
   >
     <div class="flex justify-between items-center px-16">
       <a href="#" class="hover:text-[#a50202] font-semibold text-[#a50202]">
@@ -12,7 +12,7 @@
           <!-- Submenu -->
           <div
             v-if="isOpen"
-            class="absolute left-0 top-full w-full p-4 bg-[#f8f8f8] flex justify-between px-8"
+            class="absolute left-0 top-full w-full p-4 bg-[#f8f8f8] flex justify-between px-8 text-sm"
           >
             <!-- Cột 1 -->
             <div>
