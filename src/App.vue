@@ -1,7 +1,12 @@
 <script setup>
-import index from "./components/Header/index.vue";
+import Header from "./components/Header/index.vue";
+import Footer from "./components/Footer.vue";
 </script>
 
 <template>
-  <index />
+  <div class="min-h-screen flex flex-col">
+    <Header/>
+    <main class="flex-1"></main>
+    <Footer/>
+  </div>
 </template>
