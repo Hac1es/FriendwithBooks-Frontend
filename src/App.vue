@@ -1,14 +1,15 @@
 <script setup>
-  import Header from "./components/Header/index.vue";
-  import Footer from "./components/Footer.vue";
+import Header from "./components/HeaderAdmin/index.vue";
+import Footer from "./components/Footer.vue";
+import ChatInterface from "./components/ChatInterface.vue";
+import ChatPopup from "./components/ChatPopup.vue";
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col">
     <Header/>
-    <main class="flex-1">
-      <router-view/>
-    </main>
+    <ChatInterface/>
+    <ChatPopup/>
     <Footer/>
   </div>
 </template>
