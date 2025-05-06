@@ -2,8 +2,8 @@
   <div class="flex items-center">
     <input
       type="text"
-      placeholder="Tìm kiếm sản phẩm"
-      class="px-4 py-2 rounded-md border-2 border-black bg-[#f3f0f0] text-center outline-none"
+      :placeholder="placeholder"
+      class="px-4 py-2 rounded-md border-2 border-black bg-[#f3f0f0] text-left outline-none"
     />
     <button class="ml-2">
       <svg
@@ -23,3 +23,9 @@
     </button>
   </div>
 </template>
+
+<script setup>
+defineProps({
+  placeholder: String,
+});
+</script>

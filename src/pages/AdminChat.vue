@@ -1,0 +1,17 @@
+<template>
+  <div>
+    <div class="min-h-screen flex flex-col">
+      <Header />
+      <ChatInterface />
+      <ChatPopup />
+      <Footer />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import Header from "./components/HeaderAdmin/index.vue";
+import Footer from "./components/Footer.vue";
+import ChatInterface from "./components/ChatInterface.vue";
+import ChatPopup from "./components/ChatPopup.vue";
+</script>

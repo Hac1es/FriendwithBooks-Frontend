@@ -4,7 +4,7 @@
       <img src="/Logo.png" class="object-cover w-full h-full" />
     </div>
     <div class="flex gap-4 justify-between items-center">
-      <SearchBar />
+      <SearchBar placeholder="Tìm kiếm sản phẩm" />
       <button
         class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
       >
@@ -49,5 +49,5 @@
 <script setup>
 import { ref } from "vue";
 import Navigation from "./Navigation.vue";
-import SearchBar from "../SearchBar.vue";
+import SearchBar from "../../SearchBar.vue";
 </script>
