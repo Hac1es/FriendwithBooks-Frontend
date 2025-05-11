@@ -1,10 +1,10 @@
 <template>
-  <div class="w-full max-w-[369px] flex flex-col justify-center gap-3">
-    <div class="w-full max-w-[369px] rounded-lg">
+  <div class="w-full max-w-[320px] flex flex-col items-start gap-3">
+    <div class="w-full max-w-[320px] md:h-[400px] rounded-lg">
       <img
         :src="imgSrc"
         :alt="title || null"
-        class="w-full h-full object-contain"
+        class="w-full h-full object-cover"
       />
     </div>
     <div
@@ -13,7 +13,7 @@
       {{ title }}
     </div>
     <div
-      class="font-inter font-normal sm:text-[20px] text-[7px] text-[#828282]"
+      class="font-inter font-normal sm:text-[14px] text-[7px] text-[#828282]"
     >
       {{ desc }}
     </div>

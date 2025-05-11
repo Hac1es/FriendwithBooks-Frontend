@@ -1,16 +1,16 @@
 <template>
   <div>
     <div class="hidden md:block">
-      <desktopIndex />
+      <DesktopIndex />
     </div>
 
     <div class="block md:hidden">
-      <mobileIndex />
+      <MobileIndex />
     </div>
   </div>
 </template>
 
 <script setup>
-import desktopIndex from "./DesktopHeader/desktopIndex.vue";
-import mobileIndex from "./MobileHeader/mobileIndex.vue";
+import DesktopIndex from "./DesktopHeader/DesktopIndex.vue";
+import MobileIndex from "./MobileHeader/MobileIndex.vue";
 </script>

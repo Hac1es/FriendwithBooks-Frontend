@@ -9,10 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@vicons/ionicons5": "^0.13.0",
-=======
->>>>>>> a52a22c47605c8114bb53f5758cec04a11e8f4e0
     "lucide-vue-next": "^0.507.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1"

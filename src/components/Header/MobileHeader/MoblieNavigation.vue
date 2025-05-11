@@ -39,15 +39,15 @@
         class="fixed top-0 right-0 w-3/4 max-w-sm bg-[#f8f8f8] shadow-lg p-6 z-50 overflow-y-auto flex flex-col h-full"
       >
         <nav class="space-y-4 flex-grow">
-          <a
-            href="#"
+          <router-link
+            to="/"
             class="block hover:text-[#a50202] font-semibold text-[#a50202]"
-            >Trang chủ</a
+            >Trang chủ</router-link
           >
 
-          <div>
+          <div id="mobile-menu">
             <button
-              @click="toggleSubmenu"
+              @click="handleProductClick"
               class="flex justify-between items-center w-full text-left hover:text-[#a50202]"
             >
               <span>Sản phẩm</span>
@@ -169,10 +169,13 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const isOpen = ref(false);
 const submenuOpen = ref(false);
+const productTappedOnce = ref(false);
+const router = useRouter();
 
 const toggleMenu = () => {
   isOpen.value = !isOpen.value;
@@ -181,9 +184,32 @@ const toggleMenu = () => {
   }
 };
 
-const toggleSubmenu = () => {
-  submenuOpen.value = !submenuOpen.value;
+const handleProductClick = () => {
+  if (!submenuOpen.value) {
+    submenuOpen.value = true;
+    productTappedOnce.value = true;
+  } else if (productTappedOnce.value) {
+    router.push("/Products");
+    submenuOpen.value = false;
+    productTappedOnce.value = false;
+  }
 };
+
+// Đóng khi click ngoài
+const handleClickOutside = (e) => {
+  const menu = document.getElementById("mobile-menu");
+  if (menu && !menu.contains(e.target)) {
+    submenuOpen.value = false;
+    productTappedOnce.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
 
 const closeMenu = () => {
   isOpen.value = false;

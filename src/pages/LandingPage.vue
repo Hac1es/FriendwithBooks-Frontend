@@ -6,9 +6,77 @@
       <img src="/heroSection.png" alt="" class="object-contain w-full h-full" />
     </div>
 
+    <!-- Flash sale -->
+    <div class="w-full mx-auto bg-[#fe645f] md:mt-14 mt-3 overflow-x-hidden">
+      <!-- Flash sale bar -->
+      <div class="flex items-center bg-white px-[5vw] shadow">
+        <span
+          class="text-red-500 font-bold italic flex items-center md:text-[40px] text-[15px] mr-3"
+        >
+          FLASH <span class="mx-1">⚡</span> SALE
+        </span>
+        <span class="ml-2 text-gray-700 md:text-lg text-[8px]"
+          >Kết thúc trong</span
+        >
+        <div class="flex ml-2 space-x-1 my-2">
+          <div class="bg-black text-white rounded px-2">
+            {{ formatTime(hours) }}
+          </div>
+          <span class="text-black">:</span>
+          <div class="bg-black text-white rounded px-2">
+            {{ formatTime(minutes) }}
+          </div>
+          <span class="text-black">:</span>
+          <div class="bg-black text-white rounded px-2">
+            {{ formatTime(seconds) }}
+          </div>
+        </div>
+      </div>
+      <!-- Flash sale carousel -->
+      <n-carousel
+        :space-between="5"
+        :loop="true"
+        :slides-per-view="getSlidesPerView"
+        draggable
+        show-arrow
+        class="mx-auto w-[95%] md:w-[90%] h-[260px] md:h-[375px] mt-6"
+      >
+        <n-carousel-item v-for="(data, index) in fakeBooks" :key="index">
+          <ProdCard
+            :imgSrc="data.imgSrc"
+            :discount="data.discount"
+            :oldPrice="data.oldPrice"
+            :price="data.price"
+            :title="data.title"
+            :scale="prodCardScaling"
+          />
+        </n-carousel-item>
+
+        <!-- Custom arrow -->
+        <template #arrow="{ prev, next }">
+          <div class="absolute bottom-6 right-4 flex">
+            <button
+              type="button"
+              @click="prev"
+              class="mr-3 flex h-7 w-7 items-center justify-center rounded-lg bg-[#d9d9d9] text-[#cd6d5f] hover:scale-105 active:scale-95"
+            >
+              <n-icon><ArrowBack /></n-icon>
+            </button>
+            <button
+              type="button"
+              @click="next"
+              class="flex h-7 w-7 items-center justify-center rounded-lg bg-[#d9d9d9] text-[#cd6d5f] hover:scale-105 active:scale-95"
+            >
+              <n-icon><ArrowForward /></n-icon>
+            </button>
+          </div>
+        </template>
+      </n-carousel>
+    </div>
+
     <!-- Best Seller -->
     <div
-      class="font-itim font-normal sm:text-[40px] text-[20px] w-[90%] mx-auto text-[#b22222] mt-7"
+      class="font-itim font-normal sm:text-[40px] text-[20px] w-[90%] mx-auto text-[#b22222] md:mt-7 mt-3"
     >
       BEST SELLER
     </div>
@@ -18,7 +86,7 @@
       slides-per-view="3"
       draggable
       show-arrow
-      class="mx-auto w-[90%] h-[300px] md:h-[400px] mt-6"
+      class="mx-auto w-[90%] h-[300px] md:h-[700px] mt-6"
     >
       <n-carousel-item v-for="(data, index) in fakeData" :key="index">
         <AdCard :imgSrc="data.imgSrc" :desc="data.desc" :title="data.title" />
@@ -82,7 +150,7 @@
       <!-- Image Section -->
       <div class="flex-1 aspect-square md::w-[594px] w-60 relative md:static">
         <img
-          src="/DacNhanTam.png"
+          src="/goatedBook.png"
           alt="Đắc Nhân Tâm"
           class="w-full h-full object-cover rounded-md"
         />
@@ -121,105 +189,162 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ArrowBack, ArrowForward } from "@vicons/ionicons5";
 import Header from "../components/Header/index.vue";
 import Footer from "../components/Footer.vue";
 import AdCard from "../components/AdCard.vue";
-import { ArrowBack, ArrowForward } from "@vicons/ionicons5";
-import { ref, onMounted } from "vue";
 import TestimonalCard from "../components/TestimonalCard.vue";
+import ProdCard from "../components/ProdCard.vue";
 
-const fakeData = [
-  {
-    imgSrc: "/images/ly-thuyet-tro-choi.png",
-    title: "Lý Thuyết Trò Chơi",
-    desc: "Đời người giống như trò chơi, mỗi bước đều phải cân nhắc xem đi như thế nào, đi về đâu, phải kết hợp nhiều yếu tố lại chúng ta mới có thể đưa ra được lựa chọn.",
-  },
-  {
-    imgSrc: "/images/security-analysis.png",
-    title: "Security Analysis - Phân Tích Chứng Khoán",
-    desc: "Phân tích chứng khoán của tác giả Benjamin Graham và David Dodd được ví như 'cuốn kinh thánh của đầu tư giá trị'",
-  },
-  {
-    imgSrc: "/images/khi-moi-dieu-khong-nhu.png",
-    title: "Khi Mọi Điều Không Như Ý",
-    desc: "Khi cuộc sống trở nên bận rộn và khó khăn, hãy tặng cho bản thân món quà đặc biệt là dừng lại.",
-  },
-  {
-    imgSrc: "/images/nha-gia-kim.png",
-    title: "Nhà Giả Kim",
-    desc: "Cuốn tiểu thuyết nổi tiếng của Paulo Coelho kể về hành trình tìm kiếm kho báu và ý nghĩa cuộc sống.",
-  },
-  {
-    imgSrc: "/images/dac-nhan-tam.png",
-    title: "Đắc Nhân Tâm",
-    desc: "Cuốn sách kinh điển về nghệ thuật giao tiếp, ứng xử và phát triển bản thân của Dale Carnegie.",
-  },
-  {
-    imgSrc: "/images/nang-luc-tu-hoc.png",
-    title: "Năng Lực Tự Học",
-    desc: "Giúp bạn xây dựng thói quen học tập hiệu quả và làm chủ tri thức trong thời đại số.",
-  },
-  {
-    imgSrc: "/images/tu-duy-nhanh-va-cham.png",
-    title: "Tư Duy Nhanh Và Chậm",
-    desc: "Daniel Kahneman phân tích hai hệ thống tư duy: trực giác và lý trí, ảnh hưởng đến cách chúng ta ra quyết định.",
-  },
-  {
-    imgSrc: "/images/khoi-nghiep-tinh-gon.png",
-    title: "Khởi Nghiệp Tinh Gọn",
-    desc: "Eric Ries giới thiệu mô hình Lean Startup giúp các doanh nghiệp phát triển bền vững và linh hoạt.",
-  },
-  {
-    imgSrc: "/images/suc-manh-cua-hien-tai.png",
-    title: "Sức Mạnh Của Hiện Tại",
-    desc: "Eckhart Tolle chỉ ra cách sống trọn vẹn với hiện tại để đạt được sự bình an và giác ngộ.",
-  },
-  {
-    imgSrc: "/images/thu-vien-ban-dem.png",
-    title: "Thư Viện Ban Đêm",
-    desc: "Matt Haig kể về một thư viện bí ẩn nơi bạn có thể sống thử những cuộc đời khác nhau nếu chọn lối rẽ khác.",
-  },
-];
+/** =========================
+ *  📦 Static & Mock Data
+ *  ========================= */
+const fakeData = Array.from({ length: 10 }, (_, i) => ({
+  imgSrc: `https://picsum.photos/seed/book${i}/300/400`,
+  title: `Sách ${i + 1}`,
+  desc: `Mô tả ngắn gọn cho cuốn sách ${i + 1}.`,
+}));
 
 const testimonials = [
   {
     testimonial:
-      "This platform made building my first website incredibly easy! The drag-and-drop interface is super intuitive, and the templates look amazing. I had my blog up and running in no time!",
+      "This platform made building my first website incredibly easy! The drag-and-drop interface is super intuitive...",
     name: "Sarah Thompson",
     role: "Blogger",
     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
   },
   {
     testimonial:
-      "I've tried several website builders, but this one stands out. The speed and flexibility are unmatched, and the support team is always ready to help!",
+      "I've tried several website builders, but this one stands out...",
     name: "Michael Lee",
     role: "Freelancer",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
   },
   {
-    testimonial:
-      "As a small business owner, I need tools that just work. This platform lets me focus on my customers without worrying about tech headaches.",
+    testimonial: "As a small business owner, I need tools that just work...",
     name: "Emily Davis",
     role: "Small Business Owner",
     avatar: "https://randomuser.me/api/portraits/women/65.jpg",
   },
   {
     testimonial:
-      "Amazing experience! I set up my portfolio in under an hour, and the design options are stunning.",
+      "Amazing experience! I set up my portfolio in under an hour...",
     name: "Daniel Kim",
     role: "Designer",
     avatar: "https://randomuser.me/api/portraits/men/41.jpg",
   },
 ];
 
-const buttonSize = ref("medium");
+const fakeBooks = [
+  {
+    imgSrc: "https://picsum.photos/200/300?random=11",
+    title: "Tiệm sách của nàng",
+    price: "100.000",
+    oldPrice: "125.000",
+    discount: "20",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=12",
+    title: "Nhà giả kim",
+    price: "85.000",
+    oldPrice: "100.000",
+    discount: "15",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=13",
+    title: "Dám bị ghét",
+    price: "120.000",
+    oldPrice: "150.000",
+    discount: "20",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=14",
+    title: "Tôi thấy hoa vàng trên cỏ xanh",
+    price: "90.000",
+    oldPrice: "120.000",
+    discount: "25",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=15",
+    title: "Muôn kiếp nhân sinh",
+    price: "130.000",
+    oldPrice: "160.000",
+    discount: "18",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=16",
+    title: "Trên đường băng",
+    price: "95.000",
+    oldPrice: "120.000",
+    discount: "21",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=17",
+    title: "Đắc nhân tâm",
+    price: "110.000",
+    oldPrice: "140.000",
+    discount: "21",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=18",
+    title: "Bí mật của may mắn",
+    price: "80.000",
+    oldPrice: "100.000",
+    discount: "20",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=19",
+    title: "Đi tìm lẽ sống",
+    price: "100.000",
+    oldPrice: "130.000",
+    discount: "23",
+  },
+  {
+    imgSrc: "https://picsum.photos/200/300?random=20",
+    title: "Tuổi trẻ đáng giá bao nhiêu",
+    price: "90.000",
+    oldPrice: "115.000",
+    discount: "22",
+  },
+];
+
+/** =========================
+ *  🕒 Countdown Timer
+ *  ========================= */
+import { useCountdown } from "../composables/useCountdown";
+
+const countdownDataFromBE = { timeLeftInSeconds: 26 * 60 + 8 };
+
+const { hours, minutes, seconds, formatTime, start } = useCountdown(
+  countdownDataFromBE.timeLeftInSeconds
+);
 
 onMounted(() => {
-  const updateSize = () => {
-    buttonSize.value = window.innerWidth < 768 ? "small" : "large";
-  };
-  updateSize();
-  window.addEventListener("resize", updateSize);
+  start();
 });
+
+/** =========================
+ *  📱 Responsive Logic
+ *  ========================= */
+const windowWidth = ref(window.innerWidth);
+
+const handleResize = () => {
+  windowWidth.value = window.innerWidth;
+};
+
+onMounted(() => {
+  window.addEventListener("resize", handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", handleResize);
+});
+
+const buttonSize = computed(() =>
+  windowWidth.value < 768 ? "small" : "large"
+);
+const prodCardScaling = computed(() => (windowWidth.value < 768 ? 0.7 : 1));
+const getSlidesPerView = computed(() => (windowWidth.value < 768 ? 3 : 5));
 </script>
