@@ -4,37 +4,41 @@
     <Breadcrumb :crumbs="crumbs" />
     <div>
       <div
-        class="w-full md:w-[calc(100%-200px)] font-instrument mx-auto mt-8 relative pb-16"
+        class="w-[90%] md:w-[calc(100%-200px)] font-instrument mx-auto mt-8 max-md:mt-4 relative pb-16 max-md:flex justify-center flex-wrap"
       >
         <!-- Product Section -->
-        <div class="flex flex-row gap-20 mb-8 items-stretch">
+        <div
+          class="flex flex-col md:flex-row md:gap-20 gap-4 mb-8 md:items-stretch items-center"
+        >
           <!-- Left Column -->
-          <div class="flex gap-12 items-stretch w-full md:w-auto">
+          <div
+            class="flex max-md:flex-row-reverse md:gap-12 gap-6 items-stretch justify-center w-full md:w-auto"
+          >
             <!-- Thumbnails Sub-column -->
-            <div class="flex flex-row md:flex-col gap-16 shrink-0">
+            <div class="flex flex-col md:gap-16 gap-4">
               <div
-                class="w-36 p-1 bg-white border border-gray-300 rounded cursor-pointer h-full"
+                class="md:w-36 w-16 p-1 bg-white border border-gray-300 rounded cursor-pointer h-full"
               >
                 <img
                   src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-hMFf1i8eduaYIVAVSXJAHVFSqjx4ZO.png"
                   alt="Thumbnail"
-                  class="w-full h-full object-cover rounded"
+                  class="w-full h-full object-contain rounded"
                 />
               </div>
               <div
-                class="w-36 p-1 bg-white border border-gray-300 rounded cursor-pointer h-full"
+                class="md:w-36 w-16 p-1 bg-white border border-gray-300 rounded cursor-pointer h-full"
               >
                 <img
                   src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-hMFf1i8eduaYIVAVSXJAHVFSqjx4ZO.png"
                   alt="Thumbnail"
-                  class="w-full h-full object-cover rounded"
+                  class="w-full h-full object-contain rounded"
                 />
               </div>
             </div>
 
             <!-- Main Product Image -->
             <div
-              class="w-full max-w-[350px] h-full bg-white border border-gray-300 p-2 rounded overflow-hidden"
+              class="w-full md:max-w-[350px] max-w-[150px] h-full bg-white border border-gray-300 p-2 rounded overflow-hidden"
             >
               <img
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-hMFf1i8eduaYIVAVSXJAHVFSqjx4ZO.png"
@@ -46,7 +50,7 @@
 
           <!-- Right Column -->
           <div class="h-full w-full flex-1">
-            <div class="flex">
+            <div class="flex max-md:scale-[0.7] max-md:gap-4">
               <div class="flex flex-col gap-4 w-full md:w-auto flex-1">
                 <h1 class="text-[#661c1c] font-semibold text-lg">
                   ĐẮC NHÂN TÂM
@@ -92,62 +96,62 @@
                 Thông tin chi tiết
               </h2>
 
-              <div class="text-sm">
-                <div class="grid grid-cols-3 gap-4 py-3">
+              <div class="md:text-sm text-xs">
+                <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">Mã hàng</div>
                   <div class="col-span-2 text-gray-800">
                     {{ GOATinfo.ma_hang }}
                   </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 py-3">
+                <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">Tên Nhà Cung Cấp</div>
                   <div class="col-span-2 text-gray-800">
                     {{ GOATinfo.nha_cung_cap }}
                   </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 py-3">
+                <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">Tác giả</div>
                   <div class="col-span-2 text-gray-800">
                     {{ GOATinfo.tac_gia }}
                   </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 py-3">
+                <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">NXB</div>
                   <div class="col-span-2 text-gray-800">{{ GOATinfo.nxb }}</div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 py-3">
+                <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">Năm XB</div>
                   <div class="col-span-2 text-gray-800">
                     {{ GOATinfo.nam_xb }}
                   </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 py-3">
+                <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">Ngôn Ngữ</div>
                   <div class="col-span-2 text-gray-800">
                     {{ GOATinfo.ngon_ngu }}
                   </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 py-3">
+                <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">Số trang</div>
                   <div class="col-span-2 text-gray-800">
                     {{ GOATinfo.so_trang }}
                   </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 py-3">
+                <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">Độ tuổi</div>
                   <div class="col-span-2 text-gray-800">
                     {{ GOATinfo.do_tuoi }}
                   </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 pt-3">
+                <div class="grid grid-cols-3 gap-4 md:pt-3 pt-1">
                   <div class="col-span-1 text-gray-600">Hình thức</div>
                   <div class="col-span-2 text-gray-800">
                     {{ GOATinfo.hinh_thuc }}
@@ -159,27 +163,27 @@
         </div>
 
         <!-- Description Section -->
-        <div class="mt-6">
-          <h1 class="text-[27px] text-[#661c1c] font-semibold font-instrument">
+        <div class="mt-3 md:mt-6">
+          <h1
+            class="text-[18px] md:text-[27px] text-[#661c1c] font-semibold font-instrument"
+          >
             Mô tả
           </h1>
           <div class="font-instrument">{{ GOAT }}</div>
         </div>
 
         <!-- Review Section -->
-        <div class="mt-6">
+        <div class="mt-3 md:mt-6">
           <!-- Reviews header with count and filters -->
           <div class="mb-6">
             <div class="flex items-baseline justify-between mb-4">
-              <h2 class="text-2xl text-[#661c1c] font-bold">
+              <h2 class="md:text-2xl text-lg text-[#661c1c] font-bold">
                 Đánh giá
-                <span class="text-[#400b0b] ml-1">{{
-                  reviewsData.length
-                }}</span>
+                <span class="text-[#400b0b] ml-1">{{ reviews.length }}</span>
               </h2>
             </div>
 
-            <div class="flex gap-4">
+            <div class="flex gap-4 max-md:text-sm">
               <div class="relative">
                 <button
                   class="flex items-center text-gray-800 hover:text-gray-600"
@@ -212,7 +216,7 @@
           <!-- Grid of reviews -->
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Review
-              v-for="(review, index) in reviewsData"
+              v-for="(review, index) in reviews"
               :key="index"
               :name="review.name"
               :location="review.location"
@@ -298,7 +302,7 @@ const GOATinfo = {
   ngon_ngu: "Tiếng Việt",
   so_trang: 208,
   do_tuoi: "Mọi lứa tuổi",
-  hinh_thuc: "Bìa Mềm",
+  hinh_thuc: "Bìa mềm",
 };
 
 const relatedProducts = [
