@@ -2,33 +2,38 @@
   <div>
     <Header />
     <Breadcrumb :crumbs="crumbs" />
-    <div
-      class="md:mt-10 mt-3 w-full md:w-[calc(100%-224px)] mx-auto flex md:gap-16 max-md:flex-col"
-    >
-      <Filter />
+    <div class="relative pb-16">
       <div
-        class="grid md:grid-cols-3 grid-cols-2 md:gap-x-24 gap-x-5 gap-y-10 grow shrink max-md:w-full max-md:mx-auto px-5 mb-10"
+        class="md:mt-10 mt-3 w-full md:w-[calc(100%-224px)] mx-auto flex md:gap-16 max-md:flex-col"
       >
-        <ProdCard
-          v-for="data in fakeData"
-          :key="data.id"
-          :imgSrc="data.image"
-          :title="data.name"
-          :price="data.price"
-          :oldPrice="data.oldPrice"
-          :discount="data.discount"
-          :scale="respScaling"
-        />
+        <Filter />
+        <div
+          class="grid md:grid-cols-3 grid-cols-2 md:gap-x-24 gap-x-5 gap-y-10 grow shrink max-md:w-full max-md:mx-auto px-5 mb-10"
+        >
+          <ProdCard
+            v-for="data in fakeData"
+            :key="data.id"
+            :productId="data.id"
+            :imgSrc="data.image"
+            :title="data.name"
+            :price="data.price"
+            :oldPrice="data.oldPrice"
+            :discount="data.discount"
+            :scale="respScaling"
+            @click="() => goToDetail(data.id)"
+          />
+        </div>
       </div>
-    </div>
-    <div class="flex justify-center mb-6 max-md:w-[80%] max-md:mx-auto">
-      <n-config-provider :theme-overrides="themeOverride">
-        <n-pagination
-          :default-page="1"
-          page-count="10"
-          :page-slot="respPageSlot"
-        />
-      </n-config-provider>
+      <div class="flex justify-center mb-6 max-md:w-[80%] max-md:mx-auto">
+        <n-config-provider :theme-overrides="themeOverride">
+          <n-pagination
+            :default-page="1"
+            page-count="10"
+            :page-slot="respPageSlot"
+          />
+        </n-config-provider>
+      </div>
+      <BackButton class="absolute bottom-8 right-10" />
     </div>
     <Footer />
   </div>
@@ -42,6 +47,8 @@ import Filter from "../components/Filter/index.vue";
 import ProdCard from "../components/ProdCard.vue";
 import Footer from "../components/Footer.vue";
 import { NConfigProvider } from "naive-ui";
+import BackButton from "../components/BackButton.vue";
+import { useRouter } from "vue-router";
 
 const fakeData = [
   {
@@ -152,4 +159,9 @@ const themeOverride = {
     itemBorderActive: "1px solid #400b0b",
   },
 };
+
+const router = useRouter();
+function goToDetail(id) {
+  router.push(`/Products/${id}`);
+}
 </script>

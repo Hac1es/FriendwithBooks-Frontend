@@ -1,7 +1,8 @@
 <template>
   <div class="inline-block" :style="{ zoom: scale }">
     <div
-      class="w-[45vw] sm:w-[30vw] md:w-48 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 bg-white"
+      class="w-[45vw] sm:w-[30vw] md:w-48 overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.02] transition-shadow duration-300 bg-white"
+      @click="$emit('click', productId)"
     >
       <img
         :src="imgSrc"
@@ -20,18 +21,21 @@
           <div class="text-[#661c1c] font-semibold font-inter text-lg mt-1">
             {{ price }} đ
           </div>
+
           <span
+            v-if="discount"
             class="bg-[#661c1c] text-white text-xs font-semibold ml-2 px-1.5 py-0.5 rounded font-inter"
           >
             -{{ discount }}%
           </span>
         </div>
 
-        <div class="flex items-center mt-1">
+        <div class="flex items-center mt-1 min-h-[1.25rem]" v-if="oldPrice">
           <span
             class="text-gray-400 line-through text-sm font-semibold font-inter"
-            >{{ oldPrice }} đ</span
           >
+            {{ oldPrice }} đ
+          </span>
         </div>
       </div>
     </div>
@@ -40,6 +44,7 @@
 
 <script setup>
 defineProps({
+  productId: Number,
   imgSrc: String,
   title: String,
   price: String,

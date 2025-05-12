@@ -5,6 +5,7 @@ import ForgotPass from "../pages/ForgotPass.vue";
 import License from "../pages/License.vue";
 import LandingPage from "../pages/LandingPage.vue";
 import Products from "../pages/Products.vue";
+import ProductDetail from "../pages/ProductDetail.vue";
 
 const routes = [
   { path: "/Login", name: "Login", component: Login },
@@ -13,6 +14,11 @@ const routes = [
   { path: "/License", name: "License", component: License },
   { path: "/Products", name: "Products", component: Products },
   { path: "/", name: "LandingPage", component: LandingPage },
+  {
+    path: "/Products/:id",
+    name: "ProductDetail",
+    component: ProductDetail,
+  },
 ];
 
 const router = createRouter({

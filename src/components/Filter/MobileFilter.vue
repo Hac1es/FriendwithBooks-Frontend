@@ -3,7 +3,7 @@
     <!-- Nút Lọc -->
     <button
       @click="isOpen = true"
-      class="flex items-center space-x-1 text-[#661C1C] text-sm font-semibold"
+      class="flex items-center space-x-1 text-[#661C1C] text-sm font-semibold font-itim"
     >
       <FilterIcon />
       <span>Lọc</span>

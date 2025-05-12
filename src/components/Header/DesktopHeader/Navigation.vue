@@ -21,7 +21,7 @@
         <transition name="slide-fade">
           <div
             v-if="isOpen"
-            class="absolute left-0 top-full w-full p-4 bg-[#f8f8f8] flex justify-between px-8 text-sm"
+            class="absolute left-0 top-full w-full p-4 bg-[#f8f8f8] flex justify-between px-8 text-sm z-50"
           >
             <!-- Cột 1 -->
             <div>
