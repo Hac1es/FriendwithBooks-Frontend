@@ -4,5 +4,10 @@ import App from "./App.vue";
 import "./assets/main.css";
 import router from "./router";
 import naive from "naive-ui";
+import store from "./store";
 
-createApp(App).use(router).use(naive).mount("#app");
+createApp(App)
+.use(store)
+.use(router)
+.use(naive)
+.mount("#app");

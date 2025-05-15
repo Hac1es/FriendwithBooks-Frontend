@@ -5,3 +5,17 @@ import { RouterView } from "vue-router";
 <template>
   <router-view />
 </template>
+<script>
+import { mapState } from "vuex";
+
+export default {
+  computed: {
+    ...mapState(["isAuthenticated", "role"]),
+  },
+  mounted() {
+    if (this.isAuthenticated && this.role === "admin") {
+      this.$router.push("/admin/chat");
+    }
+  },
+};
+</script>
