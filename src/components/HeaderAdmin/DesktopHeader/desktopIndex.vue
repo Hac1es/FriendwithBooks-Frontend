@@ -49,5 +49,5 @@
 <script setup>
 import { ref } from "vue";
 import Navigation from "./Navigation.vue";
-import SearchBar from "../../SearchBar.vue";
+import SearchBar from "../SearchBar.vue";
 </script>

@@ -13,7 +13,7 @@
 
       <!-- Sản phẩm -->
       <router-link
-        to="/Products"
+        to="/products"
         @mouseenter="openMenu"
         @mouseleave="closeMenu"
       >
