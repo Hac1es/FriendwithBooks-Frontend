@@ -5,7 +5,7 @@
     </div>
     <div class="flex gap-4 justify-between items-center">
       <SearchBar placeholder="Tìm kiếm sản phẩm" />
-      <router-link
+   <router-link
        to="/UserProfile"
         class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
       >
@@ -23,32 +23,32 @@
       </router-link>
 
       <!-- Giỏ hàng -->
-     <button
-        class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="w-6 h-6 mb-1"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.3 5.3a1 1 0 001 .7h11.6a1 1 0 001-.7L17 13M7 13l1.3-5.3M10 21a1 1 0 11-2 0 1 1 0 012 0zm8 0a1 1 0 11-2 0 1 1 0 012 0z"
-          />
-        </svg>
-        <span class="text-xs">Giỏ hàng</span>
-      </button>
+     <router-link
+  to="/CartView"
+  class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    class="w-6 h-6 mb-1"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.3 5.3a1 1 0 001 .7h11.6a1 1 0 001-.7L17 13M7 13l1.3-5.3M10 21a1 1 0 11-2 0 1 1 0 012 0zm8 0a1 1 0 11-2 0 1 1 0 012 0z"
+    />
+  </svg>
+  <span class="text-xs">Giỏ hàng</span>
+</router-link>
+
     </div>
   </div>
-  <Navigation />
 </template>
 
 <script setup>
 import { ref } from "vue";
-import Navigation from "./Navigation.vue";
 import SearchBar from "../../SearchBar.vue";
 </script>

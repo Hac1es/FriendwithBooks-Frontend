@@ -9,6 +9,9 @@ import ProductDetail from "../pages/ProductDetail.vue";
 import AdminDashboard from "../pages/AdminDashboard.vue";
 import AdminProducts from "../pages/AdminProducts.vue";
 import LandingAdmin from "../pages/LandingAdmin.vue";
+import CartView from "../pages/CartView.vue";
+import PayMent from "../pages/PayMent.vue";
+import UserProfile from "../pages/UserProfile.vue";
 import store from "../store/index.js"; 
 
 const routes = [
@@ -20,7 +23,9 @@ const routes = [
   { path: "/", name: "LandingPage", component: LandingPage },
   { path: "/products", name: "Products", component: Products },
   { path: "/products/:id", name: "ProductDetail", component: ProductDetail },
-
+  { path: "/CartView", name: "CartView", component: CartView },
+   { path: "/PayMent", name: "PayMent", component: PayMent },
+    { path: "/UserProfile", name: "UserProfile", component: UserProfile },
   // Admin routes (protected)
   {
     path: "/admin/chat",
