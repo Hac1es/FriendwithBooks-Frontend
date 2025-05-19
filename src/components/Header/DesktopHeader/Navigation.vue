@@ -77,18 +77,27 @@
       </router-link>
 
       <!-- Chính sách -->
-      <span class="hover:text-[#a50202] cursor-pointer">Chính sách</span>
+      <router-link to="/License" class="hover:text-[#a50202] cursor-pointer"
+        >Chính sách</router-link
+      >
 
       <!-- Hỗ trợ -->
-      <span class="hover:text-[#a50202] cursor-pointer">Hỗ trợ</span>
+      <button
+        @click.stop="showChat"
+        class="hover:text-[#a50202] cursor-pointer"
+      >
+        Hỗ trợ
+      </button>
     </div>
   </nav>
 </template>
 
 <script setup>
 import { ref, onBeforeUnmount } from "vue";
+import { useStore } from "vuex";
 
 const isOpen = ref(false);
+const store = useStore();
 let timeoutId = null;
 
 const openMenu = () => {
@@ -100,6 +109,10 @@ const closeMenu = () => {
   timeoutId = setTimeout(() => {
     isOpen.value = false;
   }, 300);
+};
+
+const showChat = () => {
+  store.commit("showChat");
 };
 
 onBeforeUnmount(() => {

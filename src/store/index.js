@@ -2,10 +2,12 @@ import { createStore } from "vuex";
 
 export default createStore({
   state: {
-    isAuthenticated: true, // Giả lập luôn đăng nhập
+    isAuthenticated: true, // Giả lập đăng nhập
     role: "admin", // Giả lập quyền admin
+    isChatVisible: false, // Toggle chat
   },
   mutations: {
+    // Login section
     LOGIN(state, role) {
       state.isAuthenticated = true;
       state.role = role;
@@ -13,6 +15,16 @@ export default createStore({
     LOGOUT(state) {
       state.isAuthenticated = false;
       state.role = "";
+    },
+    //Chat section
+    showChat(state) {
+      state.isChatVisible = true;
+    },
+    hideChat(state) {
+      state.isChatVisible = false;
+    },
+    toggleChat(state) {
+      state.isChatVisible = !state.isChatVisible;
     },
   },
   actions: {

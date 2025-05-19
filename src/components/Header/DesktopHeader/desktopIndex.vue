@@ -5,8 +5,10 @@
     </div>
     <div class="flex gap-4 justify-between items-center">
       <SearchBar placeholder="Tìm kiếm sản phẩm" />
+
+      <!-- Trang cá nhân -->
       <router-link
-       to="/UserProfile"
+        :to="dynamicRoute.profile"
         class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
       >
         <svg
@@ -23,7 +25,8 @@
       </router-link>
 
       <!-- Giỏ hàng -->
-     <button
+      <router-link
+        :to="dynamicRoute.cart"
         class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
       >
         <svg
@@ -41,14 +44,35 @@
           />
         </svg>
         <span class="text-xs">Giỏ hàng</span>
-      </button>
+      </router-link>
     </div>
   </div>
   <Navigation />
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch, computed } from "vue";
 import Navigation from "./Navigation.vue";
 import SearchBar from "../../SearchBar.vue";
+import { useStore } from "vuex";
+let dynamicRoute = ref({
+  profile: "/UserProfile",
+  cart: "/CartView",
+});
+const store = useStore();
+const auth = computed(() => store.state.isAuthenticated);
+
+watch(
+  auth,
+  (newVal) => {
+    if (newVal) {
+      dynamicRoute.value.profile = "/UserProfile";
+      dynamicRoute.value.cart = "/CartView";
+    } else {
+      dynamicRoute.value.profile = "/login";
+      dynamicRoute.value.cart = "/login";
+    }
+  },
+  { immediate: true }
+);
 </script>

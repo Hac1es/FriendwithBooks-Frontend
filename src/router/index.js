@@ -12,7 +12,7 @@ import LandingAdmin from "../pages/LandingAdmin.vue";
 import CartView from "../pages/CartView.vue";
 import PayMent from "../pages/PayMent.vue";
 import UserProfile from "../pages/UserProfile.vue";
-import store from "../store/index.js"; 
+import store from "../store/index.js";
 
 const routes = [
   // Public routes
@@ -24,8 +24,9 @@ const routes = [
   { path: "/products", name: "Products", component: Products },
   { path: "/products/:id", name: "ProductDetail", component: ProductDetail },
   { path: "/CartView", name: "CartView", component: CartView },
-   { path: "/PayMent", name: "PayMent", component: PayMent },
-    { path: "/UserProfile", name: "UserProfile", component: UserProfile },
+  { path: "/PayMent", name: "PayMent", component: PayMent },
+  { path: "/UserProfile", name: "UserProfile", component: UserProfile },
+  { path: "/License", name: "License", component: License },
   // Admin routes (protected)
   {
     path: "/admin/chat",

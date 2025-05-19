@@ -11,6 +11,6 @@
 </template>
 
 <script setup>
-import DesktopIndex from "./DesktopHeader/DesktopIndex.vue";
+import DesktopIndex from "./DesktopHeader/desktopIndex.vue";
 import MobileIndex from "./MobileHeader/MobileIndex.vue";
 </script>
