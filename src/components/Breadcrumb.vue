@@ -9,16 +9,15 @@
         :key="index"
         class="flex items-center"
       >
-        <router-link
+        <div
           v-if="crumb.link && index < crumbs.length - 1"
-          :to="crumb.link"
-          class="text-[#400b0b] hover:underline"
+          class="text-[#400b0b]"
         >
           {{ crumb.name }}
-        </router-link>
+        </div>
 
         <!-- Nếu là phần tử cuối hoặc không có link -->
-        <span v-else class="text-[#b22222] cursor-default select-none">
+        <span v-else class="text-[#b22222]">
           {{ crumb.name }}
         </span>
 

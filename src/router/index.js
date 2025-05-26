@@ -22,7 +22,12 @@ const routes = [
   { path: "/license", name: "License", component: License },
   { path: "/", name: "LandingPage", component: LandingPage },
   { path: "/products", name: "Products", component: Products },
-  { path: "/products/:id", name: "ProductDetail", component: ProductDetail },
+  {
+    path: "/products/:categories*/:id",
+    name: "ProductDetail",
+    component: ProductDetail,
+    props: true, // Để truyền params vào component
+  },
   { path: "/CartView", name: "CartView", component: CartView },
   { path: "/PayMent", name: "PayMent", component: PayMent },
   { path: "/UserProfile", name: "UserProfile", component: UserProfile },

@@ -6,8 +6,6 @@ import router from "./router";
 import naive from "naive-ui";
 import store from "./store";
 
-createApp(App)
-.use(store)
-.use(router)
-.use(naive)
-.mount("#app");
+const app = createApp(App).use(store).use(router).use(naive).mount("#app");
+
+app.config.warnHandler = () => {};

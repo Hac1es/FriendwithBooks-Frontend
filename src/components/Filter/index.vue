@@ -1,7 +1,7 @@
 <template>
   <div class="max-md:flex justify-end max-md:px-5 max-md:py-3">
     <div class="hidden md:block">
-      <Filter />
+      <Filter @filterChange="(payload) => $emit('filterChange', payload)" />
     </div>
 
     <div class="md:hidden block">

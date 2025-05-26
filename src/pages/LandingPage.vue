@@ -41,13 +41,21 @@
         show-arrow
         class="mx-auto w-[95%] md:w-[90%] h-[260px] md:h-[375px] mt-6"
       >
-        <n-carousel-item v-for="(data, index) in fakeBooks" :key="index">
+        <n-carousel-item v-for="(data, index) in flashSale" :key="index">
           <ProdCard
-            :imgSrc="data.imgSrc"
-            :discount="data.discount"
-            :oldPrice="data.oldPrice"
-            :price="data.price"
+            :imgSrc="data.imgURL"
+            :discount="data.discountPercent"
+            :oldPrice="data.price"
+            :price="data.price * ((100 - data.discountPercent) / 100)"
             :title="data.title"
+            :to="
+              buildProductUrl(
+                data.categoryPath?.map((c) =>
+                  encodeURIComponent(c.categoryName)
+                ),
+                data.bookID
+              )
+            "
             :scale="prodCardScaling"
           />
         </n-carousel-item>
@@ -86,10 +94,20 @@
       slides-per-view="3"
       draggable
       show-arrow
-      class="mx-auto w-[90%] h-[300px] md:h-[700px] mt-6"
+      class="mx-auto w-[90%] h-[400px] md:h-[700px] md:mt-6 mt-2"
     >
-      <n-carousel-item v-for="(data, index) in fakeData" :key="index">
-        <AdCard :imgSrc="data.imgSrc" :desc="data.desc" :title="data.title" />
+      <n-carousel-item v-for="(data, index) in bestSellingBooks" :key="index">
+        <AdCard
+          :imgSrc="data.imgURL"
+          :desc="data.description"
+          :title="data.title"
+          :to="
+            buildProductUrl(
+              data.categoryPath?.map((c) => encodeURIComponent(c.categoryName)),
+              data.bookID
+            )
+          "
+        />
       </n-carousel-item>
 
       <!-- Custom arrow -->
@@ -136,14 +154,15 @@
           Đắc Nhân Tâm - Cuốn sách thay đổi cuộc đời bạn!
         </h3>
         <p
-          class="text-[#828282] text-[12px] sm:text-[16px] md:text-[24px] leading-relaxed font-inter font-normal max-md:text-center"
+          class="text-[#828282] text-[12px] pt-1 sm:text-[16px] sm:pt-2 md:text-[24px] md:pt-4 leading-relaxed font-inter font-normal max-md:text-center"
         >
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text ever
-          since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book. It has survived not only
-          five centuries, but also the leap into electronic typesetting,
-          remaining essentially unchanged.
+          "Đắc Nhân Tâm" là cuốn sách kỹ năng sống kinh điển, đã giúp hàng triệu
+          người trên thế giới thấu hiểu nghệ thuật giao tiếp và chạm đến trái
+          tim người khác. Với những bài học thực tiễn, lối viết chân thành và
+          sâu sắc, cuốn sách không chỉ thay đổi cách bạn nhìn nhận bản thân mà
+          còn cải thiện mối quan hệ với mọi người xung quanh. Một lựa chọn không
+          thể bỏ qua nếu bạn muốn phát triển bản thân và sống một cuộc đời trọn
+          vẹn hơn.
         </p>
       </div>
 
@@ -190,8 +209,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import axios from "axios";
+import { useCountdown } from "../composables/useCountdown";
 import { ArrowBack, ArrowForward } from "@vicons/ionicons5";
+import { buildProductUrl } from "../utils/urlHelper";
+
+// Components
 import Header from "../components/Header/index.vue";
 import Footer from "../components/Footer.vue";
 import AdCard from "../components/AdCard.vue";
@@ -199,152 +223,105 @@ import TestimonalCard from "../components/TestimonalCard.vue";
 import ProdCard from "../components/ProdCard.vue";
 
 /** =========================
- *  📦 Static & Mock Data
- *  ========================= */
-const fakeData = Array.from({ length: 10 }, (_, i) => ({
-  imgSrc: `https://picsum.photos/seed/book${i}/300/400`,
-  title: `Sách ${i + 1}`,
-  desc: `Mô tả ngắn gọn cho cuốn sách ${i + 1}.`,
-}));
+ * 📦 Static & Mock Data
+ * ========================= */
+const bestSellingBooks = ref([]);
+const flashSale = ref([]);
 
 const testimonials = [
   {
     testimonial:
-      "This platform made building my first website incredibly easy! The drag-and-drop interface is super intuitive...",
-    name: "Sarah Thompson",
-    role: "Blogger",
+      "Mình tìm được cuốn sách tham khảo đúng lúc chuẩn bị thi cuối kỳ. Giao diện dễ dùng, đặt hàng cũng nhanh nữa!",
+    name: "Nguyễn Thị Mai",
+    role: "Sinh viên",
     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
   },
   {
     testimonial:
-      "I've tried several website builders, but this one stands out...",
-    name: "Michael Lee",
-    role: "Freelancer",
+      "Rất thích tính năng lọc sách theo thể loại và mức giá. Tìm được cuốn đúng gu cực nhanh luôn!",
+    name: "Trần Quốc Huy",
+    role: "Lập trình viên",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
   },
   {
-    testimonial: "As a small business owner, I need tools that just work...",
-    name: "Emily Davis",
-    role: "Small Business Owner",
+    testimonial:
+      "Tôi dùng trang này để nhập thêm sách mới về cho cửa hàng. Nguồn sách phong phú, nhiều đầu sách hiếm.",
+    name: "Phạm Thùy Dương",
+    role: "Chủ cửa hàng sách cũ",
     avatar: "https://randomuser.me/api/portraits/women/65.jpg",
   },
   {
     testimonial:
-      "Amazing experience! I set up my portfolio in under an hour...",
-    name: "Daniel Kim",
+      "Mình đặt sách ‘Đắc Nhân Tâm’ ở đây, giao hàng nhanh, sách đóng gói cẩn thận. Rất hài lòng!",
+    name: "Daniel Nguyễn",
     role: "Designer",
     avatar: "https://randomuser.me/api/portraits/men/41.jpg",
   },
 ];
 
-const fakeBooks = [
-  {
-    imgSrc: "https://picsum.photos/200/300?random=11",
-    title: "Tiệm sách của nàng",
-    price: "100.000",
-    oldPrice: "125.000",
-    discount: "20",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=12",
-    title: "Nhà giả kim",
-    price: "85.000",
-    oldPrice: "100.000",
-    discount: "15",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=13",
-    title: "Dám bị ghét",
-    price: "120.000",
-    oldPrice: "150.000",
-    discount: "20",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=14",
-    title: "Tôi thấy hoa vàng trên cỏ xanh",
-    price: "90.000",
-    oldPrice: "120.000",
-    discount: "25",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=15",
-    title: "Muôn kiếp nhân sinh",
-    price: "130.000",
-    oldPrice: "160.000",
-    discount: "18",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=16",
-    title: "Trên đường băng",
-    price: "95.000",
-    oldPrice: "120.000",
-    discount: "21",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=17",
-    title: "Đắc nhân tâm",
-    price: "110.000",
-    oldPrice: "140.000",
-    discount: "21",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=18",
-    title: "Bí mật của may mắn",
-    price: "80.000",
-    oldPrice: "100.000",
-    discount: "20",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=19",
-    title: "Đi tìm lẽ sống",
-    price: "100.000",
-    oldPrice: "130.000",
-    discount: "23",
-  },
-  {
-    imgSrc: "https://picsum.photos/200/300?random=20",
-    title: "Tuổi trẻ đáng giá bao nhiêu",
-    price: "90.000",
-    oldPrice: "115.000",
-    discount: "22",
-  },
-];
+/** =========================
+ * 📡 Fetch Data
+ * ========================= */
+const fetchHomeData = async () => {
+  try {
+    const [bestSellersRes, flashSaleRes] = await Promise.all([
+      axios.get("https://localhost:7129/api/Home/BestSellers"),
+      axios.get("https://localhost:7129/api/Home/FlashSale"),
+    ]);
+
+    bestSellingBooks.value = bestSellersRes.data;
+    flashSale.value = flashSaleRes.data;
+  } catch (err) {
+    console.error("Failed to fetch home data:", err);
+  }
+};
 
 /** =========================
- *  🕒 Countdown Timer
- *  ========================= */
-import { useCountdown } from "../composables/useCountdown";
+ * 🕒 Countdown Timer
+ * ========================= */
+const timeLeftInSeconds = ref(0);
+const { hours, minutes, seconds, formatTime, start } =
+  useCountdown(timeLeftInSeconds);
 
-const countdownDataFromBE = { timeLeftInSeconds: 26 * 60 + 8 };
-
-const { hours, minutes, seconds, formatTime, start } = useCountdown(
-  countdownDataFromBE.timeLeftInSeconds
-);
-
-onMounted(() => {
-  start();
+watch(flashSale, (list) => {
+  if (list.length) {
+    const maxEndTime = Math.max(
+      ...list.map((item) => new Date(item.endTime).getTime())
+    );
+    const now = Date.now();
+    timeLeftInSeconds.value = Math.max(
+      Math.floor((maxEndTime - now) / 1000),
+      0
+    );
+    start();
+  }
 });
 
 /** =========================
- *  📱 Responsive Logic
- *  ========================= */
+ * 📱 Responsive Logic
+ * ========================= */
 const windowWidth = ref(window.innerWidth);
 
 const handleResize = () => {
   windowWidth.value = window.innerWidth;
 };
 
+const buttonSize = computed(() =>
+  windowWidth.value < 768 ? "small" : "large"
+);
+const prodCardScaling = computed(() => (windowWidth.value < 768 ? 0.7 : 1));
+const getSlidesPerView = computed(() => (windowWidth.value < 768 ? 3 : 5));
+
+/** =========================
+ * 🚀 Lifecycle
+ * ========================= */
 onMounted(() => {
+  console.log("Component mounted ✅");
+  fetchHomeData();
   window.addEventListener("resize", handleResize);
 });
 
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
 });
-
-const buttonSize = computed(() =>
-  windowWidth.value < 768 ? "small" : "large"
-);
-const prodCardScaling = computed(() => (windowWidth.value < 768 ? 0.7 : 1));
-const getSlidesPerView = computed(() => (windowWidth.value < 768 ? 3 : 5));
 </script>

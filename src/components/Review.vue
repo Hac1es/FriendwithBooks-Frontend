@@ -1,8 +1,8 @@
 <template>
   <div class="p-4 rounded-lg shadow-sm font-instrument">
     <!-- Header with name, location and date -->
-    <div class="flex justify-between items-center mb-1">
-      <div class="font-medium text-gray-800">{{ name }}, {{ location }}</div>
+    <div class="flex justify-between items-center mb-1 flex-wrap">
+      <div class="font-medium text-gray-800">{{ name }}</div>
       <div class="text-gray-500 text-sm">{{ date }}</div>
     </div>
 
@@ -18,9 +18,6 @@
       />
     </div>
 
-    <!-- Review title -->
-    <h3 class="font-bold text-gray-900 mb-2">{{ title }}</h3>
-
     <!-- Review content -->
     <p class="text-gray-700">{{ content }}</p>
   </div>
@@ -32,10 +29,8 @@ import { StarIcon } from "lucide-vue-next";
 // Define props with default values matching the example
 const props = defineProps({
   name: String,
-  location: String,
   date: String,
   rating: Number,
-  title: String,
   content: String,
 });
 </script>

@@ -6,12 +6,28 @@
       <div
         class="md:mt-10 mt-3 w-full md:w-[calc(100%-224px)] mx-auto flex md:gap-16 max-md:flex-col"
       >
-        <Filter />
+        <Filter @filterChange="handleFilterChange" />
+
+        <!-- Error state -->
+        <div v-if="error" class="text-red-600 text-center w-full p-4">
+          {{ error }}
+        </div>
+
+        <!-- Loading state -->
         <div
+          v-else-if="isLoading"
+          class="flex justify-center items-center w-full h-64"
+        >
+          <n-spin size="large" />
+        </div>
+
+        <!-- Products grid -->
+        <div
+          v-else-if="products.length > 0"
           class="grid md:grid-cols-3 grid-cols-2 md:gap-x-24 gap-x-5 gap-y-10 grow shrink max-md:w-full max-md:mx-auto px-5 mb-10"
         >
           <ProdCard
-            v-for="data in fakeData"
+            v-for="data in products"
             :key="data.id"
             :productId="data.id"
             :imgSrc="data.image"
@@ -23,13 +39,23 @@
             @click="() => goToDetail(data.id)"
           />
         </div>
+
+        <!-- No results -->
+        <div v-else class="text-center w-full p-4">
+          Không tìm thấy sản phẩm nào.
+        </div>
       </div>
+
+      <!--Pagination-->
       <div class="flex justify-center mb-6 max-md:w-[80%] max-md:mx-auto">
         <n-config-provider :theme-overrides="themeOverride">
           <n-pagination
+            v-if="totalPages > 0"
+            :page="currentPage"
             :default-page="1"
-            page-count="10"
+            :page-count="totalPages"
             :page-slot="respPageSlot"
+            @update:page="handlePageChange"
           />
         </n-config-provider>
       </div>
@@ -41,6 +67,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
+import axios from "axios";
 import Header from "../components/Header/index.vue";
 import Breadcrumb from "../components/Breadcrumb.vue";
 import Filter from "../components/Filter/index.vue";
@@ -50,86 +77,129 @@ import { NConfigProvider } from "naive-ui";
 import BackButton from "../components/BackButton.vue";
 import { useRouter } from "vue-router";
 
-const fakeData = [
-  {
-    id: 1,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1015/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-  {
-    id: 2,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1025/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-  {
-    id: 3,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1035/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-  {
-    id: 4,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1045/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-  {
-    id: 5,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1055/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-  {
-    id: 6,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1065/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-  {
-    id: 7,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1075/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-  {
-    id: 8,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1076/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-  {
-    id: 9,
-    name: "Tiệm Sách Của Nàng",
-    image: "https://picsum.photos/id/1077/300/400",
-    oldPrice: 125000,
-    price: 100000,
-    discount: "20",
-  },
-];
+// State variables for pagination and product data
+const currentPage = ref(1);
+const pageSize = ref(12);
+const totalItems = ref(0);
+const totalPages = ref(0);
+const products = ref([]);
+const isLoading = ref(true);
+const currentFilters = ref({});
+const error = ref(null);
 
-const crumbs = [
+// Fetch products with pagination
+const fetchProducts = async (params = {}) => {
+  try {
+    isLoading.value = true;
+    error.value = null; // Reset error state
+    const queryParams = new URLSearchParams();
+
+    // Add page parameter
+    queryParams.append("page", params.page || 1);
+
+    // Add filters only if they have values
+    if (params.promo) {
+      queryParams.append("promo", params.promo);
+    }
+    if (params.price) {
+      queryParams.append("price", params.price);
+    }
+    if (params.priceMin) {
+      queryParams.append("priceMin", params.priceMin);
+    }
+    if (params.priceMax) {
+      queryParams.append("priceMax", params.priceMax);
+    }
+    if (params.age) {
+      queryParams.append("age", params.age);
+    }
+    if (params.type) {
+      queryParams.append("type", params.type);
+    }
+
+    if (params.selectedCategoryId) {
+      queryParams.append("category", params.selectedCategoryId);
+    }
+
+    console.log(
+      "API URL:",
+      `https://localhost:7129/api/Book/query?${queryParams.toString()}`
+    );
+
+    const response = await axios.get(
+      `https://localhost:7129/api/Book/query?${queryParams.toString()}`
+    );
+    const data = response.data;
+
+    products.value = data.items.map((book) => ({
+      id: book.bookID,
+      name: book.title,
+      image: book.imgURL1,
+      price: book.price,
+      oldPrice: book.price,
+      discount: book.discount === 0 ? null : book.discount,
+      author: book.author,
+    }));
+
+    currentPage.value = data.currentPage;
+    pageSize.value = data.pageSize;
+    totalItems.value = data.totalItems;
+    totalPages.value = data.totalPages;
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    error.value = "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const crumbs = ref([
   { name: "Trang chủ", link: "/" },
   { name: "Sản phẩm", link: "/Products" },
-  { name: "Tiểu thuyết" },
-];
+]);
+
+const handleFilterChange = ({ filters, categoryTree }) => {
+  console.log("handleFilterChange received:", filters, categoryTree);
+  currentFilters.value = filters;
+
+  // Cập nhật breadcrumb dựa trên category được chọn
+  if (categoryTree) {
+    crumbs.value = [
+      { name: "Trang chủ", link: "/" },
+      { name: "Sản phẩm", link: "/Products" },
+    ];
+
+    // Thêm parent category
+    if (categoryTree.parent) {
+      const parentPath = `/Products/${encodeURIComponent(categoryTree.parent)}`;
+      crumbs.value.push({
+        name: categoryTree.parent,
+        link: parentPath,
+      });
+    }
+    if (categoryTree.sub) {
+      crumbs.value.push({
+        name: categoryTree.sub,
+        link: `/Products/${encodeURIComponent(
+          categoryTree.parent
+        )}/${encodeURIComponent(categoryTree.sub)}`,
+      });
+    }
+  }
+
+  fetchProducts({ ...filters, page: 1 });
+};
+
+// Handle page change
+const handlePageChange = (page) => {
+  fetchProducts({ ...currentFilters.value, page });
+};
+
+// Fetch initial data on mount
+onMounted(() => {
+  window.addEventListener("resize", handleResize);
+  fetchProducts();
+});
 
 let windowWidth = ref(window.innerWidth);
 

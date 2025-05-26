@@ -1,5 +1,10 @@
 <template>
-  <div class="inline-block" :style="{ zoom: scale }">
+  <component
+    :is="to ? 'router-link' : 'div'"
+    :to="to"
+    class="inline-block"
+    :style="{ zoom: scale }"
+  >
     <div
       class="w-[45vw] sm:w-[30vw] md:w-48 overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.02] transition-shadow duration-300 bg-white"
       @click="$emit('click', productId)"
@@ -39,7 +44,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </component>
 </template>
 
 <script setup>
@@ -50,6 +55,10 @@ defineProps({
   price: String,
   oldPrice: String,
   discount: String,
+  to: {
+    type: [String, Object],
+    default: null,
+  },
   scale: {
     type: Number,
     default: 1,

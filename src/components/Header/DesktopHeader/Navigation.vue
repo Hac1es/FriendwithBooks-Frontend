@@ -30,8 +30,8 @@
                 <li>Tiểu thuyết</li>
                 <li>Sách giáo khoa – Tham khảo</li>
                 <li>Khoa học – Kỹ thuật</li>
-                <li>Lịch sử – Nghệ thuật</li>
-                <li>Tôn giáo – Tâm linh</li>
+                <li>Lịch sử – Nghệ thuật - Tôn giáo</li>
+                <li>Kinh tế</li>
                 <li>Văn hóa – Địa lý – Du lịch</li>
                 <li>Chính trị</li>
               </ul>
