@@ -6,7 +6,7 @@
       <!-- Trang chủ -->
       <router-link
         to="/"
-        class="hover:text-[#a50202] font-semibold text-[#a50202]"
+        class="hover:text-[#a50202]"
       >
         Trang chủ
       </router-link>

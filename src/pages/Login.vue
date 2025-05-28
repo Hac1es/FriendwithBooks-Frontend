@@ -45,6 +45,7 @@
       <div class="flex items-center justify-center">
         <button
           class="flex items-center gap-2 px-6 py-3 border border-gray-400 rounded-xl hover:bg-gray-100"
+          @click="signInWithGoogle"
         >
           <img src="/Google.png" alt="Google" class="w-6 h-6" />
           <span class="text-gray-600 font-medium">Đăng nhập với Google</span>
@@ -60,14 +61,52 @@ import Footer from "../components/Footer.vue";
 import Header from "../components/Header/index.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { supabase } from "../utils/supabase";
+import { useStore } from "vuex";
+import bcrypt from "bcryptjs";
 
 const router = useRouter();
 const email = ref("");
 const password = ref("");
+const store = useStore();
 
-const login = () => {
-  // Thực hiện logic đăng nhập
-  console.log("Đăng nhập với", email.value, password.value);
+const login = async () => {
+  // Lấy user theo email
+  const { data: user, error } = await supabase
+    .from("Users")
+    .select("Password, Role")
+    .eq("Email", email.value)
+    .single();
+
+  if (error || !user) {
+    alert("Email hoặc mật khẩu không đúng.");
+    return;
+  }
+
+  // So sánh mật khẩu nhập với hash
+  const isMatch = await bcrypt.compare(password.value, user.Password);
+  if (!isMatch) {
+    alert("Email hoặc mật khẩu không đúng.");
+    return;
+  }
+
+  // Gọi action login của store, truyền role
+  store.dispatch("login", user.Role || "user");
+
+  alert("Đăng nhập thành công!");
+  router.push("/");
+};
+
+const signInWithGoogle = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin + "/", // hoặc trang bạn muốn chuyển hướng sau khi đăng nhập
+    },
+  });
+  if (error) {
+    alert("Đăng nhập với Google thất bại: " + error.message);
+  }
 };
 
 const goToRegister = () => {
