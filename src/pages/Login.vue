@@ -45,6 +45,7 @@
       <div class="flex items-center justify-center">
         <button
           class="flex items-center gap-2 px-6 py-3 border border-gray-400 rounded-xl hover:bg-gray-100"
+          @click="signInWithGoogle"
         >
           <img src="/Google.png" alt="Google" class="w-6 h-6" />
           <span class="text-gray-600 font-medium">Đăng nhập với Google</span>
@@ -60,18 +61,65 @@ import Footer from "../components/Footer.vue";
 import Header from "../components/Header/index.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { supabase } from "../utils/supabase";
+import { useStore } from "vuex";
 
 const router = useRouter();
 const email = ref("");
 const password = ref("");
+const store = useStore();
 
-const login = () => {
-  // Thực hiện logic đăng nhập
-  console.log("Đăng nhập với", email.value, password.value);
+const login = async () => {
+  if (!email.value || !password.value) {
+    alert("Vui lòng nhập đầy đủ thông tin.");
+    return;
+  }
+
+  // Đăng nhập với Supabase Auth
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value,
+  });
+
+  if (error) {
+    alert("Email hoặc mật khẩu không đúng.");
+    return;
+  }
+
+  // Lấy thông tin bổ sung từ bảng Users (nếu cần)
+  const { data: userInfo } = await supabase
+    .from("Users")
+    .select("Role")
+    .eq("Email", email.value)
+    .single();
+
+  if (!userInfo) {
+    alert("Tài khoản chưa được đăng ký trong hệ thống. Vui lòng đăng ký.");
+    store.dispatch("logout");
+    router.push("/register");
+    return;
+  }
+
+  // Gọi action login của store, truyền role nếu có
+  store.dispatch("login", userInfo.Role);
+
+  alert("Đăng nhập thành công!");
+};
+
+const signInWithGoogle = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin + "/login-google",
+    },
+  });
+  if (error) {
+    alert("Đăng nhập với Google thất bại: " + error.message);
+  }
 };
 
 const goToRegister = () => {
-  router.push("/Register");
+  router.push("/register");
 };
 
 const goToForgot = () => {
