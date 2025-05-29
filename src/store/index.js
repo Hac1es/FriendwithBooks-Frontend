@@ -2,8 +2,8 @@ import { createStore } from "vuex";
 
 export default createStore({
   state: {
-    isAuthenticated: false, // Giả lập đăng nhập
-    role: "", // Giả lập quyền admin
+    isAuthenticated: true, // Giả lập đăng nhập
+    role: "user", // Giả lập quyền admin
     isChatVisible: false, // Toggle chat
   },
   mutations: {

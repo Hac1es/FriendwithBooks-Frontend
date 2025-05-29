@@ -66,6 +66,21 @@ onMounted(async () => {
 });
 
 const updateInfo = async () => {
+  if (!fullName.value || !phone.value || !address.value) {
+    alert("Vui lòng nhập đầy đủ thông tin.");
+    return;
+  }
+
+  if (!email.value) {
+    alert("Không tìm thấy email tài khoản.");
+    return;
+  }
+
+  if (!/^(0\d{9})$/.test(phone.value)) {
+    alert("Số điện thoại không hợp lệ. Vui lòng nhập đúng định dạng.");
+    return;
+  }
+
   // Nếu có email, kiểm tra và thêm vào bảng Users nếu chưa có
   if (email.value) {
     const { data: existingUser } = await supabase
@@ -78,16 +93,12 @@ const updateInfo = async () => {
       // Thêm user mới với email, các trường khác để trống
       await supabase.from("Users").insert([{ Email: email.value }]);
     }
-  }
-
-  if (!fullName.value || !phone.value || !address.value) {
-    alert("Vui lòng nhập đầy đủ thông tin.");
-    return;
-  }
-
-  if (!email.value) {
-    alert("Không tìm thấy email tài khoản.");
-    return;
+    else {
+      alert("Email đã tồn tại trong hệ thống.");
+      await supabase.auth.signOut();
+      router.push("/login");
+      return;
+    }
   }
 
   const { error } = await supabase
@@ -106,6 +117,7 @@ const updateInfo = async () => {
   }
 
   alert("Cập nhật thông tin thành công!");
+  await supabase.auth.signOut();
   router.push("/login");
 };
 </script>
