@@ -1,7 +1,7 @@
 <template>
   <Header />
   <div class="min-h-screen bg-[#fdf9e5] flex items-center justify-center px-4">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl flex gap-8">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl md:flex gap-8">
       <!-- Form bên trái -->
       <div class="flex-1">
         <p class="block text-gray-600 mb-2">Email</p>

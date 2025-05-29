@@ -20,7 +20,7 @@ onMounted(async () => {
 
     if (!userInfo) {
       alert("Tài khoản Google chưa được đăng ký trong hệ thống. Vui lòng đăng ký.");
-      store.dispatch("logout");
+      await supabase.auth.signOut();
       router.push("/register");
       return;
     }
