@@ -18,30 +18,9 @@
           v-model="password"
         />
 
-        <p class="block text-gray-600 mb-2">Họ và tên</p>
-        <input
-          type="text"
-          class="w-full mb-4 p-4 rounded-xl bg-gray-200 outline-none"
-          v-model="fullName"
-        />
-
-        <p class="block text-gray-600 mb-2">Số điện thoại</p>
-        <input
-          type="tel"
-          class="w-full mb-4 p-4 rounded-xl bg-gray-200 outline-none"
-          v-model="phone"
-        />
-
-        <p class="block text-gray-600 mb-2">Địa chỉ</p>
-        <input
-          type="text"
-          class="w-full p-4 rounded-xl bg-gray-200 outline-none"
-          v-model="address"
-        />
-
         <button
           class="bg-yellow-300 font-semibold py-3 mt-6 w-full rounded-xl hover:bg-yellow-400"
-          @click="register"
+          @click="registerWithEmail"
         >
           Đăng ký
         </button>
@@ -60,10 +39,10 @@
       <div class="flex items-center justify-center mt-7">
         <button
           class="flex items-center gap-2 px-6 py-3 border border-gray-400 rounded-xl hover:bg-gray-100"
-          @click="signInWithGoogle"
+          @click="registerWithGoogle"
         >
           <img src="/Google.png" alt="Google" class="w-6 h-6" />
-          <span class="text-gray-600 font-medium">Đăng nhập với Google</span>
+          <span class="text-gray-600 font-medium">Đăng ký với Google</span>
         </button>
       </div>
     </div>
@@ -82,54 +61,52 @@ import { supabase } from "../utils/supabase";
 const router = useRouter();
 const email = ref("");
 const password = ref("");
-const fullName = ref("");
-const phone = ref("");
-const address = ref("");
 
-const register = async () => {
-  if (!email.value || !password.value || !fullName.value || !phone.value || !address.value) {
+const registerWithEmail = async () => {
+  if (!email.value || !password.value) {
     alert("Vui lòng nhập đầy đủ thông tin.");
     return;
   }
 
-  // Kiểm tra email đã tồn tại chưa
-  const { data: existingUser, error: selectError } = await supabase
+  // Kiểm tra email đã tồn tại trong bảng Users chưa
+  const { data: existingUser, error: checkError } = await supabase
     .from("Users")
     .select("UserID")
     .eq("Email", email.value)
     .single();
 
   if (existingUser) {
-    alert("Email đã được đăng ký.");
-    return;
-  }
-  if (selectError && selectError.code !== "PGRST116") {
-    alert("Lỗi kiểm tra email: " + selectError.message);
+    alert("Email này đã được đăng ký. Vui lòng dùng email khác.");
     return;
   }
 
-  // Hash password
+  // Đăng ký với Supabase Auth
+  const { data, error } = await supabase.auth.signUp({
+    email: email.value,
+    password: password.value,
+  });
+
+  if (error) {
+    alert("Đăng ký thất bại: " + error.message);
+    return;
+  }
+
+  // Hash mật khẩu
   const hashedPassword = await bcrypt.hash(password.value, 10);
 
-  // Thêm user mới
-  const { error: insertError } = await supabase
-    .from("Users")
-    .insert([{ Email: email.value, Password: hashedPassword, FullName: fullName.value, Phone: phone.value, Address: address.value }]);
-
-  if (insertError) {
-    alert("Đăng ký thất bại: " + insertError.message);
-    return;
-  }
-
-  alert("Đăng ký thành công! Vui lòng đăng nhập.");
-  router.push("/Login");
+  alert("Đăng ký thành công! Vui lòng nhập thông tin và xác nhận email.");
+  router.push({
+    path: "/register-info",
+    query: { email: email.value, password: hashedPassword },
+  });
 };
 
-const signInWithGoogle = async () => {
+// Đăng ký bằng Google
+const registerWithGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: window.location.origin + "/", // hoặc trang bạn muốn chuyển hướng sau khi đăng nhập
+      redirectTo: window.location.origin + "/register-info",
     },
   });
   if (error) {
@@ -138,6 +115,6 @@ const signInWithGoogle = async () => {
 };
 
 const goToLogin = () => {
-  router.push("/Login");
+  router.push("/login");
 };
 </script>

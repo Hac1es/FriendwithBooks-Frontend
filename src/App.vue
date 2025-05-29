@@ -4,7 +4,7 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from "vue";
+import { onMounted, computed, watch } from "vue";
 import { useStore } from "vuex";
 import { useRouter, RouterView } from "vue-router";
 import ChatPopup from "./components/ChatPopup.vue";
@@ -20,4 +20,16 @@ onMounted(() => {
     router.push("/admin/chat");
   }
 });
+
+watch(
+  [isAuthenticated, role],
+  ([newAuth, newRole]) => {
+    if (newAuth && newRole === "admin") {
+      router.push("/admin/chat");
+    }
+    else if (newAuth && newRole === "user") {
+      router.push("/");
+    }
+  }
+);
 </script>

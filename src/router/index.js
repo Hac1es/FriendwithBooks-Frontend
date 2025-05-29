@@ -13,11 +13,15 @@ import CartView from "../pages/CartView.vue";
 import PayMent from "../pages/PayMent.vue";
 import UserProfile from "../pages/UserProfile.vue";
 import store from "../store/index.js";
+import RegisterInfo from "../pages/RegisterInfo.vue";
+import LoginGoogle from "../pages/LoginGoogle.vue";
 
 const routes = [
   // Public routes
   { path: "/login", name: "Login", component: Login },
+  { path: "/login-google", name: "LoginGoogle", component: LoginGoogle },
   { path: "/register", name: "Register", component: Register },
+  { path: "/register-info", name: "RegisterInfo", component: RegisterInfo },
   { path: "/forgot-password", name: "ForgotPass", component: ForgotPass },
   { path: "/license", name: "License", component: License },
   { path: "/", name: "LandingPage", component: LandingPage },

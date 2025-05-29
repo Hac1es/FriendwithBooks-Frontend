@@ -63,7 +63,6 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { supabase } from "../utils/supabase";
 import { useStore } from "vuex";
-import bcrypt from "bcryptjs";
 
 const router = useRouter();
 const email = ref("");
@@ -71,37 +70,47 @@ const password = ref("");
 const store = useStore();
 
 const login = async () => {
-  // Lấy user theo email
-  const { data: user, error } = await supabase
+  if (!email.value || !password.value) {
+    alert("Vui lòng nhập đầy đủ thông tin.");
+    return;
+  }
+
+  // Đăng nhập với Supabase Auth
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value,
+  });
+
+  if (error) {
+    alert("Email hoặc mật khẩu không đúng.");
+    return;
+  }
+
+  // Lấy thông tin bổ sung từ bảng Users (nếu cần)
+  const { data: userInfo } = await supabase
     .from("Users")
-    .select("Password, Role")
+    .select("Role")
     .eq("Email", email.value)
     .single();
 
-  if (error || !user) {
-    alert("Email hoặc mật khẩu không đúng.");
+  if (!userInfo) {
+    alert("Tài khoản chưa được đăng ký trong hệ thống. Vui lòng đăng ký.");
+    store.dispatch("logout");
+    router.push("/register");
     return;
   }
 
-  // So sánh mật khẩu nhập với hash
-  const isMatch = await bcrypt.compare(password.value, user.Password);
-  if (!isMatch) {
-    alert("Email hoặc mật khẩu không đúng.");
-    return;
-  }
-
-  // Gọi action login của store, truyền role
-  store.dispatch("login", user.Role || "user");
+  // Gọi action login của store, truyền role nếu có
+  store.dispatch("login", userInfo.Role);
 
   alert("Đăng nhập thành công!");
-  router.push("/");
 };
 
 const signInWithGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: window.location.origin + "/", // hoặc trang bạn muốn chuyển hướng sau khi đăng nhập
+      redirectTo: window.location.origin + "/login-google",
     },
   });
   if (error) {
@@ -110,7 +119,7 @@ const signInWithGoogle = async () => {
 };
 
 const goToRegister = () => {
-  router.push("/Register");
+  router.push("/register");
 };
 
 const goToForgot = () => {
