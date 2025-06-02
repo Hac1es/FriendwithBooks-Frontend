@@ -66,7 +66,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import axios from "axios";
 import Header from "../components/Header/index.vue";
 import Breadcrumb from "../components/Breadcrumb.vue";
@@ -75,7 +75,7 @@ import ProdCard from "../components/ProdCard.vue";
 import Footer from "../components/Footer.vue";
 import { NConfigProvider } from "naive-ui";
 import BackButton from "../components/BackButton.vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 // State variables for pagination and product data
 const currentPage = ref(1);
@@ -86,6 +86,7 @@ const products = ref([]);
 const isLoading = ref(true);
 const currentFilters = ref({});
 const error = ref(null);
+const route = useRoute();
 
 // Fetch products with pagination
 const fetchProducts = async (params = {}) => {
@@ -119,6 +120,10 @@ const fetchProducts = async (params = {}) => {
 
     if (params.selectedCategoryId) {
       queryParams.append("category", params.selectedCategoryId);
+    }
+
+    if (params.name) {
+      queryParams.append("name", params.name);
     }
 
     console.log(
@@ -209,6 +214,7 @@ const handleResize = () => {
 
 onMounted(() => {
   window.addEventListener("resize", handleResize);
+  fetchProducts({ name: route.query.name || undefined });
 });
 
 onUnmounted(() => {
@@ -234,4 +240,15 @@ const router = useRouter();
 function goToDetail(id) {
   router.push(`/Products/${id}`);
 }
+
+watch(
+  () => route.query.name,
+  (newName) => {
+    fetchProducts({
+      ...currentFilters.value,
+      name: newName || undefined,
+      page: 1,
+    });
+  }
+);
 </script>

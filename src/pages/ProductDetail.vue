@@ -171,6 +171,48 @@
 
         <!-- Review Section -->
         <div class="mt-3 md:mt-6">
+          <div
+            class="w-full flex flex-col gap-4 md:mb-6 mb-3"
+            v-if="isLoggedIn"
+          >
+            <!-- Add review -->
+            <div class="flex items-center gap-4">
+              <span
+                class="text-[18px] md:text-[27px] text-[#661c1c] font-semibold font-instrument"
+                >Thêm bình luận</span
+              >
+              <div class="flex gap-2 ml-4">
+                <button
+                  v-for="rating in 5"
+                  :key="rating"
+                  class="border rounded-full px-3 py-1 flex items-center gap-1 transition-colors"
+                  :class="{
+                    'border-red-500 text-red-500': selectedRating === rating,
+                    'border-gray-300': selectedRating !== rating,
+                  }"
+                  @click="handleRatingClick(rating)"
+                >
+                  {{ rating }} <span>★</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-2 w-full">
+              <textarea
+                rows="4"
+                class="w-full border border-gray-300 px-4 py-2 outline-none text-white"
+                placeholder="Nhập nội dung bình luận..."
+                maxlength="3000"
+                v-model="reviewContent"
+              />
+              <button
+                class="bg-black text-white px-6 py-2 font-semibold"
+                @click="sendReview"
+              >
+                Gửi bình luận
+              </button>
+            </div>
+          </div>
+
           <!-- Reviews header with count and filters -->
           <div class="mb-6">
             <div class="flex items-baseline justify-between mb-4">
@@ -368,6 +410,7 @@ import BackButton from "../components/BackButton.vue";
 import Review from "../components/Review.vue";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import axios from "axios";
+import { useStore } from "vuex";
 
 const productData = ref({
   title: "",
@@ -393,6 +436,8 @@ const ageMapping = {
 
 const relatedProducts = ref([]);
 const reviewsData = ref([]);
+const selectedRating = ref(0);
+const reviewContent = ref("");
 
 const crumbs = ref([{ name: "Sản phẩm", link: "/products" }]);
 
@@ -430,7 +475,14 @@ const dateOptions = [
   { label: "Cũ nhất", value: "oldest" },
 ];
 
-onMounted(async () => {
+const store = useStore();
+const isLoggedIn = computed(() => store.state.isAuthenticated);
+
+const handleRatingClick = (rating) => {
+  selectedRating.value = rating;
+};
+
+const fetchReviews = async () => {
   try {
     const [response, reviewsResp] = await Promise.all([
       axios.get("https://localhost:7129/api/Book/" + productId),
@@ -478,11 +530,42 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error fetching product data:", error);
   }
-});
+};
+
+const sendReview = async () => {
+  if (!selectedRating.value || !reviewContent.value) {
+    alert("Vui lòng chọn số sao và nhập nội dung bình luận!");
+    return;
+  }
+
+  const reviewData = {
+    userID: store.state.userInfo.id,
+    bookID: productId,
+    rating: selectedRating.value,
+    comment: reviewContent.value,
+  };
+
+  console.log(reviewData);
+
+  try {
+    const response = await axios.put(
+      `https://localhost:7129/api/Book/addReview`,
+      reviewData
+    );
+    console.log("Review added successfully:", response.data);
+    // Cập nhật lại danh sách review nếu cần
+    reviewContent.value = ""; // Reset nội dung bình luận
+    selectedRating.value = 0; // Reset số sao
+    fetchReviews();
+  } catch (error) {
+    console.error("Error adding review:", error);
+  }
+};
 
 onMounted(() => {
   // Add click outside listener
   document.addEventListener("click", closeDropdowns);
+  fetchReviews();
 });
 
 onUnmounted(() => {

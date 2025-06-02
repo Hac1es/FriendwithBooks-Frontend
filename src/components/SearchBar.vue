@@ -3,7 +3,9 @@
     <input
       type="text"
       :placeholder="placeholder"
+      v-model="searchQuery"
       class="px-4 py-2 rounded-md border-2 border-black bg-[#f3f0f0] text-left outline-none"
+      @input="onInput"
     />
     <button class="ml-2">
       <svg
@@ -12,6 +14,7 @@
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
+        @click="onFind"
       >
         <path
           stroke-linecap="round"
@@ -25,7 +28,16 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
 defineProps({
   placeholder: String,
 });
+const searchQuery = ref("");
+const emit = defineEmits(["search"]);
+const onInput = () => {
+  emit("search", searchQuery.value);
+};
+const onFind = () => {
+  emit("find", searchQuery.value);
+};
 </script>

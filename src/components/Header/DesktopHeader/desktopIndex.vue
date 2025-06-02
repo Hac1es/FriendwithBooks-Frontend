@@ -3,8 +3,33 @@
     <div class="w-[214px] h-[77px]">
       <img src="/Logo.png" class="object-cover w-full h-full" />
     </div>
-    <div class="flex gap-4 justify-between items-center">
-      <SearchBar placeholder="Tìm kiếm sản phẩm" />
+    <div class="flex gap-4 justify-between items-center relative">
+      <SearchBar
+        placeholder="Tìm kiếm sản phẩm"
+        @search="handleSearch"
+        @find="handleFind"
+      />
+      <div
+        v-if="showSuggestions"
+        class="absolute top-full left-0 w-full bg-white shadow-lg z-10 font-inter"
+      >
+        <div
+          v-if="suggestionList.length != 0"
+          v-for="item in suggestionList"
+          :key="item.bookID"
+          class="p-2 pb-4 hover:bg-gray-100 cursor-pointer flex relative"
+          @click="handleSuggestionClick(item)"
+        >
+          <div>
+            <img :src="item.imgURL1" class="w-8 h-12 mr-2 inline-block" />
+          </div>
+          <div>
+            <div class="text-[#3b3b3b] text-sm">{{ item.title }}</div>
+            <div class="text-[#a50202] text-xs">{{ item.author }}</div>
+          </div>
+          <div class="absolute bottom-2 right-4">{{ `${item.price} đ` }}</div>
+        </div>
+      </div>
 
       <!-- Trang cá nhân -->
       <router-link
@@ -12,6 +37,7 @@
         class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
       >
         <svg
+          v-if="!auth && userInfo"
           xmlns="http://www.w3.org/2000/svg"
           class="w-6 h-6 mb-1"
           fill="currentColor"
@@ -21,7 +47,18 @@
             d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12Zm0 2.4c-3.1 0-9.3 1.6-9.3 4.7v1.6h18.6v-1.6c0-3.1-6.2-4.7-9.3-4.7Z"
           />
         </svg>
-        <span class="text-xs">Tài khoản</span>
+        <div v-else class="w-6 h-6 mb-1">
+          <img :src="userInfo.avatar" class="rounded-full object-cover" />
+        </div>
+        <span
+          class="text-xs"
+          :class="auth && userInfo != null ? 'font-bold' : ''"
+          >{{
+            auth && userInfo != null
+              ? userInfo.name.trim().split(" ").pop()
+              : "Tài khoản"
+          }}</span
+        >
       </router-link>
 
       <!-- Giỏ hàng -->
@@ -55,12 +92,44 @@ import { ref, watch, computed } from "vue";
 import Navigation from "./Navigation.vue";
 import SearchBar from "../../SearchBar.vue";
 import { useStore } from "vuex";
+import { useRouter } from "vue-router";
+import axios from "axios";
+
 let dynamicRoute = ref({
   profile: "/UserProfile",
   cart: "/CartView",
 });
+const searchText = ref("");
+const suggestionList = ref([]);
+const showSuggestions = ref(false);
+const router = useRouter();
 const store = useStore();
 const auth = computed(() => store.state.isAuthenticated);
+const userInfo = computed(() => store.state.userInfo);
+let searchTimeout = null;
+
+function handleSearch(val) {
+  searchText.value = val;
+  clearTimeout(searchTimeout);
+  if (val.length > 0) {
+    searchTimeout = setTimeout(() => {
+      axios
+        .get(`https://localhost:7129/api/Book/query?name=${val}`)
+        .then((res) => {
+          suggestionList.value = (res.data.items || []).slice(0, 7);
+          showSuggestions.value = suggestionList.value.length > 0;
+        });
+    }, 500);
+  } else {
+    showSuggestions.value = false;
+  }
+}
+
+const handleFind = (val) => {
+  if (val && val.trim() !== "") {
+    router.push({ path: "/Products", query: { name: val.trim() } });
+  }
+};
 
 watch(
   auth,
