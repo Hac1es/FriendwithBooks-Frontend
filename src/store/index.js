@@ -6,12 +6,7 @@ export default createStore({
     role: "", // Giả lập quyền admin
     isChatVisible: false, // Toggle chat
     userInfo: {
-      id: 20,
-      name: "Nguyễn Viết Tùng",
-      email: "nchinhtung@gmail.com",
-      phone: "0909090909",
-      address: "Hà Nội",
-      avatar: `https://i.pravatar.cc/150?img=20`,
+      
     },
   },
   mutations: {
