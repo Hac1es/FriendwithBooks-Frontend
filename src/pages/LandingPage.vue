@@ -210,7 +210,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import axios from "axios";
+import axios from "../utils/axios";
 import { useCountdown } from "../composables/useCountdown";
 import { ArrowBack, ArrowForward } from "@vicons/ionicons5";
 import { buildProductUrl } from "../utils/urlHelper";
@@ -265,8 +265,8 @@ const testimonials = [
 const fetchHomeData = async () => {
   try {
     const [bestSellersRes, flashSaleRes] = await Promise.all([
-      axios.get("https://localhost:7129/api/Home/BestSellers"),
-      axios.get("https://localhost:7129/api/Home/FlashSale"),
+      axios.get("/Home/BestSellers"),
+      axios.get("/Home/FlashSale"),
     ]);
 
     bestSellingBooks.value = bestSellersRes.data;

@@ -133,7 +133,7 @@
 
 <script setup>
 import { ref, reactive, watch, onMounted, defineEmits } from "vue";
-import axios from "axios";
+import axios from "../../utils/axios";
 
 const categories = ref({});
 
@@ -148,9 +148,7 @@ const emitFilter = () => {
 
 onMounted(async () => {
   try {
-    const response = await axios.get(
-      "https://localhost:7129/api/Book/category"
-    );
+    const response = await axios.get("/Book/category");
     categories.value = response.data;
   } catch (error) {
     console.error("Error fetching categories:", error);

@@ -1,7 +1,9 @@
 <template>
   <Header />
   <div class="min-h-screen bg-[#fdf9e5] flex items-center justify-center px-4">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm flex gap-8 mt-8 mb-8">
+    <div
+      class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm flex gap-8 mt-8 mb-8"
+    >
       <div class="flex-1">
         <p class="block text-gray-600 mb-2">Email</p>
         <input
@@ -57,7 +59,7 @@
 <script setup>
 import Footer from "../components/Footer.vue";
 import Header from "../components/Header/index.vue";
-import axios from "axios";
+import axios from "../utils/axios";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
@@ -76,18 +78,21 @@ const login = async () => {
 
   try {
     // Gọi API đăng nhập phía back-end
-    const response = await axios.post("/api/Auth/login", {
+    const response = await axios.post("/Auth/login", {
       Email: email.value,
       Password: password.value,
     });
 
     if (response.status === 200) {
-      // Lưu token vào localStorage (hoặc sessionStorage)
-      localStorage.setItem("token", response.data.token);
       // Giải mã token để lấy role
       const decoded = jwtDecode(response.data.token);
       alert("Đăng nhập thành công!");
       store.dispatch("login", decoded.role); // Gọi action login của store
+      // Lưu thông tin user vào store
+      store.dispatch("setUserInfo", decoded);
+      // Lưu vào localStorage (hoặc sessionStorage)
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("userInfo", JSON.stringify(decoded));
     } else {
       alert(response.data.message || "Đăng nhập thất bại.");
     }
@@ -96,6 +101,7 @@ const login = async () => {
       error.response?.data?.message ||
         "Đăng nhập thất bại. Vui lòng thử lại sau."
     );
+    console.log(error);
   }
 };
 

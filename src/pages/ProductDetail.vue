@@ -409,7 +409,7 @@ import ProdCard from "../components/ProdCard.vue";
 import BackButton from "../components/BackButton.vue";
 import Review from "../components/Review.vue";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import axios from "axios";
+import axios from "../utils/axios";
 import { useStore } from "vuex";
 
 const productData = ref({
@@ -485,8 +485,8 @@ const handleRatingClick = (rating) => {
 const fetchReviews = async () => {
   try {
     const [response, reviewsResp] = await Promise.all([
-      axios.get("https://localhost:7129/api/Book/" + productId),
-      axios.get(`https://localhost:7129/api/Book/${productId}/reviews`, {
+      axios.get("/Book/" + productId),
+      axios.get(`/Book/${productId}/reviews`, {
         params: {
           page: 1,
           perPage: perPage.value,
@@ -548,10 +548,7 @@ const sendReview = async () => {
   console.log(reviewData);
 
   try {
-    const response = await axios.put(
-      `https://localhost:7129/api/Book/addReview`,
-      reviewData
-    );
+    const response = await axios.put("/Book/addReview", reviewData);
     console.log("Review added successfully:", response.data);
     // Cập nhật lại danh sách review nếu cần
     reviewContent.value = ""; // Reset nội dung bình luận
@@ -620,17 +617,14 @@ const loadMoreReviews = async () => {
   isLoadingMore.value = true;
   try {
     const nextPage = page.value + 1;
-    const response = await axios.get(
-      `https://localhost:7129/api/Book/${productId}/reviews`,
-      {
-        params: {
-          page: nextPage,
-          perPage: perPage.value,
-          filter: filterType.value,
-          sort: sortType.value,
-        },
-      }
-    );
+    const response = await axios.get(`/Book/${productId}/reviews`, {
+      params: {
+        page: nextPage,
+        perPage: perPage.value,
+        filter: filterType.value,
+        sort: sortType.value,
+      },
+    });
 
     if (response.data.length === 0 || response.data.length < perPage.value) {
       hasMore.value = false;

@@ -3,15 +3,15 @@ import { createStore } from "vuex";
 export default createStore({
   state: {
     isAuthenticated: false, // Giả lập đăng nhập
-    role: "", // Giả lập quyền admin
+    role: "user", // Giả lập quyền admin
     isChatVisible: false, // Toggle chat
     userInfo: {
-      id: 20,
-      name: "Nguyễn Viết Tùng",
-      email: "nchinhtung@gmail.com",
-      phone: "0909090909",
-      address: "Hà Nội",
-      avatar: `https://i.pravatar.cc/150?img=20`,
+      id: 0,
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      avatar: "",
     },
   },
   mutations: {
@@ -26,13 +26,23 @@ export default createStore({
     },
     //Chat section
     showChat(state) {
-      state.isChatVisible = true;
+      if (state.isAuthenticated && state.userInfo != null) {
+        state.isChatVisible = true;
+      }
     },
     hideChat(state) {
       state.isChatVisible = false;
     },
     toggleChat(state) {
       state.isChatVisible = !state.isChatVisible;
+    },
+    SET_USER_INFO(state, userInfo) {
+      state.userInfo.id = userInfo.userId;
+      state.userInfo.name = userInfo.fullName;
+      state.userInfo.email = userInfo.email;
+      state.userInfo.phone = userInfo.phone;
+      state.userInfo.address = userInfo.address;
+      state.userInfo.avatar = userInfo.avatar;
     },
   },
   actions: {
@@ -41,6 +51,9 @@ export default createStore({
     },
     logout({ commit }) {
       commit("LOGOUT");
+    },
+    setUserInfo({ commit }, userInfo) {
+      commit("SET_USER_INFO", userInfo);
     },
   },
 });
