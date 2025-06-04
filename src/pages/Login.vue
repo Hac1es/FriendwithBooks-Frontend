@@ -59,8 +59,8 @@
 <script setup>
 import Footer from "../components/Footer.vue";
 import Header from "../components/Header/index.vue";
+import { ref, inject } from "vue";
 import axios from "../utils/axios";
-import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { jwtDecode } from "jwt-decode";
@@ -93,6 +93,34 @@ const login = async () => {
       // Lưu vào localStorage (hoặc sessionStorage)
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userInfo", JSON.stringify(decoded));
+    } else {
+      alert(response.data.message || "Đăng nhập thất bại.");
+    }
+  } catch (error) {
+    alert(
+      error.response?.data?.message ||
+        "Đăng nhập thất bại. Vui lòng thử lại sau."
+    );
+  }
+};
+
+const googleAuth = inject("googleAuth");
+
+const signInWithGoogle = async () => {
+  try {
+    const googleUser = await googleAuth.signIn();
+    const idToken = googleUser.id_token || googleUser.idToken;
+
+    // Gửi idToken lên backend
+    const response = await axios.post('/Auth/google-login', {
+      idToken,
+    });
+
+    if (response.status === 200) {
+      localStorage.setItem("token", response.data.token);
+      const decoded = jwtDecode(response.data.token);
+      alert("Đăng nhập thành công!");
+      store.dispatch("login", decoded.role);
     } else {
       alert(response.data.message || "Đăng nhập thất bại.");
     }
