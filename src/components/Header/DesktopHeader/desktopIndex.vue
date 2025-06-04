@@ -55,6 +55,18 @@
         }}</span>
       </router-link>
 
+      <!-- Nút Log out, chỉ hiển thị khi đã đăng nhập -->
+      <button
+        v-if="auth && userInfo"
+        class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202] focus:outline-none"
+        @click="logout"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
+        </svg>
+        <span class="text-xs">Log out</span>
+      </button>
+
       <!-- Giỏ hàng -->
       <router-link
         :to="dynamicRoute.cart"
@@ -101,6 +113,12 @@ const store = useStore();
 const auth = computed(() => store.state.isAuthenticated);
 const userInfo = computed(() => store.state.userInfo);
 let searchTimeout = null;
+
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("userInfo");
+  store.dispatch("logout");
+}
 
 function handleSearch(val) {
   searchText.value = val;

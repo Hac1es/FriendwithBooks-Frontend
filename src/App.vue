@@ -41,5 +41,8 @@ watch([isAuthenticated, role], ([newAuth, newRole]) => {
   } else if (newAuth && newRole === "user") {
     router.push("/");
   }
+  else {
+    router.push("/");
+  }
 });
 </script>

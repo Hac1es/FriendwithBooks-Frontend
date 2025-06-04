@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "https://localhost:7129/api",
+  baseURL: "http://localhost:5240/api",
 });
 
 instance.interceptors.request.use((config) => {
