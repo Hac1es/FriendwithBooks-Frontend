@@ -1,7 +1,9 @@
 <template>
   <Header />
   <div class="min-h-screen bg-[#fdf9e5] flex items-center justify-center px-4">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm flex gap-8 mt-8 mb-8">
+    <div
+      class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm flex gap-8 mt-8 mb-8"
+    >
       <div class="flex-1">
         <p class="block text-gray-600 mb-2">Email</p>
         <input
@@ -74,7 +76,7 @@ import Footer from "../components/Footer.vue";
 import Header from "../components/Header/index.vue";
 import { ref, inject } from "vue";
 import { useRouter } from "vue-router";
-import axios from "axios";
+import axios from "../utils/axios";
 import { useStore } from "vuex";
 import { jwtDecode } from "jwt-decode";
 
@@ -87,7 +89,13 @@ const phone = ref("");
 const address = ref("");
 
 const registerWithEmail = async () => {
-  if (!email.value || !password.value || !fullName.value || !phone.value || !address.value) {
+  if (
+    !email.value ||
+    !password.value ||
+    !fullName.value ||
+    !phone.value ||
+    !address.value
+  ) {
     alert("Vui lòng nhập đầy đủ thông tin.");
     return;
   }
@@ -112,7 +120,7 @@ const registerWithEmail = async () => {
 
   try {
     // Gọi API đăng ký phía back-end
-    const response = await axios.post("/api/Auth/register", {
+    const response = await axios.post("/Auth/register", {
       Email: email.value,
       Password: password.value,
       FullName: fullName.value,
@@ -122,18 +130,20 @@ const registerWithEmail = async () => {
 
     if (response.status === 200) {
       // Lưu token vào localStorage (hoặc sessionStorage)
-    localStorage.setItem("token", response.data.token);
-    // Giải mã token để lấy role
-    const decoded = jwtDecode(response.data.token);
-    alert("Đăng ký thành công!");
-    store.dispatch("login", decoded.role); // Gọi action login của store
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("userInfo", JSON.stringify(response.data.user));
+      // Giải mã token để lấy role
+      const decoded = jwtDecode(response.data.token);
+      alert("Đăng ký thành công!");
+      store.dispatch("login", decoded.role);
+      // Lưu thông tin user vào store
+      store.dispatch("setUserInfo", response.data.user); // Gọi action login của store
     } else {
       alert(response.data.message || "Đăng ký thất bại.");
     }
   } catch (error) {
     alert(
-      error.response?.data?.message ||
-        "Đăng ký thất bại. Vui lòng thử lại sau."
+      error.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại sau."
     );
   }
 };

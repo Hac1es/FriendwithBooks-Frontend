@@ -67,7 +67,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import axios from "axios";
+import axios from "../utils/axios";
 import Header from "../components/Header/index.vue";
 import Breadcrumb from "../components/Breadcrumb.vue";
 import Filter from "../components/Filter/index.vue";
@@ -131,9 +131,7 @@ const fetchProducts = async (params = {}) => {
       `https://localhost:7129/api/Book/query?${queryParams.toString()}`
     );
 
-    const response = await axios.get(
-      `https://localhost:7129/api/Book/query?${queryParams.toString()}`
-    );
+    const response = await axios.get(`/Book/query?${queryParams.toString()}`);
     const data = response.data;
 
     products.value = data.items.map((book) => ({

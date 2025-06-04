@@ -6,8 +6,8 @@ import ChatInterface from "../components/ChatInterface.vue";
 
 <template>
   <div class="min-h-screen flex flex-col">
-    <Header/>
-    <ChatInterface/>
-    <Footer/>
+    <Header />
+    <ChatInterface />
+    <Footer />
   </div>
 </template>

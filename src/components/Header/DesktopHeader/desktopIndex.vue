@@ -37,7 +37,7 @@
         class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
       >
         <svg
-          v-if="!auth && userInfo"
+          v-if="!auth || !userInfo"
           xmlns="http://www.w3.org/2000/svg"
           class="w-6 h-6 mb-1"
           fill="currentColor"
@@ -50,15 +50,9 @@
         <div v-else class="w-6 h-6 mb-1">
           <img :src="userInfo.avatar" class="rounded-full object-cover" />
         </div>
-        <span
-          class="text-xs"
-          :class="auth && userInfo != null ? 'font-bold' : ''"
-          >{{
-            auth && userInfo != null
-              ? userInfo.name.trim().split(" ").pop()
-              : "Tài khoản"
-          }}</span
-        >
+        <span class="text-xs" :class="auth && userInfo ? 'font-bold' : ''">{{
+          auth && userInfo ? userInfo.name.trim().split(" ").pop() : "Tài khoản"
+        }}</span>
       </router-link>
 
       <!-- Giỏ hàng -->
@@ -93,7 +87,7 @@ import Navigation from "./Navigation.vue";
 import SearchBar from "../../SearchBar.vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import axios from "axios";
+import axios from "../../../utils/axios";
 
 let dynamicRoute = ref({
   profile: "/UserProfile",
@@ -113,12 +107,10 @@ function handleSearch(val) {
   clearTimeout(searchTimeout);
   if (val.length > 0) {
     searchTimeout = setTimeout(() => {
-      axios
-        .get(`https://localhost:7129/api/Book/query?name=${val}`)
-        .then((res) => {
-          suggestionList.value = (res.data.items || []).slice(0, 7);
-          showSuggestions.value = suggestionList.value.length > 0;
-        });
+      axios.get(`/Book/query?name=${val}`).then((res) => {
+        suggestionList.value = (res.data.items || []).slice(0, 7);
+        showSuggestions.value = suggestionList.value.length > 0;
+      });
     }, 500);
   } else {
     showSuggestions.value = false;
