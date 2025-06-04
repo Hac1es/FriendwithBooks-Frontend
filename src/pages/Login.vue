@@ -101,7 +101,6 @@ const login = async () => {
       error.response?.data?.message ||
         "Đăng nhập thất bại. Vui lòng thử lại sau."
     );
-    console.log(error);
   }
 };
 

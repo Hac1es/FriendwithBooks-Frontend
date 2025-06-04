@@ -1,6 +1,6 @@
 <template>
   <router-view :key="$route.fullPath" />
-  <ChatPopup />
+  <ChatPopup v-show="isAuthenticated" />
 </template>
 
 <script setup>
