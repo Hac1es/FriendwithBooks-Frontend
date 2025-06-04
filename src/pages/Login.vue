@@ -113,7 +113,7 @@ const signInWithGoogle = async () => {
     const idToken = googleUser.id_token || googleUser.idToken;
 
     // Gửi idToken lên backend
-    const response = await axios.post('/api/Auth/google-login', {
+    const response = await axios.post('/Auth/google-login', {
       idToken,
     });
 
