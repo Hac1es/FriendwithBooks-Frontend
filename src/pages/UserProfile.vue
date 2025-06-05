@@ -8,13 +8,13 @@
           class="w-40 h-40 rounded-full overflow-hidden border border-gray-300 mb-8"
         >
           <img
-            src="/Picture3.png"
+            :src="userProfile.avatar"
             alt="Avatar"
             class="w-full h-full object-cover"
           />
         </div>
         <h2 class="text-xl font-semibold text-[#7a3c1a] mb-6 text-center">
-          {{ userProfile.name }}
+          {{ userProfile.fullName }}
         </h2>
         <button
           v-if="!isEditing"
@@ -31,21 +31,11 @@
           >
             <div>
               <label class="block text-xs text-[#7a3c1a] mb-1 font-semibold"
-                >Tên</label
+                >Họ và tên</label
               >
               <input
                 type="text"
-                v-model="userProfile.name"
-                class="w-full px-2 py-1 border border-gray-400 rounded-md bg-black text-white text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-[#7a3c1a] mb-1 font-semibold"
-                >Email</label
-              >
-              <input
-                type="email"
-                v-model="userProfile.email"
+                v-model="userProfile.fullName"
                 class="w-full px-2 py-1 border border-gray-400 rounded-md bg-black text-white text-sm"
               />
             </div>
@@ -61,26 +51,23 @@
             </div>
             <div>
               <label class="block text-xs text-[#7a3c1a] mb-1 font-semibold"
-                >Địa chỉ nhận hàng</label
+                >Địa chỉ</label
               >
-              <div
-                v-for="(addr, idx) in userProfile.address"
-                :key="idx"
-                class="mb-2"
+              <input
+                type="text"
+                v-model="userProfile.address"
+                class="w-full px-2 py-1 border border-gray-400 rounded-md bg-black text-white text-sm"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-[#7a3c1a] mb-1 font-semibold"
+                >Đường dẫn avatar</label
               >
-                <input
-                  type="text"
-                  v-model="userProfile.address[idx]"
-                  class="w-full px-2 py-1 border border-gray-400 rounded-md bg-black text-white text-sm"
-                />
-              </div>
-              <a
-                href="#"
-                class="text-xs text-[#8b0000] hover:text-red-800 flex items-center transition"
-                @click.prevent="addAddress"
-              >
-                <span>+ Thêm...</span>
-              </a>
+              <input
+                type="text"
+                v-model="userProfile.avatar"
+                class="w-full px-2 py-1 border border-gray-400 rounded-md bg-black text-white text-sm"
+              />
             </div>
             <div class="flex gap-2 mt-2 justify-center">
               <button
@@ -217,17 +204,40 @@
 </template>
 <script setup>
 import { ref, reactive } from "vue";
+import { useStore } from "vuex";
+import { jwtDecode } from "jwt-decode";
 import Footer from "../components/Footer.vue";
 import Header from "../components/Header/index.vue";
+import axios from "../utils/axios.js";
 
 const isEditing = ref(false);
+const store = useStore();
 
-const userProfile = reactive({
-  name: "Anh Liêm",
-  email: "europequalitowc@goat.com",
-  phone: "0123645987",
-  address: ["151 Linh Trung, Thủ Đức, TPHCM", "125 Ngô Gia Tự, Quận 10, TPHCM"],
-});
+// Lấy userInfo từ localStorage (đã lưu khi đăng nhập)
+function getUserInfoFromToken() {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    if (userInfo) {
+      return {
+        fullName: userInfo.fullName,
+        phone: userInfo.phone,
+        address: userInfo.address,
+        avatar: userInfo.avatar,
+      };
+    }
+  } catch (e) {
+    // Nếu lỗi thì trả về mặc định
+  }
+  return {
+    fullName: "",
+    phone: "",
+    address: "",
+    avatar: "",
+  };
+}
+
+const userProfile = reactive(getUserInfoFromToken());
+
 
 const deliveredBooks = ref([
   {
@@ -255,15 +265,52 @@ const deliveringBooks = ref([
   },
 ]);
 
-function saveProfile() {
-  isEditing.value = false;
+async function saveProfile() {
+  if (!userProfile.fullName || !userProfile.phone || !userProfile.address || !userProfile.avatar) {
+    alert("Vui lòng điền đầy đủ thông tin.");
+    return;
+  }
+  // Kiểm tra số điện thoại hợp lệ: bắt đầu bằng 0 và có đúng 10 chữ số
+  const phoneRegex = /^0\d{9}$/;
+  if (!phoneRegex.test(userProfile.phone)) {
+    alert("Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số.");
+    return;
+  }
+  
+  try {
+    // Gửi request cập nhật thông tin lên server
+    const response = await axios.put("/Auth/updateProfile", {
+        FullName: userProfile.fullName,
+        Phone: userProfile.phone,
+        Address: userProfile.address,
+        Avatar: userProfile.avatar,
+      }
+    );
+    if (response.status === 200) {
+      const decoded = jwtDecode(response.data.token);
+      store.dispatch("setUserInfo", decoded);
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("userInfo", JSON.stringify(decoded));
+      isEditing.value = false;
+      alert("Cập nhật thông tin thành công!");
+    } else {
+      alert(response.data.message || "Cập nhật thất bại.");
+    }
+  } catch (error) {
+    alert(
+      error.response?.data?.message ||
+        "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại."
+    );
+  }
 }
 
 function cancelEdit() {
   isEditing.value = false;
-}
-
-function addAddress() {
-  userProfile.address.push("");
+  // Reset lại thông tin nếu hủy chỉnh sửa
+  const info = getUserInfoFromToken();
+  userProfile.fullName = info.fullName;
+  userProfile.phone = info.phone;
+  userProfile.address = info.address;
+  userProfile.avatar = info.avatar;
 }
 </script>
