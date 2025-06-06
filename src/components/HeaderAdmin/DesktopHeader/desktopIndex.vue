@@ -1,10 +1,9 @@
 <template>
-  <div class="w-full md:w-[calc(100%-224px)] mx-auto py-4 flex justify-between">
+  <div class="w-full md:w-[calc(100%-224px)] mx-auto py-0 flex justify-between">
     <div class="w-[214px] h-[77px]">
       <img src="/Logo.png" class="object-cover w-full h-full" />
     </div>
     <div class="flex gap-4 justify-between items-center">
-      <SearchBar />
       <button
         class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
       >

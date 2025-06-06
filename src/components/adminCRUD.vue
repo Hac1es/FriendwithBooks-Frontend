@@ -1,22 +1,18 @@
 <template>
-  <div class="min-h-screen py-6">
+  <div class="min-h-screen py-3">
+
     <!-- Main Content -->
     <div class="container mx-auto px-4 flex flex-col md:flex-row">
       <!-- Sidebar Filters -->
       <div class="hidden md:block">
-        <Filter @filterChange="handleFilterChange" />
+        <Filter class="mr-4" />
       </div>
-      <div class="md:hidden block mb-4">
-        <MobileFilter @change="handleFilterChange" />
-      </div>
-
       <!-- Product Grid -->
       <div class="flex-1">
         <!-- Admin Controls -->
-        <div class="mb-6 flex justify-between items-center">
-          <h1 class="text-xl font-bold text-amber-800">Quản lý sản phẩm</h1>
-          <div class="flex items-center">
-            <div class="relative mr-4">
+        <div class="mb-4 flex justify-between items-center">
+          <div class="w-full flex items-center">
+            <div class="relative w-full mr-4">
               <input 
                 type="text" 
                 v-model="searchQuery"
@@ -742,6 +738,7 @@ const handleFileUpload = async (file, imageKey) => {
   }
 };
 
+// Update the uploadImageFile function to work with the API
 const uploadImageFile = async (file, imageKey) => {
   try {
     isUploading.value = true;
@@ -761,7 +758,7 @@ const uploadImageFile = async (file, imageKey) => {
       }
     });
 
-    // Update the corresponding URL field
+    // Update the corresponding URL field with proper casing for the API
     const urlField = imageKey === 'img1' ? 'imgURL1' : 
                     imageKey === 'img2' ? 'imgURL2' : 'imgURL3';
     editingBook.value[urlField] = response.data.imageUrl;
@@ -828,7 +825,7 @@ const resetFilters = () => {
   fetchBooks();
 };
 
-// Fetch books from API
+// Fetch books from API - Updated to use admin endpoint
 const fetchBooks = async () => {
   try {
     isLoading.value = true;
@@ -836,34 +833,14 @@ const fetchBooks = async () => {
     
     const queryParams = new URLSearchParams();
     queryParams.append("page", currentPage.value.toString());
+    queryParams.append("pageSize", pageSize.value.toString());
     
     if (searchQuery.value) {
-      queryParams.append("name", searchQuery.value);
+      queryParams.append("search", searchQuery.value);
     }
     
-    if (currentFilters.value.promo) {
-      queryParams.append("promo", currentFilters.value.promo);
-    }
-    if (currentFilters.value.price) {
-      queryParams.append("price", currentFilters.value.price);
-    }
-    if (currentFilters.value.priceMin) {
-      queryParams.append("priceMin", currentFilters.value.priceMin);
-    }
-    if (currentFilters.value.priceMax) {
-      queryParams.append("priceMax", currentFilters.value.priceMax);
-    }
-    if (currentFilters.value.age) {
-      queryParams.append("age", currentFilters.value.age);
-    }
-    if (currentFilters.value.type) {
-      queryParams.append("type", currentFilters.value.type);
-    }
-    if (currentFilters.value.selectedCategoryId) {
-      queryParams.append("category", currentFilters.value.selectedCategoryId);
-    }
-
-    const response = await axios.get(`/Book/query?${queryParams.toString()}`);
+    // Use admin products endpoint
+    const response = await axios.get(`/admin/products?${queryParams.toString()}`);
     const data = response.data;
 
     filteredBooks.value = data.items.map((book) => ({
@@ -873,9 +850,19 @@ const fetchBooks = async () => {
       price: book.price,
       discount: book.discount || 0,
       imgURL1: book.imgURL1,
+      imgURL2: book.imgURL2,
+      imgURL3: book.imgURL3,
       stock: book.stock || 0,
       avgRating: book.avgRating || 0,
       totalRating: book.totalRating || 0,
+      description: book.description || '',
+      supplier: book.supplier || '',
+      publishYear: book.publishYear || new Date().getFullYear(),
+      pageNum: book.pageNum || 0,
+      language: book.language || 'Tiếng Việt',
+      binding: book.binding || 'Bìa mềm',
+      ageGroup: book.ageGroup || 'all',
+      categoryID: book.categoryID || null,
       discountPrice: book.discount > 0 ? 
         (book.price * (100 - book.discount) / 100) : book.price,
       originalPrice: book.price
@@ -914,12 +901,7 @@ const fetchCategories = async () => {
   }
 };
 
-// Handle filter changes
-const handleFilterChange = ({ filters, categoryTree }) => {
-  currentFilters.value = filters;
-  currentPage.value = 1;
-  fetchBooks();
-};
+
 
 // Search books
 const searchBooks = () => {
@@ -968,11 +950,11 @@ const getCategoryId = (parent, sub) => {
   return categoryMappings[parent]?.[sub];
 };
 
-// Fetch detailed book info
+// Fetch detailed book info - Updated to use admin endpoint
 const fetchProductDetails = async (bookId) => {
   try {
-    const response = await axios.get(`/Book/${bookId}`);
-    return response.data.book;
+    const response = await axios.get(`/admin/products/${bookId}`);
+    return response.data;
   } catch (err) {
     console.error('Error fetching book details:', err);
     throw new Error('Không thể tải chi tiết sách.');
@@ -1001,6 +983,7 @@ const openQuickView = async (book) => {
 const showBookModal = ref(false);
 const isEditMode = ref(false);
 const editingBook = ref({
+  bookID: null,
   title: '',
   price: 0,
   discount: 0,
@@ -1016,7 +999,9 @@ const editingBook = ref({
   imgURL1: '',
   imgURL2: '',
   imgURL3: '',
-  description: ''
+  description: '',
+  avgRating: 0,
+  totalRating: 0
 });
 
 // Reset image states when modal opens/closes
@@ -1031,6 +1016,7 @@ const resetImageStates = () => {
 const openAddBookModal = () => {
   isEditMode.value = false;
   editingBook.value = {
+    bookID: null,
     title: '',
     price: 0,
     discount: 0,
@@ -1046,7 +1032,9 @@ const openAddBookModal = () => {
     imgURL1: '',
     imgURL2: '',
     imgURL3: '',
-    description: ''
+    description: '',
+    avgRating: 0,
+    totalRating: 0
   };
   resetImageStates();
   showBookModal.value = true;
@@ -1055,7 +1043,29 @@ const openAddBookModal = () => {
 // Open edit book modal
 const openEditBookModal = (book) => {
   isEditMode.value = true;
-  editingBook.value = { ...book };
+  
+  // Map the book data to the editing form with proper field names
+  editingBook.value = {
+    bookID: book.bookID,
+    title: book.title || '',
+    author: book.author || '',
+    description: book.description || '',
+    price: Number(book.price) || 0,
+    stock: Number(book.stock) || 0,
+    categoryID: Number(book.categoryID) || allCategories.value[0]?.categoryID || null,
+    discount: Number(book.discount) || 0,
+    imgURL1: book.imgURL1 || '',
+    imgURL2: book.imgURL2 || '',
+    imgURL3: book.imgURL3 || '',
+    supplier: book.supplier || '',
+    publishYear: Number(book.publishYear) || new Date().getFullYear(),
+    pageNum: Number(book.pageNum) || 0,
+    language: book.language || 'Tiếng Việt',
+    binding: book.binding || 'Bìa mềm',
+    ageGroup: book.ageGroup || 'all',
+    avgRating: Number(book.avgRating) || 0,
+    totalRating: Number(book.totalRating) || 0
+  };
   
   // Set image previews for existing images
   imagePreviews.value = {
@@ -1072,25 +1082,148 @@ const openEditBookModal = (book) => {
   quickViewBook.value = null;
 };
 
-// Save book
+// Save book - Updated to use admin endpoints
 const saveBook = async () => {
   isLoading.value = true;
   error.value = null;
   
   try {
-    if (isEditMode.value) {
-      await axios.put(`/admin/products/${editingBook.value.bookID}`, editingBook.value);
-    } else {
-      await axios.post(`/admin/products`, editingBook.value);
+    // Validate required fields
+    if (!editingBook.value.title || !editingBook.value.author || !editingBook.value.price) {
+      throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc (Tiêu đề, Tác giả, Giá)');
+    }
+
+    // Create the book object with exact structure expected by the API
+    const bookData = {
+      // Only include BookID for updates
+      ...(isEditMode.value && editingBook.value.bookID && { bookID: Number(editingBook.value.bookID) }),
+      
+      title: String(editingBook.value.title).trim(),
+      author: String(editingBook.value.author).trim(),
+      description: String(editingBook.value.description || '').trim(),
+      price: Number(editingBook.value.price),
+      stock: Number(editingBook.value.stock) || 0,
+      categoryID: Number(editingBook.value.categoryID),
+      discount: Number(editingBook.value.discount) || 0,
+      
+      // Image URLs - ensure they're strings
+      imgURL1: String(editingBook.value.imgURL1 || ''),
+      imgURL2: String(editingBook.value.imgURL2 || ''),
+      imgURL3: String(editingBook.value.imgURL3 || ''),
+      
+      // Additional fields
+      supplier: String(editingBook.value.supplier || '').trim(),
+      publishYear: Number(editingBook.value.publishYear) || new Date().getFullYear(),
+      pageNum: Number(editingBook.value.pageNum) || 0,
+      language: String(editingBook.value.language || 'Tiếng Việt').trim(),
+      binding: String(editingBook.value.binding || 'Bìa mềm').trim(),
+      ageGroup: String(editingBook.value.ageGroup || 'all').trim(),
+      
+      // Default values for rating fields
+      avgRating: 0,
+      totalRating: 0
+    };
+
+    // Additional validation
+    if (bookData.price <= 0) {
+      throw new Error('Giá sách phải lớn hơn 0');
     }
     
+    if (bookData.discount < 0 || bookData.discount > 100) {
+      throw new Error('Giảm giá phải từ 0% đến 100%');
+    }
+    
+    if (bookData.stock < 0) {
+      throw new Error('Số lượng tồn kho không thể âm');
+    }
+    
+    if (!bookData.categoryID || bookData.categoryID <= 0) {
+      throw new Error('Vui lòng chọn danh mục');
+    }
+
+    console.log('Sending book data:', JSON.stringify(bookData, null, 2));
+
+    let response;
+    
+    if (isEditMode.value && editingBook.value.bookID) {
+      // Update existing book using admin endpoint
+      response = await axios.put(`/admin/products/${editingBook.value.bookID}`, bookData);
+    } else {
+      // Add new book using admin endpoint - remove bookID for creation
+      const { bookID, ...createData } = bookData;
+      response = await axios.post(`/admin/products`, createData);
+    }
+    
+    console.log('API Response:', response.data);
+    
+    // Refresh the book list
     await fetchBooks();
+    
+    // Close modal
     showBookModal.value = false;
+    resetImageStates();
+    
+    // Show success message
     alert(isEditMode.value ? 'Đã cập nhật sách thành công!' : 'Đã thêm sách mới thành công!');
     
   } catch (err) {
     console.error('Error saving book:', err);
-    error.value = 'Có lỗi xảy ra khi lưu sách. Vui lòng thử lại.';
+    
+    // Handle specific error cases
+    if (err.response) {
+      // Server responded with error status
+      const status = err.response.status;
+      const data = err.response.data;
+      
+      console.error('Full error response:', {
+        status,
+        data,
+        headers: err.response.headers,
+        config: err.response.config
+      });
+      
+      if (status === 400) {
+        // Try to extract more specific error information
+        let errorMessage = 'Dữ liệu không hợp lệ. ';
+        
+        if (data.errors) {
+          // Handle validation errors
+          const validationErrors = [];
+          Object.keys(data.errors).forEach(field => {
+            validationErrors.push(`${field}: ${data.errors[field].join(', ')}`);
+          });
+          errorMessage += validationErrors.join('; ');
+        } else if (data.message) {
+          errorMessage += data.message;
+        } else if (typeof data === 'string') {
+          errorMessage += data;
+        } else {
+          errorMessage += 'Vui lòng kiểm tra lại thông tin đã nhập.';
+        }
+        
+        error.value = errorMessage;
+      } else if (status === 401) {
+        error.value = 'Bạn không có quyền thực hiện thao tác này.';
+      } else if (status === 404) {
+        error.value = 'Không tìm thấy API endpoint. Vui lòng liên hệ admin.';
+      } else if (status === 422) {
+        error.value = data.message || 'Dữ liệu không đúng định dạng.';
+      } else if (status === 500) {
+        error.value = 'Lỗi server. Vui lòng thử lại sau.';
+      } else {
+        error.value = data.message || `Lỗi HTTP ${status}. Vui lòng thử lại.`;
+      }
+    } else if (err.request) {
+      // Network error
+      error.value = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+      console.error('Network error:', err.request);
+    } else if (err.message) {
+      // Custom error message
+      error.value = err.message;
+    } else {
+      // Unknown error
+      error.value = 'Có lỗi không xác định xảy ra. Vui lòng thử lại.';
+    }
   } finally {
     isLoading.value = false;
   }
@@ -1106,7 +1239,7 @@ const confirmDeleteBook = (book) => {
   quickViewBook.value = null;
 };
 
-// Delete book
+// Delete book - Updated to use admin endpoint
 const deleteBook = async () => {
   if (!bookToDelete.value) return;
   
@@ -1114,12 +1247,28 @@ const deleteBook = async () => {
   error.value = null;
   
   try {
+    // Use admin delete endpoint
     await axios.delete(`/admin/products/${bookToDelete.value.bookID}`);
+    
     await fetchBooks();
     alert('Đã xóa sách thành công!');
   } catch (err) {
     console.error('Error deleting book:', err);
-    error.value = 'Có lỗi xảy ra khi xóa sách. Vui lòng thử lại.';
+    
+    if (err.response) {
+      const status = err.response.status;
+      const data = err.response.data;
+      
+      if (status === 404) {
+        error.value = 'Không tìm thấy sách cần xóa.';
+      } else if (status === 401) {
+        error.value = 'Bạn không có quyền xóa sách.';
+      } else {
+        error.value = data.message || 'Có lỗi xảy ra khi xóa sách.';
+      }
+    } else {
+      error.value = 'Không thể kết nối đến server. Vui lòng thử lại.';
+    }
   } finally {
     isLoading.value = false;
     showDeleteConfirmation.value = false;
@@ -1127,8 +1276,27 @@ const deleteBook = async () => {
   }
 };
 
-// Initialize
+// Add function to test API endpoints
+const testApiEndpoints = async () => {
+  console.log('Testing API endpoints...');
+  
+  try {
+    // Test admin products endpoint
+    const adminResponse = await axios.get('/admin/products?page=1&pageSize=5');
+    console.log('Admin products API works:', adminResponse.status);
+    
+    // Test categories endpoint
+    const categoriesResponse = await axios.get('/Book/category');
+    console.log('Categories API works:', categoriesResponse.status);
+    
+  } catch (err) {
+    console.error('API test failed:', err);
+  }
+};
+
+// Call test function on mount for debugging
 onMounted(async () => {
+  await testApiEndpoints();
   await fetchCategories();
   await fetchBooks();
 });
