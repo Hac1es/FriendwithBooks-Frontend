@@ -4,6 +4,7 @@ export default createStore({
   state: {
     isAuthenticated: false, // Giả lập đăng nhập
     role: "", // Giả lập quyền admin
+
     isChatVisible: false, // Toggle chat
     userInfo: {
       id: 0,

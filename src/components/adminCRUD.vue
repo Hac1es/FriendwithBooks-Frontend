@@ -1,124 +1,29 @@
 <template>
-  <div class="min-h-screen py-6">
+  <div class="min-h-screen py-3">
+
     <!-- Main Content -->
     <div class="container mx-auto px-4 flex flex-col md:flex-row">
-      <!-- Mobile Filter Toggle -->
-      <div class="md:hidden mb-4">
-        <button 
-          class="w-full py-2 px-4 bg-amber-100 rounded-md flex items-center justify-between"
-          @click="showMobileFilters = !showMobileFilters"
-        >
-          <span class="font-medium">Bộ lọc</span>
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            class="h-5 w-5" 
-            :class="{ 'transform rotate-180': showMobileFilters }"
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-      </div>
-
       <!-- Sidebar Filters -->
-      <div 
-        class="w-full md:w-64 md:pr-6 mb-6 md:mb-0"
-        :class="{ 'hidden': !showMobileFilters }"
-        v-show="showMobileFilters || !isMobile"
-      >
-        <div class="mb-6">
-          <h3 class="font-bold mb-3">BỘ LỌC</h3>
-          <div class="flex items-center mb-2">
-            <input 
-              type="checkbox" 
-              class="h-4 w-4 rounded border-gray-300 text-amber-600" 
-              id="sale" 
-              v-model="filters.onSale"
-              @change="applyFilters"
-            />
-            <label for="sale" class="ml-2 text-sm">Khuyến mãi</label>
-          </div>
-        </div>
-
-        <div class="mb-6">
-          <h3 class="font-bold mb-3">Loại sách</h3>
-          <div v-for="(category, index) in bookCategories" :key="index" class="flex items-center mb-2">
-            <input 
-              type="checkbox" 
-              class="h-4 w-4 rounded border-gray-300 text-amber-600" 
-              :id="'cat-' + index" 
-              v-model="filters.categories[index]"
-              @change="applyFilters"
-            />
-            <label :for="'cat-' + index" class="ml-2 text-sm">{{ category }}</label>
-          </div>
-        </div>
-
-        <div class="mb-6">
-          <h3 class="font-bold mb-3">Giá</h3>
-          <div v-for="(price, index) in priceRanges" :key="index" class="flex items-center mb-2">
-            <input 
-              type="checkbox" 
-              class="h-4 w-4 rounded border-gray-300 text-amber-600" 
-              :id="'price-' + index" 
-              v-model="filters.priceRanges[index]"
-              @change="applyFilters"
-            />
-            <label :for="'price-' + index" class="ml-2 text-sm">{{ price }}</label>
-          </div>
-        </div>
-
-        <div class="mb-6">
-          <h3 class="font-bold mb-3">Độ tuổi:</h3>
-          <div v-for="(age, index) in ageRanges" :key="index" class="flex items-center mb-2">
-            <input 
-              type="checkbox" 
-              class="h-4 w-4 rounded border-gray-300 text-amber-600" 
-              :id="'age-' + index" 
-              v-model="filters.ageRanges[index]"
-              @change="applyFilters"
-            />
-            <label :for="'age-' + index" class="ml-2 text-sm">{{ age }}</label>
-          </div>
-        </div>
-
-        <div class="mb-6">
-          <h3 class="font-bold mb-3">Hình thức:</h3>
-          <div v-for="(format, index) in bookFormats" :key="index" class="flex items-center mb-2">
-            <input 
-              type="checkbox" 
-              class="h-4 w-4 rounded border-gray-300 text-amber-600" 
-              :id="'format-' + index" 
-              v-model="filters.formats[index]"
-              @change="applyFilters"
-            />
-            <label :for="'format-' + index" class="ml-2 text-sm">{{ format }}</label>
-          </div>
-        </div>
-
-        <button 
-          class="w-full py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 md:hidden"
-          @click="showMobileFilters = false"
-        >
-          Áp dụng
-        </button>
+      <div class="hidden md:block">
+        <Filter 
+          class="mr-4" 
+          @filter-change="handleFilterChange"
+          :categories="allCategories"
+        />
       </div>
-
       <!-- Product Grid -->
       <div class="flex-1">
         <!-- Admin Controls -->
-        <div class="mb-6 flex justify-between items-center">
-          <h1 class="text-xl font-bold text-amber-800">Quản lý sản phẩm</h1>
-          <div class="flex items-center">
-            <div class="relative mr-4">
+        <div class="mb-4 flex justify-between items-center">
+          <div class="w-full flex items-center">
+            <div class="relative w-full mr-4">
               <input 
                 type="text" 
                 v-model="searchQuery"
-                placeholder="Tìm kiếm sản phẩm" 
+                placeholder="Tìm kiếm theo tên sách hoặc ID sản phẩm" 
                 class="w-full py-2 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                 @keyup.enter="searchBooks"
+                @input="onSearchInput"
               />
               <button 
                 class="absolute right-2 top-1/2 transform -translate-y-1/2"
@@ -128,17 +33,76 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
+              <!-- Clear search button -->
+              <button 
+                v-if="searchQuery"
+                class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                @click="clearSearch"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <button 
-              class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded transition-colors duration-200 flex items-center"
-              @click="openAddBookModal"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              THÊM
-            </button>
+            <div class="flex space-x-2">
+              <button 
+                class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-sm transition-colors duration-200 flex items-center"
+                @click="openAddBookModal"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                THÊM SÁCH
+              </button>
+              <button 
+                class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm transition-colors duration-200 flex items-center"
+                @click="openFlashSaleManagement"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                FLASH SALE
+              </button>
+            </div>
           </div>
+        </div>
+
+        <!-- Active Filters Display -->
+        <div v-if="hasActiveFilters" class="mb-4 flex flex-wrap gap-2">
+          <span class="text-sm text-gray-600">Bộ lọc đang áp dụng:</span>
+          <span v-if="currentFilters.promo" class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+            Khuyến mãi
+            <button @click="removeFilter('promo')" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+          </span>
+          <span v-if="currentFilters.price" class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+            Giá: {{ getPriceFilterText(currentFilters.price) }}
+            <button @click="removeFilter('price')" class="ml-1 text-green-600 hover:text-green-800">×</button>
+          </span>
+          <span v-if="currentFilters.age" class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+            Độ tuổi: {{ getAgeFilterText(currentFilters.age) }}
+            <button @click="removeFilter('age')" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
+          </span>
+          <span v-if="currentFilters.type" class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+            Hình thức: {{ getTypeFilterText(currentFilters.type) }}
+            <button @click="removeFilter('type')" class="ml-1 text-orange-600 hover:text-orange-800">×</button>
+          </span>
+          <span v-if="currentFilters.selectedCategoryId" class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">
+            Danh mục: {{ getCategoryName(currentFilters.selectedCategoryId) }}
+            <button @click="removeFilter('category')" class="ml-1 text-indigo-600 hover:text-indigo-800">×</button>
+          </span>
+          <button @click="clearAllFilters" class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full hover:bg-red-200">
+            Xóa tất cả
+          </button>
+        </div>
+
+        <!-- Search Results Info -->
+        <div v-if="searchQuery && !isLoading" class="mb-4 text-sm text-gray-600">
+          <span v-if="totalItems > 0">
+            Tìm thấy {{ totalItems }} kết quả cho "{{ searchQuery }}"
+          </span>
+          <span v-else>
+            Không tìm thấy kết quả nào cho "{{ searchQuery }}"
+          </span>
         </div>
 
         <!-- Loading State -->
@@ -158,24 +122,36 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h3 class="mt-4 text-lg font-medium text-gray-900">Không tìm thấy sách</h3>
-          <p class="mt-1 text-gray-500">Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác.</p>
+          <p class="mt-1 text-gray-500">
+            {{ searchQuery ? 'Thử tìm kiếm với từ khóa khác.' : 'Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác.' }}
+          </p>
           <button 
             class="mt-4 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
             @click="resetFilters"
           >
-            Xóa bộ lọc
+            {{ searchQuery ? 'Xóa tìm kiếm' : 'Xóa bộ lọc' }}
           </button>
         </div>
         
         <!-- Product Grid -->
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div 
-            v-for="(book, index) in paginatedBooks" 
-            :key="index" 
-            class="bg-white rounded-lg shadow-sm overflow-hidden"
+            v-for="book in filteredBooks" 
+            :key="book.bookID" 
+            class="bg-white rounded-lg shadow-sm overflow-hidden relative"
           >
+            <!-- Product ID Badge -->
+            <div class="absolute top-2 left-2 bg-amber-600 text-white text-xs px-2 py-1 rounded-md font-medium z-10">
+              ID: {{ book.bookID }}
+            </div>
+            
+            <!-- Flash Sale Badge -->
+            <div v-if="book.isFlashSale" class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-md font-medium z-10 animate-pulse">
+              FLASH SALE
+            </div>
+            
             <div class="h-64 overflow-hidden relative">
-              <img :src="book.image" alt="Book cover" class="w-full h-full object-cover" />
+              <img :src="book.imgURL1 || '/placeholder.svg?height=256&width=192'" alt="Book cover" class="w-full h-full object-cover" />
               
               <!-- Quick View Button -->
               <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
@@ -190,10 +166,15 @@
             <div class="p-4">
               <h3 class="font-medium text-center mb-2">{{ book.title }}</h3>
               <div class="flex justify-center items-center space-x-2">
-                <span class="font-medium">{{ book.discountPrice }} đ</span>
-                <span class="bg-red-800 text-white text-xs px-2 py-0.5 rounded">-{{ book.discount }}%</span>
+                <span class="font-medium">{{ formatPrice(calculateDiscountPrice(book.price, book.discount)) }} đ</span>
+                <span v-if="book.discount > 0" class="bg-red-800 text-white text-xs px-2 py-0.5 rounded">-{{ book.discount }}%</span>
               </div>
-              <div class="text-gray-500 text-sm text-center line-through">{{ book.originalPrice }} đ</div>
+              <div v-if="book.discount > 0" class="text-gray-500 text-sm text-center line-through">{{ formatPrice(book.price) }} đ</div>
+              
+              <!-- Stock info -->
+              <div class="text-center text-xs text-gray-500 mt-1">
+                Tồn kho: {{ book.stock }}
+              </div>
               
               <!-- Admin Controls -->
               <div class="flex mt-3 space-x-2">
@@ -214,295 +195,789 @@
           </div>
         </div>
 
-        
-      </div>
-    </div>
-
-    <!-- Quick View Modal -->
-    <div v-if="quickViewBook" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div class="bg-white rounded-lg max-w-4xl w-full my-8">
-        <div class="flex justify-end p-2 sticky top-0 bg-white z-10">
-          <button @click="quickViewBook = null" class="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="p-6 max-h-[70vh] overflow-y-auto">
-          <div class="flex flex-col md:flex-row">
-            <div class="md:w-1/3">
-              <img :src="quickViewBook.image" alt="Book cover" class="w-full h-auto object-cover rounded-md" />
+        <!-- Enhanced Pagination -->
+        <div v-if="totalPages > 1" class="mt-8 flex justify-center">
+          <nav class="flex items-center space-x-2">
+            <!-- First Page Button with Text -->
+            <button 
+              @click="changePage(1)"
+              :disabled="currentPage === 1"
+              class="px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 font-medium"
+              title="Trang đầu tiên"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+              <span class="hidden sm:inline">Đầu</span>
+            </button>
+            
+            <!-- Previous Page Button -->
+            <button 
+              @click="changePage(currentPage - 1)"
+              :disabled="currentPage === 1"
+              class="px-3 py-2 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              title="Trang trước"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span class="hidden sm:inline ml-1">Trước</span>
+            </button>
+            
+            <!-- Page Numbers -->
+            <div class="flex items-center space-x-1">
+              <!-- Show first page if not in visible range -->
+              <template v-if="visiblePages[0] > 1">
+                <button 
+                  @click="changePage(1)"
+                  class="px-3 py-2 rounded-md border bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  1
+                </button>
+                <span v-if="visiblePages[0] > 2" class="px-2 text-gray-500">...</span>
+              </template>
+              
+              <!-- Visible page numbers -->
+              <button 
+                v-for="page in visiblePages" 
+                :key="page"
+                @click="changePage(page)"
+                :class="[
+                  'px-3 py-2 rounded-md border',
+                  page === currentPage 
+                    ? 'bg-amber-600 border-amber-600 text-white font-medium' 
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                ]"
+              >
+                {{ page }}
+              </button>
+              
+              <!-- Show last page if not in visible range -->
+              <template v-if="visiblePages[visiblePages.length - 1] < totalPages">
+                <span v-if="visiblePages[visiblePages.length - 1] < totalPages - 1" class="px-2 text-gray-500">...</span>
+                <button 
+                  @click="changePage(totalPages)"
+                  class="px-3 py-2 rounded-md border bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  {{ totalPages }}
+                </button>
+              </template>
             </div>
-            <div class="md:w-2/3 md:pl-6 mt-4 md:mt-0">
-              <h2 class="text-2xl font-bold">{{ quickViewBook.title }}</h2>
-              <div class="mt-2 flex items-center">
-                <div class="flex text-amber-500">
-                  <svg v-for="i in 5" :key="i" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="{ 'text-gray-300': i > quickViewBook.rating }" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
-                </div>
-                <span class="ml-2 text-gray-600">({{ quickViewBook.reviewCount }} đánh giá)</span>
-              </div>
-              <div class="mt-4 flex items-center">
-                <span class="text-2xl font-bold text-amber-800">{{ quickViewBook.discountPrice }} đ</span>
-                <span class="ml-2 text-gray-500 line-through">{{ quickViewBook.originalPrice }} đ</span>
-                <span class="ml-2 bg-red-800 text-white text-xs px-2 py-0.5 rounded">-{{ quickViewBook.discount }}%</span>
-              </div>
-              <div class="mt-4">
-                <h3 class="font-medium">Mô tả:</h3>
-                <p class="mt-2 text-gray-600">{{ quickViewBook.description }}</p>
-              </div>
-              <div class="mt-4">
-                <h3 class="font-medium">Thông tin chi tiết:</h3>
-                <div class="mt-2 grid grid-cols-2 gap-2">
-                  <div class="text-gray-600">Tác giả:</div>
-                  <div>{{ quickViewBook.author }}</div>
-                  <div class="text-gray-600">Nhà xuất bản:</div>
-                  <div>{{ quickViewBook.publisher }}</div>
-                  <div class="text-gray-600">Năm xuất bản:</div>
-                  <div>{{ quickViewBook.year }}</div>
+            
+            <!-- Next Page Button -->
+            <button 
+              @click="changePage(currentPage + 1)"
+              :disabled="currentPage === totalPages"
+              class="px-3 py-2 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              title="Trang sau"
+            >
+              <span class="hidden sm:inline mr-1">Sau</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            
+            <!-- Last Page Button with Text -->
+            <button 
+              @click="changePage(totalPages)"
+              :disabled="currentPage === totalPages"
+              class="px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 font-medium"
+              title="Trang cuối cùng"
+            >
+              <span class="hidden sm:inline">Cuối</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            </button>
+          </nav>
+        </div>
 
-                  <div class="text-gray-600">Loại sách:</div>
-                  <div>{{ quickViewBook.category }}</div>
-                  <div class="text-gray-600">Hình thức:</div>
-                  <div>{{ quickViewBook.format }}</div>
-                  <div class="text-gray-600">Độ tuổi:</div>
-                  <div>{{ quickViewBook.ageGroup }}</div>
-                </div>
-              </div>
-              <div class="mt-6 flex space-x-4 sticky bottom-0 bg-white pt-4">
-                <button 
-                  class="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-md transition-colors duration-200"
-                  @click="openEditBookModal(quickViewBook)"
-                >
-                  Chỉnh sửa
-                </button>
-                <button 
-                  class="flex-1 bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-md transition-colors duration-200"
-                  @click="confirmDeleteBook(quickViewBook)"
-                >
-                  Xóa sản phẩm
-                </button>
-              </div>
+        <!-- Enhanced Pagination Info -->
+        <div v-if="totalPages > 1" class="mt-4 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600 space-y-2 sm:space-y-0">
+          <div>
+            Trang {{ currentPage }} / {{ totalPages }} ({{ totalItems }} sản phẩm)
+          </div>
+          <div class="flex items-center space-x-4">
+            <!-- Quick jump to page -->
+            <div class="flex items-center space-x-2">
+              <label for="pageJump" class="text-sm">Đi tới trang:</label>
+              <input 
+                id="pageJump"
+                type="number" 
+                :min="1" 
+                :max="totalPages"
+                v-model.number="jumpToPage"
+                @keyup.enter="handlePageJump"
+                class="w-16 px-2 py-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-amber-500"
+                placeholder="1"
+              />
+              <button 
+                @click="handlePageJump"
+                :disabled="!jumpToPage || jumpToPage < 1 || jumpToPage > totalPages"
+                class="px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                Đi
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Add/Edit Book Modal -->
-    <div v-if="showBookModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div class="bg-white rounded-lg max-w-2xl w-full my-8">
-        <div class="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
-          <h2 class="text-xl font-bold">{{ isEditMode ? 'Chỉnh sửa sách' : 'Thêm sách mới' }}</h2>
-          <button @click="showBookModal = false" class="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="p-6 max-h-[70vh] overflow-y-auto">
-          <form @submit.prevent="saveBook">
-            <!-- Image Upload Section -->
-            <div class="mb-6">
-              <label class="block text-gray-700 mb-2">Hình ảnh sách</label>
-              <div class="flex flex-col md:flex-row gap-4">
-                <!-- Image Preview -->
-                <div class="w-full md:w-1/3 flex flex-col items-center">
-                  <div class="w-full h-48 bg-gray-100 rounded-md overflow-hidden border border-gray-300 flex items-center justify-center">
-                    <img 
-                      v-if="imagePreview" 
-                      :src="imagePreview" 
-                      alt="Book cover preview" 
-                      class="w-full h-full object-cover"
-                    />
-                    <div v-else class="text-gray-400 text-center p-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p>Chưa có ảnh</p>
-                    </div>
-                  </div>
-                  <button 
-                    v-if="imagePreview" 
-                    type="button" 
-                    class="mt-2 text-red-600 hover:text-red-800 text-sm"
-                    @click="removeImage"
-                  >
-                    Xóa ảnh
-                  </button>
-                </div>
-                
-                <!-- Upload Options -->
-                <div class="w-full md:w-2/3">
-                  <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">Tải ảnh lên</label>
-                    <div class="relative border-2 border-dashed border-gray-300 rounded-md p-6 hover:border-amber-500 transition-colors">
-                      <input 
-                        type="file" 
-                        ref="fileInput"
-                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        accept="image/*"
-                        @change="handleFileUpload"
-                      />
-                      <div class="text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <p class="mt-2 text-sm text-gray-600">Kéo thả ảnh vào đây hoặc <span class="text-amber-600 font-medium">chọn ảnh</span></p>
-                        <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF tối đa 5MB</p>
-                      </div>
-                    </div>
-                    <div v-if="uploadError" class="mt-2 text-red-600 text-sm">
-                      {{ uploadError }}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-gray-700 mb-1">Hoặc nhập URL ảnh</label>
-                    <div class="flex">
-                      <input 
-                        type="text" 
-                        v-model="editingBook.image" 
-                        class="flex-1 border border-gray-300 rounded-l-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                        placeholder="https://example.com/image.jpg"
-                      />
-                      <button 
-                        type="button"
-                        class="bg-amber-100 text-amber-800 px-3 py-2 rounded-r-md hover:bg-amber-200"
-                        @click="previewUrlImage"
-                      >
-                        Xem trước
-                      </button>
-                    </div>
+    <!-- Flash Sale Management Modal -->
+    <div v-if="showFlashSaleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+  <div class="bg-white rounded-lg max-w-6xl w-full my-8 max-h-[90vh] flex flex-col">
+    <div class="flex justify-between items-center p-4 border-b bg-white">
+      <h2 class="text-xl font-bold text-red-600 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Quản lý Flash Sale
+      </h2>
+      <button @click="showFlashSaleModal = false" class="text-gray-500 hover:text-gray-700 p-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1">
+      <!-- Add New Flash Sale Section -->
+      <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <h3 class="text-lg font-medium text-red-800 mb-3 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Thêm Flash Sale mới
+        </h3>
+        <form @submit.prevent="createFlashSale" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <!-- Book Selection with Search -->
+          <div class="lg:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Chọn sách</label>
+            <div class="relative">
+              <input 
+                type="text"
+                v-model="bookSearchQuery"
+                @input="filterBooks"
+                @focus="showBookDropdown = true"
+                @blur="handleBookInputBlur"
+                placeholder="Tìm kiếm sách theo tên, tác giả hoặc ID..."
+                class="w-full border border-gray-300 rounded-md px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
+              />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              
+              <!-- Dropdown for book selection -->
+              <div v-if="showBookDropdown && filteredBooksForSelection.length > 0" 
+                   class="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                <div v-for="book in filteredBooksForSelection.slice(0, 8)" 
+                     :key="book.bookID"
+                     @mousedown.prevent="selectBook(book)"
+                     class="flex items-center p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                  <img :src="book.imgURL1 || '/placeholder.svg?height=32&width=24'" 
+                       alt="" 
+                       class="w-6 h-8 object-cover rounded mr-2 flex-shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <div class="text-xs font-medium text-gray-900 truncate">{{ book.title }}</div>
+                    <div class="text-xs text-gray-500">ID: {{ book.bookID }} • {{ book.author }}</div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="md:col-span-2">
-                <label class="block text-gray-700 mb-1">Tiêu đề</label>
-                <input 
-                  type="text" 
-                  v-model="editingBook.title" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                />
-              </div>
-              <div>
-                <label class="block text-gray-700 mb-1">Giá gốc (đ)</label>
-                <input 
-                  type="number" 
-                  v-model="editingBook.originalPrice" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                />
-              </div>
-              <div>
-                <label class="block text-gray-700 mb-1">Giảm giá (%)</label>
-                <input 
-                  type="number" 
-                  v-model="editingBook.discount" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  min="0"
-                  max="100"
-                />
-              </div>
-              <div>
-                <label class="block text-gray-700 mb-1">Tác giả</label>
-                <input 
-                  type="text" 
-                  v-model="editingBook.author" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                />
-              </div>
-              <div>
-                <label class="block text-gray-700 mb-1">Nhà xuất bản</label>
-                <input 
-                  type="text" 
-                  v-model="editingBook.publisher" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                />
-              </div>
-              <div>
-                <label class="block text-gray-700 mb-1">Năm xuất bản</label>
-                <input 
-                  type="number" 
-                  v-model="editingBook.year" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                />
-              </div>
-              <div>
-                
-                <label class="block text-gray-700 mb-1">Độ tuổi</label>
-                <select 
-                  v-model="editingBook.ageGroup" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                >
-                  <option v-for="(ageGroup, index) in ageRanges" :key="index" :value="ageGroup">
-                    {{ ageGroup }}
-                  </option>
-                </select>
+                <div v-if="filteredBooksForSelection.length > 8" class="p-2 text-center text-xs text-gray-500 bg-gray-50">
+                  Và {{ filteredBooksForSelection.length - 8 }} sách khác...
+                </div>
               </div>
               
-              <div>
-                <label class="block text-gray-700 mb-1">Loại sách</label>
-                <select 
-                  v-model="editingBook.category" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                >
-                  <option v-for="(category, index) in bookCategories" :key="index" :value="category">
-                    {{ category }}
-                  </option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-gray-700 mb-1">Hình thức</label>
-                <select 
-                  v-model="editingBook.format" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                >
-                  <option v-for="(format, index) in bookFormats" :key="index" :value="format">
-                    {{ format }}
-                  </option>
-                </select>
-              </div>
-              <div class="md:col-span-2">
-                <label class="block text-gray-700 mb-1">Mô tả</label>
-                <textarea 
-                  v-model="editingBook.description" 
-                  rows="4"
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                ></textarea>
+              <!-- Selected book display -->
+              <div v-if="selectedBookForFlashSale" class="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                <div class="flex items-center text-sm">
+                  <img :src="selectedBookForFlashSale.imgURL1 || '/placeholder.svg?height=32&width=24'" 
+                       alt="" 
+                       class="w-6 h-8 object-cover rounded mr-2">
+                  <div class="flex-1">
+                    <div class="font-medium text-gray-900 truncate">{{ selectedBookForFlashSale.title }}</div>
+                    <div class="text-xs text-gray-500">ID: {{ selectedBookForFlashSale.bookID }}</div>
+                  </div>
+                  <button type="button" @click="clearSelectedBookForFlashSale" class="text-red-500 hover:text-red-700 ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="mt-6 flex justify-end space-x-3 sticky bottom-0 bg-white pt-4 pb-2">
-              <button 
-                type="button"
-                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
-                @click="showBookModal = false"
-              >
-                Hủy
-              </button>
-              <button 
-                type="submit"
-                class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
-              >
-                {{ isEditMode ? 'Lưu thay đổi' : 'Thêm sách' }}
-              </button>
-            </div>
-          </form>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Giảm giá (%)</label>
+            <input 
+              type="number" 
+              v-model="newFlashSale.discountPercent"
+              min="1" 
+              max="90"
+              class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+              placeholder="20"
+              required
+            />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bắt đầu</label>
+            <input 
+              type="datetime-local" 
+              v-model="newFlashSale.startTime"
+              class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+              required
+            />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kết thúc</label>
+            <input 
+              type="datetime-local" 
+              v-model="newFlashSale.endTime"
+              class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+              required
+            />
+          </div>
+          
+          <div class="lg:col-span-5 flex justify-end">
+            <button 
+              type="submit"
+              :disabled="!canCreateFlashSale || isLoading"
+              class="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Tạo Flash Sale
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Flash Sales List -->
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-gray-800">Danh sách Flash Sale</h3>
+          <div class="text-sm text-gray-500">
+            Tổng: {{ allFlashSales.length }}
+          </div>
+        </div>
+        
+        <!-- Filter tabs -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button 
+            @click="flashSaleFilter = 'all'"
+            :class="[
+              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+              flashSaleFilter === 'all' 
+                ? 'bg-red-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            Tất cả ({{ allFlashSales.length }})
+          </button>
+          <button 
+            @click="flashSaleFilter = 'active'"
+            :class="[
+              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+              flashSaleFilter === 'active' 
+                ? 'bg-green-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            Hoạt động ({{ activeFlashSales.length }})
+          </button>
+          <button 
+            @click="flashSaleFilter = 'upcoming'"
+            :class="[
+              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+              flashSaleFilter === 'upcoming' 
+                ? 'bg-yellow-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            Sắp tới ({{ upcomingFlashSales.length }})
+          </button>
+          <button 
+            @click="flashSaleFilter = 'expired'"
+            :class="[
+              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+              flashSaleFilter === 'expired' 
+                ? 'bg-gray-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            Đã kết thúc ({{ expiredFlashSales.length }})
+          </button>
+        </div>
+
+        <!-- Flash Sales Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sách</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giảm giá</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thời gian</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="flashSale in filteredFlashSales" :key="flashSale.flashSaleID" class="hover:bg-gray-50">
+                  <td class="px-4 py-3">
+                    <div class="flex items-center">
+                      <img :src="flashSale.bookImgURL || '/placeholder.svg?height=32&width=24'" alt="" class="w-8 h-10 object-cover rounded mr-3">
+                      <div class="min-w-0 flex-1">
+                        <div class="text-sm font-medium text-gray-900 truncate">{{ flashSale.bookTitle }}</div>
+                        <div class="text-xs text-gray-500">ID: {{ flashSale.bookID }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      -{{ flashSale.discountPercent }}%
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-gray-900">
+                    <div>{{ formatDateTime(flashSale.startTime) }}</div>
+                    <div class="text-gray-500">{{ formatDateTime(flashSale.endTime) }}</div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span :class="[
+                      'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                      getFlashSaleStatus(flashSale) === 'active' ? 'bg-green-100 text-green-800' :
+                      getFlashSaleStatus(flashSale) === 'upcoming' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    ]">
+                      {{ getFlashSaleStatusText(flashSale) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex space-x-2">
+                      <button 
+                        @click="editFlashSale(flashSale)"
+                        class="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                        :disabled="getFlashSaleStatus(flashSale) === 'expired'"
+                      >
+                        Sửa
+                      </button>
+                      <button 
+                        @click="deleteFlashSale(flashSale.flashSaleID)"
+                        class="text-red-600 hover:text-red-800 text-xs font-medium"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div v-if="filteredFlashSales.length === 0" class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <p class="text-sm text-gray-500">Không có Flash Sale nào</p>
+          </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+    <!-- Edit Flash Sale Modal -->
+    <div v-if="showEditFlashSaleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg max-w-md w-full">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h2 class="text-lg font-bold text-red-600">Chỉnh sửa Flash Sale</h2>
+      <button @click="showEditFlashSaleModal = false" class="text-gray-500 hover:text-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-4">
+      <form @submit.prevent="updateFlashSale" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Giảm giá (%)</label>
+          <input 
+            type="number" 
+            v-model="editingFlashSale.discountPercent"
+            min="1" 
+            max="90"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian bắt đầu</label>
+          <input 
+            type="datetime-local" 
+            v-model="editingFlashSale.startTime"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian kết thúc</label>
+          <input 
+            type="datetime-local" 
+            v-model="editingFlashSale.endTime"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+            required
+          />
+        </div>
+        <div class="flex justify-end space-x-3 pt-2">
+          <button 
+            type="button"
+            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 text-sm"
+            @click="showEditFlashSaleModal = false"
+          >
+            Hủy
+          </button>
+          <button 
+            type="submit"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+            :disabled="isLoading"
+          >
+            Cập nhật
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+    <!-- Add/Edit Book Modal -->
+    <div v-if="showBookModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+  <div class="bg-white rounded-lg max-w-5xl w-full my-8 max-h-[90vh] flex flex-col">
+    <div class="flex justify-between items-center p-4 border-b bg-white">
+      <h2 class="text-lg font-bold">{{ isEditMode ? 'Chỉnh sửa sách' : 'Thêm sách mới' }}</h2>
+      <button @click="showBookModal = false" class="text-gray-500 hover:text-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1">
+      <form @submit.prevent="saveBook">
+        <!-- Image Upload Section -->
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2 font-medium text-sm">Hình ảnh sản phẩm</label>
+          <div class="grid grid-cols-3 gap-3">
+            <!-- Image 1 -->
+            <div class="space-y-1">
+              <label class="text-xs text-gray-600">Ảnh chính</label>
+              <div 
+                class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
+                :class="{ 
+                  'border-amber-500 bg-amber-50': dragStates.img1,
+                  'border-green-500 bg-green-50': imagePreviews.img1
+                }"
+                @dragover.prevent="handleDragOver('img1')"
+                @dragleave.prevent="handleDragLeave('img1')"
+                @drop.prevent="handleDrop($event, 'img1')"
+                @click="triggerFileInput('img1')"
+              >
+                <input 
+                  ref="fileInput1"
+                  type="file" 
+                  class="hidden"
+                  accept="image/*"
+                  @change="handleFileSelect($event, 'img1')"
+                />
+                
+                <div v-if="!imagePreviews.img1" class="text-center h-full flex flex-col justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
+                </div>
+                
+                <div v-else class="relative h-full">
+                  <img :src="imagePreviews.img1" alt="Preview" class="w-full h-full object-cover rounded" />
+                  <button 
+                    type="button"
+                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                    @click.stop="removeImage('img1')"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              <input 
+                type="url" 
+                v-model="editingBook.imgURL1" 
+                placeholder="URL ảnh"
+                class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                @input="handleUrlInput('img1')"
+              />
+            </div>
+
+            <!-- Image 2 -->
+            <div class="space-y-1">
+              <label class="text-xs text-gray-600">Ảnh phụ 1</label>
+              <div 
+                class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
+                :class="{ 
+                  'border-amber-500 bg-amber-50': dragStates.img2,
+                  'border-green-500 bg-green-50': imagePreviews.img2
+                }"
+                @dragover.prevent="handleDragOver('img2')"
+                @dragleave.prevent="handleDragLeave('img2')"
+                @drop.prevent="handleDrop($event, 'img2')"
+                @click="triggerFileInput('img2')"
+              >
+                <input 
+                  ref="fileInput2"
+                  type="file" 
+                  class="hidden"
+                  accept="image/*"
+                  @change="handleFileSelect($event, 'img2')"
+                />
+                
+                <div v-if="!imagePreviews.img2" class="text-center h-full flex flex-col justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
+                </div>
+                
+                <div v-else class="relative h-full">
+                  <img :src="imagePreviews.img2" alt="Preview" class="w-full h-full object-cover rounded" />
+                  <button 
+                    type="button"
+                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                    @click.stop="removeImage('img2')"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              <input 
+                type="url" 
+                v-model="editingBook.imgURL2" 
+                placeholder="URL ảnh"
+                class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                @input="handleUrlInput('img2')"
+              />
+            </div>
+
+            <!-- Image 3 -->
+            <div class="space-y-1">
+              <label class="text-xs text-gray-600">Ảnh phụ 2</label>
+              <div 
+                class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
+                :class="{ 
+                  'border-amber-500 bg-amber-50': dragStates.img3,
+                  'border-green-500 bg-green-50': imagePreviews.img3
+                }"
+                @dragover.prevent="handleDragOver('img3')"
+                @dragleave.prevent="handleDragLeave('img3')"
+                @drop.prevent="handleDrop($event, 'img3')"
+                @click="triggerFileInput('img3')"
+              >
+                <input 
+                  ref="fileInput3"
+                  type="file" 
+                  class="hidden"
+                  accept="image/*"
+                  @change="handleFileSelect($event, 'img3')"
+                />
+                
+                <div v-if="!imagePreviews.img3" class="text-center h-full flex flex-col justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
+                </div>
+                
+                <div v-else class="relative h-full">
+                  <img :src="imagePreviews.img3" alt="Preview" class="w-full h-full object-cover rounded" />
+                  <button 
+                    type="button"
+                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                    @click.stop="removeImage('img3')"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              <input 
+                type="url" 
+                v-model="editingBook.imgURL3" 
+                placeholder="URL ảnh"
+                class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                @input="handleUrlInput('img3')"
+              />
+            </div>
+          </div>
+          <div v-if="uploadError" class="mt-2 text-red-600 text-xs">{{ uploadError }}</div>
+        </div>
+
+        <!-- Form Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="lg:col-span-3">
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Tiêu đề *</label>
+            <input 
+              type="text" 
+              v-model="editingBook.title" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              required
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Tác giả *</label>
+            <input 
+              type="text" 
+              v-model="editingBook.author" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              required
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Nhà xuất bản *</label>
+            <input 
+              type="text" 
+              v-model="editingBook.supplier" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              required
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Danh mục *</label>
+            <select 
+              v-model="editingBook.categoryID" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              required
+            >
+              <option v-for="category in allCategories" :key="category.categoryID" :value="category.categoryID">
+                {{ category.categoryName }}
+              </option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Giá (đ) *</label>
+            <input 
+              type="number" 
+              v-model="editingBook.price" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              required
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Giảm giá (%)</label>
+            <input 
+              type="number" 
+              v-model="editingBook.discount" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              min="0"
+              max="100"
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Tồn kho *</label>
+            <input 
+              type="number" 
+              v-model="editingBook.stock" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              min="0"
+              required
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Năm xuất bản</label>
+            <input 
+              type="number" 
+              v-model="editingBook.publishYear" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Số trang</label>
+            <input 
+              type="number" 
+              v-model="editingBook.pageNum" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Ngôn ngữ</label>
+            <input 
+              type="text" 
+              v-model="editingBook.language" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+            />
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Độ tuổi</label>
+            <select 
+              v-model="editingBook.ageGroup" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+            >
+              <option value="12">Trên 12 tuổi</option>
+              <option value="18">Trên 18 tuổi</option>
+              <option value="all">Mọi lứa tuổi</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Hình thức</label>
+            <select 
+              v-model="editingBook.binding" 
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+            >
+              <option value="Bìa mềm">Bìa mềm</option>
+              <option value="Bìa cứng">Bìa cứng</option>
+              <option value="Bìa da">Bìa da</option>
+            </select>
+          </div>
+          
+          <div class="lg:col-span-3">
+            <label class="block text-gray-700 mb-1 text-sm font-medium">Mô tả *</label>
+            <textarea 
+              v-model="editingBook.description" 
+              rows="3"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              required
+            ></textarea>
+          </div>
+        </div>
+        
+        <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
+          <button 
+            type="button"
+            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 text-sm"
+            @click="showBookModal = false"
+          >
+            Hủy
+          </button>
+          <button 
+            type="submit"
+            class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 text-sm"
+            :disabled="isLoading || isUploading"
+          >
+            {{ isEditMode ? 'Lưu thay đổi' : 'Thêm sách' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
     <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -519,6 +994,7 @@
           <button 
             class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
             @click="deleteBook"
+            :disabled="isLoading"
           >
             Xóa
           </button>
@@ -529,392 +1005,1117 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-
-// Responsive state
-const isMobile = ref(false);
-const showMobileFilters = ref(false);
-
-// Check if device is mobile
-const checkMobile = () => {
-  isMobile.value = window.innerWidth < 768;
-  if (!isMobile.value) {
-    showMobileFilters.value = true;
-  } else {
-    showMobileFilters.value = false;
-  }
-};
-
-// Add event listener for resize
-onMounted(() => {
-  checkMobile();
-  window.addEventListener('resize', checkMobile);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile);
-});
+import { ref, computed, onMounted, watch } from 'vue';
+import Filter from "./Filter/index.vue";
+import axios from "../utils/axios";
 
 // Search functionality
 const searchQuery = ref('');
 const isLoading = ref(false);
 const error = ref(null);
+const searchTimeout = ref(null);
 
-// Book categories and filters
-const bookCategories = ref([
-  'Tiểu thuyết',
-  'Self-help',
-  'Truyện tranh',
-  'Chính trị',
-  'Khoa học & Giáo dục'
-]);
-
-const priceRanges = ref([
-  '<50.000 đ',
-  '50.000 đ - 200.000 đ',
-  '>200.000 đ'
-]);
-
-const ageRanges = ref([
-  'Trên 18 tuổi',
-  'Mọi lứa tuổi'
-]);
-
-const bookFormats = ref([
-  'Bìa mềm',
-  'Bìa cứng',
-  'Khác'
-]);
-
-// Filter state
-const filters = ref({
-  onSale: false,
-  categories: Array(bookCategories.value.length).fill(false),
-  priceRanges: Array(priceRanges.value.length).fill(false),
-  ageRanges: Array(ageRanges.value.length).fill(false),
-  formats: Array(bookFormats.value.length).fill(false)
+// Image upload states
+const isUploading = ref(false);
+const uploadError = ref(null);
+const dragStates = ref({
+  img1: false,
+  img2: false,
+  img3: false
+});
+const imagePreviews = ref({
+  img1: null,
+  img2: null,
+  img3: null
+});
+const uploadProgress = ref({
+  img1: 0,
+  img2: 0,
+  img3: 0
 });
 
-// Reset filters
-const resetFilters = () => {
-  filters.value = {
-    onSale: false,
-    categories: Array(bookCategories.value.length).fill(false),
-    priceRanges: Array(priceRanges.value.length).fill(false),
-    ageRanges: Array(ageRanges.value.length).fill(false),
-    formats: Array(bookFormats.value.length).fill(false)
-  };
-  searchQuery.value = '';
-  applyFilters();
-};
+// File input refs
+const fileInput1 = ref(null);
+const fileInput2 = ref(null);
+const fileInput3 = ref(null);
 
-// Sample book data with more details
-const allBooks = ref([
-  {
-    id: 1,
-    title: 'TIỆM SÁCH CỦA NÀNG',
-    image: 'https://media.istockphoto.com/id/1269703329/vi/vec-to/pixel-ngh%E1%BB%87-thu%E1%BA%ADt-8-bit-d%E1%BB%85-th%C6%B0%C6%A1ng-m%C3%A8o-con-trong-n%C6%B0%E1%BB%9Bc-th%C3%BA-c%C6%B0ng-pixel-n%C3%B3i-wow-h%C3%ACnh-minh-h%E1%BB%8Da.jpg?s=612x612&w=0&k=20&c=sKwIFKcrusX5xgsBdTUoT5HtpHSy58R6zz8-fWJ5f_w=',
-    discountPrice: '100.000',
-    originalPrice: '125.000',
-    discount: '20',
-    author: 'Nguyễn Nhật Ánh',
-    publisher: 'NXB Trẻ',
-    year: 2023,
-    rating: 4,
-    reviewCount: 28,
-    category: 'Tiểu thuyết',
-    description: 'Một câu chuyện đầy cảm xúc về tiệm sách nhỏ và những con người với những câu chuyện riêng của họ. Cuốn sách mang đến cho độc giả những khoảnh khắc ấm áp và suy ngẫm về cuộc sống.',
-    format: 'Bìa mềm',
-    ageGroup: 'Mọi lứa tuổi'
-  }
-]);
+// Filter state
+const currentFilters = ref({
+  promo: false,
+  price: null,
+  priceMin: null,
+  priceMax: null,
+  age: null,
+  type: null,
+  selectedCategoryId: null
+});
 
-// Create more sample books
-for (let i = 2; i <= 12; i++) {
-  allBooks.value.push({
-    id: i,
-    title: 'TIỆM SÁCH CỦA NÀNG',
-    image: 'https://media.istockphoto.com/id/1269703329/vi/vec-to/pixel-ngh%E1%BB%87-thu%E1%BA%ADt-8-bit-d%E1%BB%85-th%C6%B0%C6%A1ng-m%C3%A8o-con-trong-n%C6%B0%E1%BB%9Bc-th%C3%BA-c%C6%B0ng-pixel-n%C3%B3i-wow-h%C3%ACnh-minh-h%E1%BB%8Da.jpg?s=612x612&w=0&k=20&c=sKwIFKcrusX5xgsBdTUoT5HtpHSy58R6zz8-fWJ5f_w=',
-    discountPrice: '100.000',
-    originalPrice: '125.000',
-    discount: '20',
-    author: 'Nguyễn Nhật Ánh',
-    publisher: 'NXB Trẻ',
-    year: 2023,
-    rating: 4,
-    reviewCount: 28,
-    category: 'Tiểu thuyết',
-    description: 'Một câu chuyện đầy cảm xúc về tiệm sách nhỏ và những con người với những câu chuyện riêng của họ. Cuốn sách mang đến cho độc giả những khoảnh khắc ấm áp và suy ngẫm về cuộc sống.',
-    format: 'Bìa mềm',
-    ageGroup: 'Mọi lứa tuổi'
-  });
-}
-
-// Books after filtering
-const filteredBooks = ref([...allBooks.value]);
-
-// Apply filters
-const applyFilters = () => {
-  isLoading.value = true;
-  error.value = null;
-  
-  // Simulate API call
-  setTimeout(() => {
-    try {
-      filteredBooks.value = allBooks.value.filter(book => {
-        // Filter by search query
-        if (searchQuery.value && !book.title.toLowerCase().includes(searchQuery.value.toLowerCase()) && 
-            !book.author.toLowerCase().includes(searchQuery.value.toLowerCase())) {
-          return false;
-        }
-        
-        // Filter by sale
-        if (filters.value.onSale && parseInt(book.discount) === 0) {
-          return false;
-        }
-        
-        // Filter by category
-        const selectedCategories = filters.value.categories.map((selected, index) => 
-          selected ? bookCategories.value[index] : null).filter(Boolean);
-        
-        if (selectedCategories.length > 0 && !selectedCategories.includes(book.category)) {
-          return false;
-        }
-        
-        // More filters can be implemented here
-        
-        return true;
-      });
-      
-      // Reset to first page when filters change
-      currentPage.value = 1;
-      isLoading.value = false;
-    } catch (err) {
-      error.value = 'Có lỗi xảy ra khi lọc sách. Vui lòng thử lại sau.';
-      isLoading.value = false;
-    }
-  }, 500); // Simulate loading delay
-};
-
-// Search books
-const searchBooks = () => {
-  applyFilters();
-};
+// Books data
+const filteredBooks = ref([]);
+const allCategories = ref([]);
+const allBooks = ref([]);
 
 // Pagination
 const currentPage = ref(1);
-const booksPerPage = 9;
+const pageSize = ref(12);
+const totalItems = ref(0);
+const totalPages = ref(0);
+const jumpToPage = ref(null);
 
-const totalPages = computed(() => {
-  return Math.ceil(filteredBooks.value.length / booksPerPage);
-});
-
-const paginatedBooks = computed(() => {
-  const startIndex = (currentPage.value - 1) * booksPerPage;
-  const endIndex = startIndex + booksPerPage;
-  return filteredBooks.value.slice(startIndex, endIndex);
-});
-
-
-// Quick view functionality
+// Quick view book
 const quickViewBook = ref(null);
 
-const openQuickView = (book) => {
-  quickViewBook.value = book;
+// Flash Sale Management
+const showFlashSaleModal = ref(false);
+const showEditFlashSaleModal = ref(false);
+const allFlashSales = ref([]);
+const flashSaleFilter = ref('all');
+const newFlashSale = ref({
+  bookID: '',
+  discountPercent: null,
+  startTime: '',
+  endTime: ''
+});
+const editingFlashSale = ref({
+  flashSaleID: null,
+  discountPercent: null,
+  startTime: '',
+  endTime: ''
+});
+
+// Book selection for flash sale
+const bookSearchQuery = ref('');
+const showBookDropdown = ref(false);
+const selectedBookForFlashSale = ref(null);
+const filteredBooksForSelection = ref([]);
+
+// Computed properties
+const paginatedBooks = computed(() => {
+  return filteredBooks.value;
+});
+
+const visiblePages = computed(() => {
+  const pages = [];
+  const start = Math.max(1, currentPage.value - 2);
+  const end = Math.min(totalPages.value, currentPage.value + 2);
+  
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+  
+  return pages;
+});
+
+const hasActiveFilters = computed(() => {
+  return currentFilters.value.promo || 
+         currentFilters.value.price || 
+         currentFilters.value.age || 
+         currentFilters.value.type || 
+         currentFilters.value.selectedCategoryId;
+});
+
+const canCreateFlashSale = computed(() => {
+  return selectedBookForFlashSale.value && 
+         newFlashSale.value.discountPercent && 
+         newFlashSale.value.discountPercent >= 1 &&
+         newFlashSale.value.discountPercent <= 90 &&
+         newFlashSale.value.startTime && 
+         newFlashSale.value.endTime &&
+         new Date(newFlashSale.value.startTime) < new Date(newFlashSale.value.endTime);
+});
+
+const activeFlashSales = computed(() => {
+  const now = new Date();
+  return allFlashSales.value.filter(fs => 
+    new Date(fs.startTime) <= now && new Date(fs.endTime) >= now
+  );
+});
+
+const upcomingFlashSales = computed(() => {
+  const now = new Date();
+  return allFlashSales.value.filter(fs => new Date(fs.startTime) > now);
+});
+
+const expiredFlashSales = computed(() => {
+  const now = new Date();
+  return allFlashSales.value.filter(fs => new Date(fs.endTime) < now);
+});
+
+const filteredFlashSales = computed(() => {
+  switch (flashSaleFilter.value) {
+    case 'active':
+      return activeFlashSales.value;
+    case 'upcoming':
+      return upcomingFlashSales.value;
+    case 'expired':
+      return expiredFlashSales.value;
+    default:
+      return allFlashSales.value;
+  }
+});
+
+// Enhanced search functionality
+const isSearching = computed(() => {
+  return searchQuery.value && searchQuery.value.trim().length > 0;
+});
+
+const isNumericSearch = computed(() => {
+  return isSearching.value && /^\d+$/.test(searchQuery.value.trim());
+});
+
+// Filter handling
+const handleFilterChange = (filters) => {
+  currentFilters.value = { ...filters };
+  currentPage.value = 1;
+  fetchBooks();
 };
 
-// Book modal (add/edit)
+const removeFilter = (filterType) => {
+  switch (filterType) {
+    case 'promo':
+      currentFilters.value.promo = false;
+      break;
+    case 'price':
+      currentFilters.value.price = null;
+      currentFilters.value.priceMin = null;
+      currentFilters.value.priceMax = null;
+      break;
+    case 'age':
+      currentFilters.value.age = null;
+      break;
+    case 'type':
+      currentFilters.value.type = null;
+      break;
+    case 'category':
+      currentFilters.value.selectedCategoryId = null;
+      break;
+  }
+  currentPage.value = 1;
+  fetchBooks();
+};
+
+const clearAllFilters = () => {
+  currentFilters.value = {
+    promo: false,
+    price: null,
+    priceMin: null,
+    priceMax: null,
+    age: null,
+    type: null,
+    selectedCategoryId: null
+  };
+  currentPage.value = 1;
+  fetchBooks();
+};
+
+// Filter text helpers
+const getPriceFilterText = (price) => {
+  switch (price) {
+    case 'lt100': return 'Dưới 100k';
+    case 'btw100_300': return '100k - 300k';
+    case 'gt300': return 'Trên 300k';
+    default: return price;
+  }
+};
+
+const getAgeFilterText = (age) => {
+  switch (age) {
+    case '12': return 'Trên 12 tuổi';
+    case '18': return 'Trên 18 tuổi';
+    case 'all': return 'Mọi lứa tuổi';
+    default: return age;
+  }
+};
+
+const getTypeFilterText = (type) => {
+  switch (type) {
+    case 'soft': return 'Bìa mềm';
+    case 'hard': return 'Bìa cứng';
+    case 'leather': return 'Bìa da';
+    default: return type;
+  }
+};
+
+const getCategoryName = (categoryId) => {
+  const category = allCategories.value.find(c => c.categoryID === categoryId);
+  return category ? category.categoryName : 'Không xác định';
+};
+
+// Flash Sale Management Functions
+const openFlashSaleManagement = async () => {
+  showFlashSaleModal.value = true;
+  await fetchAllFlashSales();
+  await fetchAllBooks();
+};
+
+const fetchAllFlashSales = async () => {
+  try {
+    const response = await axios.get('/admin/flash-sale');
+    allFlashSales.value = response.data;
+  } catch (err) {
+    console.error('Error fetching flash sales:', err);
+    error.value = 'Không thể tải danh sách Flash Sale';
+  }
+};
+
+const fetchAllBooks = async () => {
+  try {
+    // Fetch multiple pages to get all books
+    let allBooksData = [];
+    let currentPage = 1;
+    let hasMorePages = true;
+    
+    while (hasMorePages && currentPage <= 10) { // Limit to 10 pages to avoid infinite loop
+      const response = await axios.get(`/admin/products?page=${currentPage}&pageSize=100`);
+      const data = response.data;
+      
+      if (data.items && data.items.length > 0) {
+        allBooksData = [...allBooksData, ...data.items];
+        hasMorePages = currentPage < data.totalPages;
+        currentPage++;
+      } else {
+        hasMorePages = false;
+      }
+    }
+    
+    allBooks.value = allBooksData;
+    filteredBooksForSelection.value = allBooksData;
+  } catch (err) {
+    console.error('Error fetching all books:', err);
+    // Fallback: try to get books from the current filtered list
+    if (filteredBooks.value.length > 0) {
+      allBooks.value = filteredBooks.value;
+      filteredBooksForSelection.value = filteredBooks.value;
+    }
+  }
+};
+
+const filterBooks = () => {
+  if (!bookSearchQuery.value.trim()) {
+    filteredBooksForSelection.value = allBooks.value;
+    return;
+  }
+  
+  const query = bookSearchQuery.value.toLowerCase().trim();
+  filteredBooksForSelection.value = allBooks.value.filter(book => {
+    const titleMatch = book.title && book.title.toLowerCase().includes(query);
+    const authorMatch = book.author && book.author.toLowerCase().includes(query);
+    const idMatch = book.bookID && book.bookID.toString().includes(query);
+    const supplierMatch = book.supplier && book.supplier.toLowerCase().includes(query);
+    
+    return titleMatch || authorMatch || idMatch || supplierMatch;
+  });
+};
+
+const createFlashSale = async () => {
+  try {
+    isLoading.value = true;
+    
+    // Validate required fields
+    if (!selectedBookForFlashSale.value) {
+      alert('Vui lòng chọn sách');
+      return;
+    }
+    
+    if (!newFlashSale.value.discountPercent || newFlashSale.value.discountPercent < 1 || newFlashSale.value.discountPercent > 90) {
+      alert('Vui lòng nhập phần trăm giảm giá từ 1% đến 90%');
+      return;
+    }
+    
+    if (!newFlashSale.value.startTime) {
+      alert('Vui lòng chọn thời gian bắt đầu');
+      return;
+    }
+    
+    if (!newFlashSale.value.endTime) {
+      alert('Vui lòng chọn thời gian kết thúc');
+      return;
+    }
+    
+    const startTime = new Date(newFlashSale.value.startTime);
+    const endTime = new Date(newFlashSale.value.endTime);
+    
+    if (startTime >= endTime) {
+      alert('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc');
+      return;
+    }
+    
+    const flashSaleData = {
+      bookID: parseInt(selectedBookForFlashSale.value.bookID),
+      discountPercent: parseInt(newFlashSale.value.discountPercent),
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString()
+    };
+
+    console.log('Sending flash sale data:', flashSaleData);
+
+    await axios.post('/admin/flash-sale', flashSaleData);
+    
+    // Reset form
+    newFlashSale.value = {
+      bookID: '',
+      discountPercent: null,
+      startTime: '',
+      endTime: ''
+    };
+    
+    // Clear selected book
+    clearSelectedBookForFlashSale();
+    
+    // Refresh flash sales list
+    await fetchAllFlashSales();
+    
+    alert('Đã thêm Flash Sale thành công!');
+    
+  } catch (err) {
+    console.error('Error creating flash sale:', err);
+    
+    let errorMessage = 'Có lỗi xảy ra khi thêm Flash Sale.';
+    
+    if (err.response) {
+      const status = err.response.status;
+      const data = err.response.data;
+      
+      if (status === 400) {
+        if (data.message) {
+          errorMessage = data.message;
+        } else if (data.errors) {
+          const validationErrors = [];
+          Object.keys(data.errors).forEach(field => {
+            validationErrors.push(`${field}: ${data.errors[field].join(', ')}`);
+          });
+          errorMessage = validationErrors.join('; ');
+        } else {
+          errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+        }
+      } else if (status === 401) {
+        errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
+      } else if (status === 404) {
+        errorMessage = 'Không tìm thấy API endpoint. Vui lòng liên hệ admin.';
+      } else if (status === 500) {
+        errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
+      } else if (data && data.message) {
+        errorMessage = data.message;
+      }
+    } else if (err.request) {
+      errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+    
+    alert(errorMessage);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+
+const editFlashSale = (flashSale) => {
+  editingFlashSale.value = {
+    flashSaleID: flashSale.flashSaleID,
+    discountPercent: flashSale.discountPercent,
+    startTime: new Date(flashSale.startTime).toISOString().slice(0, 16),
+    endTime: new Date(flashSale.endTime).toISOString().slice(0, 16)
+  };
+  showEditFlashSaleModal.value = true;
+};
+
+const updateFlashSale = async () => {
+  try {
+    isLoading.value = true;
+    
+    const updateData = {
+      discountPercent: parseInt(editingFlashSale.value.discountPercent),
+      startTime: new Date(editingFlashSale.value.startTime).toISOString(),
+      endTime: new Date(editingFlashSale.value.endTime).toISOString()
+    };
+
+    await axios.put(`/admin/flash-sale/${editingFlashSale.value.flashSaleID}`, updateData);
+    
+    showEditFlashSaleModal.value = false;
+    await fetchAllFlashSales();
+    
+    alert('Đã cập nhật Flash Sale thành công!');
+  } catch (err) {
+    console.error('Error updating flash sale:', err);
+    if (err.response && err.response.data && err.response.data.message) {
+      alert(err.response.data.message);
+    } else {
+      alert('Có lỗi xảy ra khi cập nhật Flash Sale.');
+    }
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const deleteFlashSale = async (flashSaleId) => {
+  if (!confirm('Bạn có chắc chắn muốn xóa Flash Sale này?')) {
+    return;
+  }
+  
+  try {
+    await axios.delete(`/admin/flash-sale/${flashSaleId}`);
+    await fetchAllFlashSales();
+    alert('Đã xóa Flash Sale thành công!');
+  } catch (err) {
+    console.error('Error deleting flash sale:', err);
+    alert('Có lỗi xảy ra khi xóa Flash Sale.');
+  }
+};
+
+const getFlashSaleStatus = (flashSale) => {
+  const now = new Date();
+  const startTime = new Date(flashSale.startTime);
+  const endTime = new Date(flashSale.endTime);
+  
+  if (now < startTime) return 'upcoming';
+  if (now >= startTime && now <= endTime) return 'active';
+  return 'expired';
+};
+
+const getFlashSaleStatusText = (flashSale) => {
+  const status = getFlashSaleStatus(flashSale);
+  switch (status) {
+    case 'active': return 'Đang hoạt động';
+    case 'upcoming': return 'Sắp diễn ra';
+    case 'expired': return 'Đã kết thúc';
+    default: return 'Không xác định';
+  }
+};
+
+const formatDateTime = (dateString) => {
+  return new Date(dateString).toLocaleString('vi-VN');
+};
+
+// Debounced search input handler
+const onSearchInput = () => {
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
+  
+  searchTimeout.value = setTimeout(() => {
+    if (searchQuery.value !== searchQuery.value.trim()) {
+      searchQuery.value = searchQuery.value.trim();
+    }
+    searchBooks();
+  }, 300);
+};
+
+// Clear search
+const clearSearch = () => {
+  searchQuery.value = '';
+  currentPage.value = 1;
+  fetchBooks();
+};
+
+// Image upload functions
+const validateFile = (file) => {
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const maxSize = 5 * 1024 * 1024; // 5MB
+
+  if (!validTypes.includes(file.type)) {
+    throw new Error('Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WEBP)');
+  }
+
+  if (file.size > maxSize) {
+    throw new Error('Kích thước file không được vượt quá 5MB');
+  }
+
+  return true;
+};
+
+const handleDragOver = (imageKey) => {
+  dragStates.value[imageKey] = true;
+};
+
+const handleDragLeave = (imageKey) => {
+  dragStates.value[imageKey] = false;
+};
+
+const handleDrop = (event, imageKey) => {
+  dragStates.value[imageKey] = false;
+  const files = event.dataTransfer.files;
+  if (files.length > 0) {
+    handleFileUpload(files[0], imageKey);
+  }
+};
+
+const triggerFileInput = (imageKey) => {
+  const inputMap = {
+    img1: fileInput1,
+    img2: fileInput2,
+    img3: fileInput3
+  };
+  inputMap[imageKey].value?.click();
+};
+
+const handleFileSelect = (event, imageKey) => {
+  const file = event.target.files[0];
+  if (file) {
+    handleFileUpload(file, imageKey);
+  }
+};
+
+const handleFileUpload = async (file, imageKey) => {
+  try {
+    uploadError.value = null;
+    validateFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreviews.value[imageKey] = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // Upload file
+    await uploadImageFile(file, imageKey);
+
+  } catch (err) {
+    uploadError.value = err.message;
+    console.error('File upload error:', err);
+  }
+};
+
+const uploadImageFile = async (file, imageKey) => {
+  try {
+    isUploading.value = true;
+    uploadProgress.value[imageKey] = 0;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('imageType', imageKey);
+
+    const response = await axios.post('/admin/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        uploadProgress.value[imageKey] = progress;
+      }
+    });
+
+    const urlField = imageKey === 'img1' ? 'imgURL1' : 
+                    imageKey === 'img2' ? 'imgURL2' : 'imgURL3';
+    editingBook.value[urlField] = response.data.imageUrl;
+
+    uploadProgress.value[imageKey] = 100;
+    
+  } catch (err) {
+    console.error('Upload error:', err);
+    uploadError.value = 'Không thể tải ảnh lên. Vui lòng thử lại.';
+    removeImage(imageKey);
+  } finally {
+    isUploading.value = false;
+    setTimeout(() => {
+      uploadProgress.value[imageKey] = 0;
+    }, 1000);
+  }
+};
+
+const removeImage = (imageKey) => {
+  imagePreviews.value[imageKey] = null;
+  uploadProgress.value[imageKey] = 0;
+  
+  const urlField = imageKey === 'img1' ? 'imgURL1' : 
+                  imageKey === 'img2' ? 'imgURL2' : 'imgURL3';
+  editingBook.value[urlField] = '';
+
+  const inputMap = {
+    img1: fileInput1,
+    img2: fileInput2,
+    img3: fileInput3
+  };
+  if (inputMap[imageKey].value) {
+    inputMap[imageKey].value.value = '';
+  }
+};
+
+const handleUrlInput = (imageKey) => {
+  const urlField = imageKey === 'img1' ? 'imgURL1' : 
+                  imageKey === 'img2' ? 'imgURL2' : 'imgURL3';
+  const url = editingBook.value[urlField];
+  
+  if (url) {
+    imagePreviews.value[imageKey] = url;
+  } else {
+    imagePreviews.value[imageKey] = null;
+  }
+};
+
+// Reset filters
+const resetFilters = () => {
+  currentFilters.value = {
+    promo: false,
+    price: null,
+    priceMin: null,
+    priceMax: null,
+    age: null,
+    type: null,
+    selectedCategoryId: null
+  };
+  searchQuery.value = '';
+  currentPage.value = 1;
+  fetchBooks();
+};
+
+// Enhanced fetch books function with search and filter support
+const fetchBooks = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append("page", currentPage.value.toString());
+    
+    // Use Book/query endpoint for filtering
+    if (searchQuery.value && searchQuery.value.trim()) {
+      const searchTerm = searchQuery.value.trim();
+      
+      // If it's a numeric search, we'll handle it differently
+      if (/^\d+$/.test(searchTerm)) {
+        // For ID search, we might need to use admin endpoint
+        try {
+          const response = await axios.get(`/admin/products/${searchTerm}`);
+          filteredBooks.value = [response.data].map((book) => ({
+            bookID: book.bookID,
+            title: book.title,
+            author: book.author,
+            price: book.price,
+            discount: book.discount || 0,
+            imgURL1: book.imgURL1,
+            imgURL2: book.imgURL2,
+            imgURL3: book.imgURL3,
+            stock: book.stock || 0,
+            avgRating: book.avgRating || 0,
+            totalRating: book.totalRating || 0,
+            description: book.description || '',
+            supplier: book.supplier || '',
+            publishYear: book.publishYear || new Date().getFullYear(),
+            pageNum: book.pageNum || 0,
+            language: book.language || 'Tiếng Việt',
+            binding: book.binding || 'Bìa mềm',
+            ageGroup: book.ageGroup || 'all',
+            categoryID: book.categoryID || null,
+            discountPrice: book.discount > 0 ? 
+              (book.price * (100 - book.discount) / 100) : book.price,
+            originalPrice: book.price,
+            isFlashSale: false // We'll check this separately
+          }));
+          
+          currentPage.value = 1;
+          totalItems.value = 1;
+          totalPages.value = 1;
+          return;
+        } catch (err) {
+          // If ID search fails, fall back to name search
+          queryParams.append("name", searchTerm);
+        }
+      } else {
+        queryParams.append("name", searchTerm);
+      }
+    }
+    
+    // Apply filters
+    if (currentFilters.value.promo) {
+      queryParams.append("promo", "true");
+    }
+    
+    if (currentFilters.value.price) {
+      queryParams.append("price", currentFilters.value.price);
+    } else if (currentFilters.value.priceMin && currentFilters.value.priceMax) {
+      queryParams.append("priceMin", currentFilters.value.priceMin);
+      queryParams.append("priceMax", currentFilters.value.priceMax);
+    }
+    
+    if (currentFilters.value.age) {
+      queryParams.append("age", currentFilters.value.age);
+    }
+    
+    if (currentFilters.value.type) {
+      queryParams.append("type", currentFilters.value.type);
+    }
+    
+    if (currentFilters.value.selectedCategoryId) {
+      queryParams.append("category", currentFilters.value.selectedCategoryId.toString());
+    }
+    
+    // Use Book/query endpoint for filtering
+    const response = await axios.get(`/Book/query?${queryParams.toString()}`);
+    const data = response.data;
+
+    // Get flash sales to mark books
+    const flashSalesResponse = await axios.get('/Home/FlashSale');
+    const flashSaleBooks = new Set(flashSalesResponse.data.map(fs => fs.bookID));
+
+    filteredBooks.value = data.items.map((book) => ({
+      bookID: book.bookID,
+      title: book.title,
+      author: book.author,
+      price: book.price,
+      discount: book.discount || 0,
+      imgURL1: book.imgURL1,
+      imgURL2: book.imgURL2,
+      imgURL3: book.imgURL3,
+      stock: book.stock || 0,
+      avgRating: book.avgRating || 0,
+      totalRating: book.totalRating || 0,
+      description: book.description || '',
+      supplier: book.supplier || '',
+      publishYear: book.publishYear || new Date().getFullYear(),
+      pageNum: book.pageNum || 0,
+      language: book.language || 'Tiếng Việt',
+      binding: book.binding || 'Bìa mềm',
+      ageGroup: book.ageGroup || 'all',
+      categoryID: book.categoryID || null,
+      discountPrice: book.discount > 0 ? 
+        (book.price * (100 - book.discount) / 100) : book.price,
+      originalPrice: book.price,
+      isFlashSale: flashSaleBooks.has(book.bookID)
+    }));
+
+    currentPage.value = data.currentPage;
+    totalItems.value = data.totalItems;
+    totalPages.value = data.totalPages;
+    
+  } catch (err) {
+    console.error("Error fetching books:", err);
+    
+    if (err.response && err.response.status === 404 && isSearching.value) {
+      filteredBooks.value = [];
+      totalItems.value = 0;
+      totalPages.value = 0;
+      currentPage.value = 1;
+    } else {
+      error.value = "Có lỗi xảy ra khi tải dữ liệu sách. Vui lòng thử lại sau.";
+    }
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Fetch categories
+const fetchCategories = async () => {
+  try {
+    const response = await axios.get(`/Book/category`);
+    
+    const categories = [];
+    Object.entries(response.data).forEach(([parent, subs]) => {
+      subs.forEach(sub => {
+        categories.push({
+          categoryID: getCategoryId(parent, sub),
+          categoryName: `${parent} - ${sub}`
+        });
+      });
+    });
+    
+    allCategories.value = categories;
+  } catch (err) {
+    console.error('Error fetching categories:', err);
+  }
+};
+
+// Enhanced search books function
+const searchBooks = () => {
+  currentPage.value = 1;
+  fetchBooks();
+};
+
+// Change page
+const changePage = (page) => {
+  if (page >= 1 && page <= totalPages.value && page !== currentPage.value) {
+    currentPage.value = page;
+    fetchBooks();
+  }
+};
+
+// Helper functions
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('vi-VN').format(price);
+};
+
+const calculateDiscountPrice = (price, discount) => {
+  if (!discount || discount === 0) return price;
+  return price * (100 - discount) / 100;
+};
+
+const getCategoryId = (parent, sub) => {
+  const categoryMappings = {
+    "Sách Tiếng Việt": {
+      "Tiểu thuyết": 3,
+      "Sách giáo khoa – Tham khảo": 4,
+      "Khoa học – Kỹ thuật": 5,
+      "Lịch sử – Nghệ thuật - Tôn giáo": 6,
+      "Kinh tế": 7,
+      "Văn hóa – Địa lý – Du lịch": 8,
+      "Chính trị": 9,
+    },
+    "Foreign Books": {
+      "Fantasy & Sci-Fi": 10,
+      "Novel": 11,
+      "Business & Management": 12,
+      "Science & Technology": 13,
+      "History & Politics": 14,
+    },
+  };
+
+  return categoryMappings[parent]?.[sub];
+};
+
+// Fetch detailed book info
+const fetchProductDetails = async (bookId) => {
+  try {
+    const response = await axios.get(`/admin/products/${bookId}`);
+    return response.data;
+  } catch (err) {
+    console.error('Error fetching book details:', err);
+    throw new Error('Không thể tải chi tiết sách.');
+  }
+};
+
+// Quick view
+const openQuickView = async (book) => {
+  try {
+    isLoading.value = true;
+    const detailedBook = await fetchProductDetails(book.bookID);
+    quickViewBook.value = {
+      ...book,
+      ...detailedBook,
+      discountPrice: book.discountPrice,
+      originalPrice: book.originalPrice
+    };
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Book modal
 const showBookModal = ref(false);
 const isEditMode = ref(false);
 const editingBook = ref({
+  bookID: null,
   title: '',
-  originalPrice: '',
-  discount: '0',
+  price: 0,
+  discount: 0,
   author: '',
-  publisher: '',
-  year: new Date().getFullYear(),
-  category: '',
+  supplier: '',
+  publishYear: new Date().getFullYear(),
+  pageNum: 0,
+  language: 'Tiếng Việt',
+  ageGroup: 'all',
+  categoryID: null,
+  binding: 'Bìa mềm',
+  stock: 0,
+  imgURL1: '',
+  imgURL2: '',
+  imgURL3: '',
   description: '',
-  image: 'https://media.istockphoto.com/id/1269703329/vi/vec-to/pixel-ngh%E1%BB%87-thu%E1%BA%ADt-8-bit-d%E1%BB%85-th%C6%B0%C6%A1ng-m%C3%A8o-con-trong-n%C6%B0%E1%BB%9Bc-th%C3%BA-c%C6%B0ng-pixel-n%C3%B3i-wow-h%C3%ACnh-minh-h%E1%BB%8Da.jpg?s=612x612&w=0&k=20&c=sKwIFKcrusX5xgsBdTUoT5HtpHSy58R6zz8-fWJ5f_w=',
-  rating: 0,
-  reviewCount: 0,
-  format: 'Bìa mềm',
-  ageGroup: 'Mọi lứa tuổi'
+  avgRating: 0,
+  totalRating: 0
 });
 
-// Image upload functionality
-const fileInput = ref(null);
-const imagePreview = ref(null);
-const uploadError = ref(null);
-const selectedFile = ref(null);
-
-// Handle file upload
-const handleFileUpload = (event) => {
+// Reset image states when modal opens/closes
+const resetImageStates = () => {
+  imagePreviews.value = { img1: null, img2: null, img3: null };
+  uploadProgress.value = { img1: 0, img2: 0, img3: 0 };
+  dragStates.value = { img1: false, img2: false, img3: false };
   uploadError.value = null;
-  const file = event.target.files[0];
-  
-  if (!file) return;
-  
-  // Validate file type
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  if (!validTypes.includes(file.type)) {
-    uploadError.value = 'Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WEBP)';
-    return;
-  }
-  
-  // Validate file size (5MB max)
-  const maxSize = 5 * 1024 * 1024; // 5MB
-  if (file.size > maxSize) {
-    uploadError.value = 'Kích thước file không được vượt quá 5MB';
-    return;
-  }
-  
-  // Store the file for later use
-  selectedFile.value = file;
-  
-  // Create preview
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    imagePreview.value = e.target.result;
-    // Clear the URL input since we're using an uploaded file
-    editingBook.value.image = '';
-  };
-  reader.readAsDataURL(file);
-};
-
-// Preview image from URL
-const previewUrlImage = () => {
-  if (!editingBook.value.image) {
-    uploadError.value = 'Vui lòng nhập URL ảnh';
-    return;
-  }
-  
-  // Clear any previous file upload
-  selectedFile.value = null;
-  
-  // Set the preview to the URL
-  imagePreview.value = editingBook.value.image;
-};
-
-// Remove image
-const removeImage = () => {
-  imagePreview.value = null;
-  selectedFile.value = null;
-  editingBook.value.image = '';
-  
-  // Reset file input
-  if (fileInput.value) {
-    fileInput.value.value = '';
-  }
 };
 
 // Open add book modal
 const openAddBookModal = () => {
   isEditMode.value = false;
   editingBook.value = {
+    bookID: null,
     title: '',
-    originalPrice: '',
-    discount: '0',
+    price: 0,
+    discount: 0,
     author: '',
-    publisher: '',
-    year: new Date().getFullYear(),
-    category: bookCategories.value[0],
+    supplier: '',
+    publishYear: new Date().getFullYear(),
+    pageNum: 0,
+    language: 'Tiếng Việt',
+    ageGroup: 'all',
+    categoryID: allCategories.value[0]?.categoryID || null,
+    binding: 'Bìa mềm',
+    stock: 0,
+    imgURL1: '',
+    imgURL2: '',
+    imgURL3: '',
     description: '',
-    image: '',
-    rating: 0,
-    reviewCount: 0,
-    format: 'Bìa mềm',
-    ageGroup: 'Mọi lứa tuổi'
+    avgRating: 0,
+    totalRating: 0
   };
-  imagePreview.value = null;
-  selectedFile.value = null;
-  uploadError.value = null;
+  resetImageStates();
   showBookModal.value = true;
 };
 
 // Open edit book modal
-const openEditBookModal = (book) => {
+const openEditBookModal = async (book) => {
   isEditMode.value = true;
-  editingBook.value = { ...book };
-  imagePreview.value = book.image;
-  selectedFile.value = null;
-  uploadError.value = null;
-  showBookModal.value = true;
   
-  // Close quick view if open
+  editingBook.value = {
+    bookID: book.bookID,
+    title: book.title || '',
+    author: book.author || '',
+    description: book.description || '',
+    price: Number(book.price) || 0,
+    stock: Number(book.stock) || 0,
+    categoryID: Number(book.categoryID) || allCategories.value[0]?.categoryID || null,
+    discount: Number(book.discount) || 0,
+    imgURL1: book.imgURL1 || '',
+    imgURL2: book.imgURL2 || '',
+    imgURL3: book.imgURL3 || '',
+    supplier: book.supplier || '',
+    publishYear: Number(book.publishYear) || new Date().getFullYear(),
+    pageNum: Number(book.pageNum) || 0,
+    language: book.language || 'Tiếng Việt',
+    binding: book.binding || 'Bìa mềm',
+    ageGroup: book.ageGroup || 'all',
+    avgRating: Number(book.avgRating) || 0,
+    totalRating: Number(book.totalRating) || 0
+  };
+  
+  // Set image previews for existing images
+  imagePreviews.value = {
+    img1: book.imgURL1 || null,
+    img2: book.imgURL2 || null,
+    img3: book.imgURL3 || null
+  };
+  
+  uploadProgress.value = { img1: 0, img2: 0, img3: 0 };
+  dragStates.value = { img1: false, img2: false, img3: false };
+  uploadError.value = null;
+  
+  showBookModal.value = true;
   quickViewBook.value = null;
 };
 
-// Upload image to server (simulated)
-const uploadImage = async () => {
-  if (!selectedFile.value && !editingBook.value.image) {
-    return null;
-  }
+// Save book
+const saveBook = async () => {
+  isLoading.value = true;
+  error.value = null;
   
-  if (selectedFile.value) {
-    // In a real application, you would upload the file to your server here
-    // For this example, we'll simulate a successful upload and return the data URL
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(imagePreview.value);
-      }, 500);
-    });
+  try {
+    if (!editingBook.value.title || !editingBook.value.author || !editingBook.value.price) {
+      throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc (Tiêu đề, Tác giả, Giá)');
+    }
+
+    const bookData = {
+      ...(isEditMode.value && editingBook.value.bookID && { bookID: Number(editingBook.value.bookID) }),
+      
+      title: String(editingBook.value.title).trim(),
+      author: String(editingBook.value.author).trim(),
+      description: String(editingBook.value.description || '').trim(),
+      price: Number(editingBook.value.price),
+      stock: Number(editingBook.value.stock) || 0,
+      categoryID: Number(editingBook.value.categoryID),
+      discount: Number(editingBook.value.discount) || 0,
+      
+      imgURL1: String(editingBook.value.imgURL1 || ''),
+      imgURL2: String(editingBook.value.imgURL2 || ''),
+      imgURL3: String(editingBook.value.imgURL3 || ''),
+      
+      supplier: String(editingBook.value.supplier || '').trim(),
+      publishYear: Number(editingBook.value.publishYear) || new Date().getFullYear(),
+      pageNum: Number(editingBook.value.pageNum) || 0,
+      language: String(editingBook.value.language || 'Tiếng Việt').trim(),
+      binding: String(editingBook.value.binding || 'Bìa mềm').trim(),
+      ageGroup: String(editingBook.value.ageGroup || 'all').trim(),
+      
+      avgRating: 0,
+      totalRating: 0
+    };
+
+    if (bookData.price <= 0) {
+      throw new Error('Giá sách phải lớn hơn 0');
+    }
+    
+    if (bookData.discount < 0 || bookData.discount > 100) {
+      throw new Error('Giảm giá phải từ 0% đến 100%');
+    }
+    
+    if (bookData.stock < 0) {
+      throw new Error('Số lượng tồn kho không thể âm');
+    }
+    
+    if (!bookData.categoryID || bookData.categoryID <= 0) {
+      throw new Error('Vui lòng chọn danh mục');
+    }
+
+    let response;
+    
+    if (isEditMode.value && editingBook.value.bookID) {
+      response = await axios.put(`/admin/products/${editingBook.value.bookID}`, bookData);
+    } else {
+      const { bookID, ...createData } = bookData;
+      response = await axios.post(`/admin/products`, createData);
+    }
+    
+    await fetchBooks();
+    
+    showBookModal.value = false;
+    resetImageStates();
+    
+    alert(isEditMode.value ? 'Đã cập nhật sách thành công!' : 'Đã thêm sách mới thành công!');
+    
+  } catch (err) {
+    console.error('Error saving book:', err);
+    
+    if (err.response) {
+      const status = err.response.status;
+      const data = err.response.data;
+      
+      if (status === 400) {
+        let errorMessage = 'Dữ liệu không hợp lệ. ';
+        
+        if (data.errors) {
+          const validationErrors = [];
+          Object.keys(data.errors).forEach(field => {
+            validationErrors.push(`${field}: ${data.errors[field].join(', ')}`);
+          });
+          errorMessage += validationErrors.join('; ');
+        } else if (data.message) {
+          errorMessage += data.message;
+        } else if (typeof data === 'string') {
+          errorMessage += data;
+        } else {
+          errorMessage += 'Vui lòng kiểm tra lại thông tin đã nhập.';
+        }
+        
+        error.value = errorMessage;
+      } else if (status === 401) {
+        error.value = 'Bạn không có quyền thực hiện thao tác này.';
+      } else if (status === 404) {
+        error.value = 'Không tìm thấy API endpoint. Vui lòng liên hệ admin.';
+      } else if (status === 422) {
+        error.value = data.message || 'Dữ liệu không đúng định dạng.';
+      } else if (status === 500) {
+        error.value = 'Lỗi server. Vui lòng thử lại sau.';
+      } else {
+        error.value = data.message || `Lỗi HTTP ${status}. Vui lòng thử lại.`;
+      }
+    } else if (err.request) {
+      error.value = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+      console.error('Network error:', err.request);
+    } else if (err.message) {
+      error.value = err.message;
+    } else {
+      error.value = 'Có lỗi không xác định xảy ra. Vui lòng thử lại.';
+    }
+  } finally {
+    isLoading.value = false;
   }
-  
-  // If using URL, just return it
-  return editingBook.value.image;
 };
 
-// Save book (add or update)
-const saveBook = async () => {
-  // Validate that we have an image
-  if (!imagePreview.value && !editingBook.value.image) {
-    uploadError.value = 'Vui lòng tải lên hoặc nhập URL ảnh sách';
-    return;
+const handlePageJump = () => {
+  if (jumpToPage.value && jumpToPage.value >= 1 && jumpToPage.value <= totalPages.value) {
+    changePage(jumpToPage.value);
+    jumpToPage.value = null;
   }
-  
-  // Upload image if needed
-  const imageUrl = await uploadImage();
-  
-  if (!imageUrl) {
-    uploadError.value = 'Không thể tải ảnh lên. Vui lòng thử lại.';
-    return;
-  }
-  
-  // Calculate discounted price
-  const originalPrice = parseInt(editingBook.value.originalPrice);
-  const discount = parseInt(editingBook.value.discount);
-  const discountPrice = (originalPrice * (100 - discount) / 100).toString();
-  
-  if (isEditMode.value) {
-    // Update existing book
-    const index = allBooks.value.findIndex(book => book.id === editingBook.value.id);
-    if (index !== -1) {
-      allBooks.value[index] = {
-        ...editingBook.value,
-        image: imageUrl,
-        discountPrice
-      };
-    }
-  } else {
-    // Add new book
-    const newBook = {
-      id: allBooks.value.length + 1,
-      ...editingBook.value,
-      image: imageUrl,
-      discountPrice
-    };
-    allBooks.value.push(newBook);
-  }
-  
-  // Apply filters to update display
-  applyFilters();
-  
-  // Close modal
-  showBookModal.value = false;
-  
-  // Show confirmation
-  alert(isEditMode.value ? 'Đã cập nhật sách thành công!' : 'Đã thêm sách mới thành công!');
 };
 
 // Delete confirmation
@@ -924,34 +2125,86 @@ const bookToDelete = ref(null);
 const confirmDeleteBook = (book) => {
   bookToDelete.value = book;
   showDeleteConfirmation.value = true;
-  
-  // Close quick view if open
   quickViewBook.value = null;
 };
 
-// Delete book
-const deleteBook = () => {
-  if (bookToDelete.value) {
-    const index = allBooks.value.findIndex(book => book.id === bookToDelete.value.id);
-    if (index !== -1) {
-      allBooks.value.splice(index, 1);
+const deleteBook = async () => {
+  if (!bookToDelete.value) return;
+  
+  isLoading.value = true;
+  error.value = null;
+  
+  try {
+    await axios.delete(`/admin/products/${bookToDelete.value.bookID}`);
+    
+    await fetchBooks();
+    alert('Đã xóa sách thành công!');
+  } catch (err) {
+    console.error('Error deleting book:', err);
+    
+    if (err.response) {
+      const status = err.response.status;
+      const data = err.response.data;
       
-      // Apply filters to update display
-      applyFilters();
-      
-      // Show confirmation
-      alert('Đã xóa sách thành công!');
+      if (status === 404) {
+        error.value = 'Không tìm thấy sách cần xóa.';
+      } else if (status === 401) {
+        error.value = 'Bạn không có quyền xóa sách.';
+      } else {
+        error.value = data.message || 'Có lỗi xảy ra khi xóa sách.';
+      }
+    } else {
+      error.value = 'Không thể kết nối đến server. Vui lòng thử lại.';
+    }
+  } finally {
+    isLoading.value = false;
+    showDeleteConfirmation.value = false;
+    bookToDelete.value = null;
+  }
+};
+
+// Watch for search query changes
+watch(searchQuery, (newValue) => {
+  if (!newValue || newValue.trim() === '') {
+    if (filteredBooks.value.length === 0 && !isLoading.value) {
+      fetchBooks();
     }
   }
-  
-  // Close confirmation modal
-  showDeleteConfirmation.value = false;
-  bookToDelete.value = null;
+});
+
+const handleBookInputBlur = () => {
+  // Delay hiding dropdown to allow click events to fire
+  setTimeout(() => {
+    showBookDropdown.value = false;
+  }, 200);
+};
+
+const selectBook = (book) => {
+  selectedBookForFlashSale.value = book;
+  newFlashSale.value.bookID = book.bookID;
+  bookSearchQuery.value = `${book.title} (ID: ${book.bookID})`;
+  showBookDropdown.value = false;
+};
+
+const clearSelectedBookForFlashSale = () => {
+  selectedBookForFlashSale.value = null;
+  newFlashSale.value.bookID = '';
+  bookSearchQuery.value = '';
+  showBookDropdown.value = false;
+  filteredBooksForSelection.value = allBooks.value;
 };
 
 // Initialize
-onMounted(() => {
-  applyFilters();
+onMounted(async () => {
+  await fetchCategories();
+  await fetchBooks();
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.relative')) {
+      showBookDropdown.value = false;
+    }
+  });
 });
 </script>
 
@@ -974,8 +2227,65 @@ onMounted(() => {
   background: #b45309;
 }
 
-/* File upload drag and drop */
-input[type="file"] {
-  cursor: pointer;
+/* Drag and drop animations */
+.drag-over {
+  border-color: #f59e0b;
+  background-color: #fef3c7;
+}
+
+.upload-progress {
+  transition: width 0.3s ease;
+}
+
+/* Search input enhancements */
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+/* Product card hover effects */
+.product-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Pagination button styles */
+.pagination-btn {
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ID badge styles */
+.id-badge {
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Flash sale badge animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+}
+/* Flash sale badge animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

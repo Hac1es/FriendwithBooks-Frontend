@@ -131,9 +131,14 @@ const registerWithEmail = async () => {
     if (response.status === 200) {
       // Lưu token vào localStorage (hoặc sessionStorage)
       localStorage.setItem("token", response.data.token);
+
       // Giải mã token để lấy role
       const decoded = jwtDecode(response.data.token);
+      // Lưu token vào localStorage (hoặc sessionStorage)
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("userInfo", JSON.stringify(decoded));
       alert("Đăng ký thành công!");
+
       store.dispatch("login", decoded.role);
       // Lưu thông tin user vào store và lưu vào localStorage
       store.dispatch("setUserInfo", response.data.user);
@@ -156,7 +161,7 @@ const signInWithGoogle = async () => {
     const idToken = googleUser.id_token || googleUser.idToken;
 
     // Gửi idToken lên backend
-    const response = await axios.post('/Auth/google-login', {
+    const response = await axios.post("/Auth/googleLogin", {
       idToken,
     });
 

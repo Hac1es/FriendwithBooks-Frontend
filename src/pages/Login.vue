@@ -42,13 +42,19 @@
         </div>
 
         <div class="flex items-center justify-center mt-7">
-          <button
-            class="flex items-center gap-2 px-6 py-3 border border-gray-400 rounded-xl hover:bg-gray-100"
-            @click="signInWithGoogle"
-          >
-            <img src="/Google.png" alt="Google" class="w-6 h-6" />
-            <span class="text-gray-600 font-medium">Đăng nhập với Google</span>
-          </button>
+          <GoogleLogin
+            :client-id="'975931811781-6h7psjl3epjhhn4kv37v2tbg2pdpbs0t.apps.googleusercontent.com'"
+            :buttonConfig="{
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              text: 'signin_with',
+              shape: 'rectangular',
+              logo_alignment: 'left'
+            }"
+            @success="onGoogleSuccess"
+            @error="onGoogleError"
+          />
         </div>
       </div>
     </div>
@@ -59,11 +65,12 @@
 <script setup>
 import Footer from "../components/Footer.vue";
 import Header from "../components/Header/index.vue";
-import { ref, inject } from "vue";
+import { ref } from "vue";
 import axios from "../utils/axios";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { jwtDecode } from "jwt-decode";
+import { GoogleLogin } from 'vue3-google-login';
 
 const router = useRouter();
 const email = ref("");
@@ -104,32 +111,31 @@ const login = async () => {
   }
 };
 
-const googleAuth = inject("googleAuth");
-
-const signInWithGoogle = async () => {
+const onGoogleSuccess = async (response) => {
   try {
-    const googleUser = await googleAuth.signIn();
-    const idToken = googleUser.id_token || googleUser.idToken;
-
-    // Gửi idToken lên backend
-    const response = await axios.post('/Auth/google-login', {
-      idToken,
-    });
-
-    if (response.status === 200) {
-      localStorage.setItem("token", response.data.token);
-      const decoded = jwtDecode(response.data.token);
+    const idToken = response.credential;
+    const res = await axios.post('/Auth/googleLogin', { idToken });
+    if (res.status === 200) {
+      const decoded = jwtDecode(res.data.token);
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userInfo", JSON.stringify(decoded));
       alert("Đăng nhập thành công!");
       store.dispatch("login", decoded.role);
+      store.dispatch("setUserInfo", decoded);
     } else {
-      alert(response.data.message || "Đăng nhập thất bại.");
+      alert(res.data.message || "Đăng nhập thất bại.");
     }
   } catch (error) {
     alert(
       error.response?.data?.message ||
-        "Đăng nhập thất bại. Vui lòng thử lại sau."
+      "Đăng nhập thất bại. Vui lòng thử lại sau."
     );
+    console.log(error);
   }
+};
+
+const onGoogleError = () => {
+  alert("Đăng nhập Google thất bại.");
 };
 
 const goToRegister = () => {

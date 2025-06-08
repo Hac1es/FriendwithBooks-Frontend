@@ -3,7 +3,7 @@
     <!-- Main Content -->
     <div class="flex-1 container mx-auto flex">
       <!-- Sidebar -->
-      <div class="w-1/4 p-4 border-gray-200">
+      <div class="w-1/4 mr-4 border-gray-200">
         <!-- Search -->
         <div class="relative mb-4">
           <input
