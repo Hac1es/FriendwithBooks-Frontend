@@ -900,8 +900,11 @@
                 <label class="block text-gray-700 mb-1 text-sm font-medium">Năm xuất bản</label>
                 <input 
                   type="number" 
-                  v-model="editingBook.publishYear" 
+                  v-model.number="editingBook.publishYear" 
                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  min="1000"
+                  max="2030"
+                  step="1"
                 />
               </div>
               
@@ -1036,7 +1039,13 @@
                   </div>
                   <div>
                     <span class="text-gray-500">Năm xuất bản:</span>
-                    <span class="font-medium ml-2">{{ quickViewBook.publishYear }}</span>
+                    <span class="font-medium ml-2">{{ 
+                      quickViewBook.publishYear 
+                        ? (typeof quickViewBook.publishYear === 'string' 
+                            ? new Date(quickViewBook.publishYear).getFullYear() 
+                            : quickViewBook.publishYear)
+                        : 'Không có thông tin' 
+                    }}</span>
                   </div>
                   <div>
                     <span class="text-gray-500">Số trang:</span>
@@ -2011,20 +2020,33 @@ const openEditBookModal = async (book) => {
   
   isEditMode.value = true;
   
+  // Xử lý publishYear từ DateTime sang năm
+  let publishYear = new Date().getFullYear();
+  if (book.publishYear) {
+    if (typeof book.publishYear === 'string') {
+      // Nếu là string DateTime, extract năm
+      const year = new Date(book.publishYear).getFullYear();
+      publishYear = isNaN(year) ? new Date().getFullYear() : year;
+    } else if (typeof book.publishYear === 'number') {
+      // Nếu đã là số năm
+      publishYear = book.publishYear;
+    }
+  }
+  
   editingBook.value = {
     bookID: book.bookID,
     title: book.title || '',
     author: book.author || '',
     description: book.description || '',
     price: Number(book.price) || 0,
-    stock: parseInt(book.stock) || 0, // Ensure it's an integer
+    stock: parseInt(book.stock) || 0,
     categoryID: Number(book.categoryID) || allCategories.value[0]?.categoryID || null,
     discount: Number(book.discount) || 0,
     imgURL1: book.imgURL1 || '',
     imgURL2: book.imgURL2 || '',
     imgURL3: book.imgURL3 || '',
     supplier: book.supplier || '',
-    publishYear: Number(book.publishYear) || new Date().getFullYear(),
+    publishYear: publishYear, // Sử dụng năm đã xử lý
     pageNum: Number(book.pageNum) || 0,
     language: book.language || 'Tiếng Việt',
     binding: book.binding || 'Bìa mềm',
@@ -2060,6 +2082,10 @@ const saveBook = async () => {
       throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc (Tiêu đề, Tác giả, Giá)');
     }
 
+    // Xử lý publishYear - chuyển năm thành DateTime cho backend
+    const publishYear = Number(editingBook.value.publishYear) || new Date().getFullYear();
+
+
     const bookData = {
       ...(isEditMode.value && editingBook.value.bookID && { bookID: Number(editingBook.value.bookID) }),
       
@@ -2067,7 +2093,7 @@ const saveBook = async () => {
       author: String(editingBook.value.author).trim(),
       description: String(editingBook.value.description || '').trim(),
       price: Number(editingBook.value.price),
-      stock: parseInt(editingBook.value.stock) || 0, // Ensure it's an integer
+      stock: parseInt(editingBook.value.stock) || 0,
       categoryID: Number(editingBook.value.categoryID),
       discount: Number(editingBook.value.discount) || 0,
       
@@ -2076,7 +2102,7 @@ const saveBook = async () => {
       imgURL3: String(editingBook.value.imgURL3 || ''),
       
       supplier: String(editingBook.value.supplier || '').trim(),
-      publishYear: Number(editingBook.value.publishYear) || new Date().getFullYear(),
+      publishYear: publishYear, // Gửi như DateTime
       pageNum: Number(editingBook.value.pageNum) || 0,
       language: String(editingBook.value.language || 'Tiếng Việt').trim(),
       binding: String(editingBook.value.binding || 'Bìa mềm').trim(),
