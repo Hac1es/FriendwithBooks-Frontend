@@ -48,7 +48,10 @@
           />
         </svg>
         <div v-else class="w-6 h-6 mb-1">
-          <img :src="userInfo.avatar" class="rounded-full object-cover" />
+          <img
+            :src="userInfo.avatar"
+            class="w-full h-full rounded-full object-cover"
+          />
         </div>
         <span class="text-xs" :class="auth && userInfo ? 'font-bold' : ''">{{
           auth && userInfo ? userInfo.name.trim().split(" ").pop() : "Tài khoản"
@@ -61,8 +64,19 @@
         class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202] focus:outline-none"
         @click="logout"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-6 h-6 mb-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
+          />
         </svg>
         <span class="text-xs">Log out</span>
       </button>
@@ -123,6 +137,7 @@ function logout() {
   });
   localStorage.removeItem("token");
   localStorage.removeItem("userInfo");
+  localStorage.removeItem("cart");
   store.dispatch("logout");
 }
 
@@ -145,6 +160,10 @@ const handleFind = (val) => {
   if (val && val.trim() !== "") {
     router.push({ path: "/Products", query: { name: val.trim() } });
   }
+};
+
+const handleSuggestionClick = (item) => {
+  router.push(`/Products/${item.bookID}`);
 };
 
 watch(

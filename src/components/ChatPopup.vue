@@ -2,51 +2,68 @@
   <div v-if="isVisible">
     <!-- Chat popup-->
     <div
-      class="fixed bottom-0 right-0 w-96 bg-white rounded-lg shadow-xl z-40 border border-gray-200 flex flex-col"
+      class="fixed bottom-0 right-0 w-96 bg-white rounded-lg shadow-xl z-40 border border-gray-200 flex flex-col min-h-96"
       style="max-height: 70%"
       ref="chatBox"
     >
       <!-- Header -->
       <div class="bg-white p-4 border-b flex justify-between items-center">
         <h2 class="text-2xl font-bold text-gray-800">Hỗ trợ</h2>
-        <div class="flex space-x-3">
-          <button class="text-amber-400 hover:text-amber-500">
-            <AlertTriangleIcon class="h-5 w-5" />
-          </button>
-          <button class="text-gray-400 hover:text-gray-500">
-            <TrashIcon class="h-5 w-5" />
-          </button>
-        </div>
+        <button class="text-gray-400 hover:text-gray-500">
+          <TrashIcon class="h-5 w-5" />
+        </button>
       </div>
 
-      <!-- Chat messages -->
-      <div class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
+      <n-spin :show="isLoading" class="flex-1 flex flex-col">
+        <!-- Chat messages -->
         <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          :class="msg.sender === 'user' ? 'flex justify-end' : 'flex'"
+          class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4 min-h-0 max-h-72"
+          ref="messagesContainer"
         >
           <div
-            v-if="msg.sender === 'support'"
-            class="w-8 h-8 rounded-full bg-gray-300 mr-2 self-end overflow-hidden"
+            v-for="(msg, index) in messages"
+            :key="msg.id || index"
+            :class="
+              msg.senderId === Number(userInfo.id)
+                ? 'flex justify-end items-end'
+                : 'flex items-end'
+            "
           >
-            <img src="/user.png" alt="Support" class="h-8 w-8 rounded-full" />
-          </div>
-
-          <div
-            class="bg-white rounded-lg p-3 max-w-xs shadow-sm border border-gray-200 relative"
-          >
-            <p class="text-gray-800">{{ msg.text }}</p>
-          </div>
-
-          <div
-            v-if="msg.sender === 'user'"
-            class="w-8 h-8 rounded-full bg-gray-300 ml-2 self-end overflow-hidden"
-          >
-            <img src="/user.png" alt="User" class="h-8 w-8 rounded-full" />
+            <!-- Avatar bên trái nếu là support/admin -->
+            <div
+              v-if="msg.senderId !== Number(userInfo.id)"
+              class="w-8 h-8 rounded-full bg-gray-300 mr-2 self-end overflow-hidden"
+            >
+              <img
+                :src="msg.senderAvatar || '/user.png'"
+                alt="Support"
+                class="h-8 w-8 rounded-full"
+              />
+            </div>
+            <!-- Nội dung tin nhắn -->
+            <div
+              class="bg-white rounded-lg p-3 max-w-xs shadow-sm border border-gray-200 relative"
+            >
+              <p class="text-gray-800">{{ msg.message || msg.text }}</p>
+              <span class="block text-xs text-gray-400 mt-1">{{
+                msg.sender
+              }}</span>
+            </div>
+            <!-- Avatar bên phải nếu là user -->
+            <div
+              v-if="msg.senderId === Number(userInfo.id)"
+              class="w-8 h-8 rounded-full bg-gray-300 ml-2 self-end overflow-hidden"
+            >
+              <img
+                :src="userInfo.avatar || '/user.png'"
+                alt="User"
+                class="h-8 w-8 rounded-full"
+              />
+            </div>
           </div>
         </div>
-      </div>
+        <template #description> Wait for it... </template>
+      </n-spin>
 
       <!-- Input area -->
       <div class="p-4 border-t bg-white">
@@ -57,7 +74,8 @@
             v-model="message"
             type="text"
             placeholder="Chúng tôi có thể hỗ trợ bạn như thế nào?"
-            class="flex-1 outline-none text-gray-700"
+            class="flex-1 outline-none text-gray-700 bg-white"
+            @keyup.enter="sendMessage"
           />
           <div class="flex space-x-2">
             <button class="text-gray-500 hover:text-gray-700">
@@ -85,55 +103,200 @@ import {
   Send as SendIcon,
 } from "lucide-vue-next";
 import { useStore } from "vuex";
+import { HubConnectionBuilder } from "@microsoft/signalr";
+import { useRouter } from "vue-router";
+import axios from "../utils/axios";
 
-const message = ref("");
-const messages = ref([
-  {
-    text: "Shop giúp mình đổi mô hình Luffy Gear 5 được không ạ? Nó có chi tiết bị lỗi",
-    sender: "user",
-  },
-  {
-    text: "Cảm ơn bạn đã liên hệ bộ phận hỗ trợ khách hàng của FriendwithBooks. Chúng tôi sẽ phản hồi trong thời gian sớm nhất!",
-    sender: "support",
-  },
-]);
-
-function sendMessage() {
-  if (!message.value.trim()) return;
-
-  messages.value.push({
-    text: message.value,
-    sender: "user",
-  });
-
-  message.value = "";
-
-  // Simulate response
-  setTimeout(() => {
-    messages.value.push({
-      text: "Chúng tôi đã nhận được tin nhắn của bạn và sẽ phản hồi sớm.",
-      sender: "support",
-    });
-  }, 1000);
-}
-
+// Store & user info
 const store = useStore();
 const isVisible = computed(() => store.state.isChatVisible);
+const userInfo = computed(() => store.state.userInfo);
+const router = useRouter();
+
+// Chat state
+const message = ref("");
+const messages = ref([]);
+const connection = ref(null);
+const currentPage = ref(1);
+const totalPages = ref(1);
+const isLoading = ref(false);
+const chatBox = ref(null);
+const messagesContainer = ref(null);
+
+const loadMsg = async (page = 1) => {
+  if (isLoading.value) return;
+  isLoading.value = true;
+  try {
+    const resp = await axios.get(`/Chat/conversations?page=${page}`);
+    console.log(resp.data);
+    totalPages.value = resp.data.totalPages;
+    currentPage.value = resp.data.currentPage;
+    if (resp.data.totalCount === 0 && page === 1) {
+      messages.value = [
+        {
+          text: "Chào bạn! Tôi có thể giúp gì cho bạn?",
+          sender: "support",
+          senderAvatar: "/user.png",
+        },
+      ];
+    } else {
+      if (page === 1) {
+        messages.value = resp.data.messages;
+      } else {
+        messages.value = [...resp.data.messages, ...messages.value];
+      }
+    }
+    if (messages.value.length > 0) {
+      localStorage.setItem(
+        "latestMessageId",
+        messages.value[messages.value.length - 1].id
+      );
+    }
+  } catch (err) {
+    console.error("Load messages error:", err);
+  }
+  isLoading.value = false;
+};
+
+function handleUnauthorized() {
+  // Xóa token
+  localStorage.removeItem("token");
+  localStorage.removeItem("userInfo");
+  // Đóng chat popup
+  store.commit("hideChat");
+  // Xóa thông tin user
+  store.dispatch("logout");
+  // Chuyển hướng về login
+  router.push("/login");
+  // Thông báo cho user
+  alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+}
+
+const scrollToBottom = () => {
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  }
+};
+
+// SignalR setup
+const initializeSignalR = async () => {
+  try {
+    console.log(localStorage.getItem("token"));
+    connection.value = new HubConnectionBuilder()
+      .withUrl("https://localhost:7129/api/chathub", {
+        accessTokenFactory: () => localStorage.getItem("token"),
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    // Lắng nghe tin nhắn mới từ server
+    connection.value.on("ReceiveMessage", (msg) => {
+      messages.value.push({
+        text: msg.message,
+        sender: "admin",
+        senderName: msg.sender,
+        senderAvatar: msg.senderAvatar,
+        id: msg.id,
+      });
+      localStorage.setItem("latestMessageId", id);
+      scrollToBottom();
+    });
+
+    connection.value.onclose((error) => {
+      if (error && error.message && error.message.includes("401")) {
+        handleUnauthorized();
+      }
+    });
+
+    await connection.value.start();
+    console.log("SignalR Connected!");
+  } catch (err) {
+    // Bắt lỗi 401
+    if (err && err.message && err.message.includes("401")) {
+      handleUnauthorized();
+    } else {
+      console.error("SignalR Connection Error: ", err);
+    }
+  }
+};
+
+// Gửi tin nhắn lên server
+const sendMessage = async () => {
+  if (
+    !message.value.trim() ||
+    !connection.value ||
+    connection.value.state !== "Connected"
+  )
+    return;
+
+  // Hiển thị tin nhắn của user ngay lập tức
+  messages.value.push({
+    text: message.value,
+    senderId: Number(userInfo.value.id),
+    sender: userInfo.value.name,
+    senderAvatar: userInfo.value.avatar,
+  });
+  scrollToBottom();
+
+  // Gửi lên server
+  try {
+    await connection.value.invoke("SendMessage", String(message.value), 152);
+  } catch (err) {
+    console.error("SendMessage error:", err);
+  }
+
+  message.value = "";
+};
+
+// Đóng chat popup
 const close = () => store.commit("hideChat");
 
-const chatBox = ref(null);
-
+// Đóng popup khi click ra ngoài
 function handleClickOutside(event) {
   if (chatBox.value && !chatBox.value.contains(event.target)) {
-    store.commit("hideChat");
+    close();
   }
 }
 
-onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
-});
+function onScroll() {
+  const el = chatBox.value;
+  if (el && el.scrollTop === 0 && currentPage.value < totalPages.value) {
+    loadMsg(currentPage.value + 1);
+  }
+}
 
+// Lifecycle
+onMounted(async () => {
+  await initializeSignalR();
+  document.addEventListener("click", handleClickOutside);
+  await loadMsg(1);
+
+  // Lấy latestMessageId từ localStorage
+  const latestMessageId = localStorage.getItem("latestMessageId");
+  if (latestMessageId) {
+    // Gọi API lấy các tin nhắn mới hơn
+    const resp = await axios.get(
+      `/Chat/conversations/latest?lastMessageId=${latestMessageId}&partnerId=152`
+    );
+    if (resp.data && resp.data.length > 0) {
+      messages.value = [...messages.value, ...resp.data];
+      // Cập nhật lại latestMessageId
+      localStorage.setItem(
+        "latestMessageId",
+        messages.value[messages.value.length - 1].id
+      );
+    }
+  }
+
+  if (chatBox.value) {
+    chatBox.value.addEventListener("scroll", onScroll);
+  }
+});
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
+  if (connection.value) connection.value.stop();
+  if (chatBox.value) {
+    chatBox.value.removeEventListener("scroll", onScroll);
+  }
 });
 </script>

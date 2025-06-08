@@ -2,8 +2,9 @@ import { createStore } from "vuex";
 
 export default createStore({
   state: {
-    isAuthenticated: 0, // Giả lập đăng nhập
+    isAuthenticated: 1, // Giả lập đăng nhập
     role: "admin", // Giả lập quyền admin
+
     isChatVisible: false, // Toggle chat
     userInfo: {
       id: 0,
@@ -23,6 +24,14 @@ export default createStore({
     LOGOUT(state) {
       state.isAuthenticated = false;
       state.role = "";
+      state.userInfo = {
+        id: 0,
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        avatar: "",
+      };
     },
     //Chat section
     showChat(state) {

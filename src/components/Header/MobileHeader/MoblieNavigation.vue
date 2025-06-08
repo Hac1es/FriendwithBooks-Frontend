@@ -39,9 +39,7 @@
         class="fixed top-0 right-0 w-3/4 max-w-sm bg-[#f8f8f8] shadow-lg p-6 z-50 overflow-y-auto flex flex-col h-full"
       >
         <nav class="space-y-4 flex-grow">
-          <router-link
-            to="/"
-            class="block hover:text-[#a50202]"
+          <router-link to="/" class="block hover:text-[#a50202]"
             >Trang chủ</router-link
           >
 
@@ -117,10 +115,12 @@
 
         <div class="flex justify-between items-center mt-10 px-2 shrink-0">
           <!-- Tài khoản -->
-          <button
+          <router-link
+            :to="auth && userInfo ? dynamicRoute.profile : dynamicRoute.login"
             class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
           >
             <svg
+              v-if="!auth || !userInfo"
               xmlns="http://www.w3.org/2000/svg"
               class="w-6 h-6 mb-1"
               fill="currentColor"
@@ -130,11 +130,44 @@
                 d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12Zm0 2.4c-3.1 0-9.3 1.6-9.3 4.7v1.6h18.6v-1.6c0-3.1-6.2-4.7-9.3-4.7Z"
               />
             </svg>
-            <span class="text-xs">Tài khoản</span>
+            <div v-else class="w-6 h-6 mb-1">
+              <img :src="userInfo.avatar" class="rounded-full object-cover" />
+            </div>
+            <span class="text-xs" :class="auth && userInfo ? 'font-bold' : ''">
+              {{
+                auth && userInfo
+                  ? userInfo.name.trim().split(" ").pop()
+                  : "Tài khoản"
+              }}
+            </span>
+          </router-link>
+
+          <!-- Nút Log out, chỉ hiển thị khi đã đăng nhập -->
+          <button
+            v-if="auth && userInfo"
+            class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202] focus:outline-none"
+            @click="logout"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-6 h-6 mb-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
+              />
+            </svg>
+            <span class="text-xs">Log out</span>
           </button>
 
           <!-- Giỏ hàng -->
-          <button
+          <router-link
+            :to="dynamicRoute.cart"
             class="flex flex-col items-center text-[#3b3b3b] hover:text-[#a50202]"
           >
             <svg
@@ -152,7 +185,7 @@
               />
             </svg>
             <span class="text-xs">Giỏ hàng</span>
-          </button>
+          </router-link>
         </div>
       </div>
     </transition>
@@ -170,12 +203,45 @@
 
 <script setup>
 import { useRouter } from "vue-router";
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { useStore } from "vuex";
 
 const isOpen = ref(false);
 const submenuOpen = ref(false);
 const productTappedOnce = ref(false);
 const router = useRouter();
+const store = useStore();
+
+const auth = computed(() => store.state.isAuthenticated);
+const userInfo = computed(() => store.state.userInfo);
+
+let dynamicRoute = ref({
+  profile: "/UserProfile",
+  cart: "/CartView",
+  login: "/login",
+});
+
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("userInfo");
+  store.dispatch("logout");
+  // Đóng menu sau khi logout
+  isOpen.value = false;
+}
+
+watch(
+  auth,
+  (newVal) => {
+    if (newVal) {
+      dynamicRoute.value.profile = "/UserProfile";
+      dynamicRoute.value.cart = "/CartView";
+    } else {
+      dynamicRoute.value.profile = "/login";
+      dynamicRoute.value.cart = "/login";
+    }
+  },
+  { immediate: true }
+);
 
 const toggleMenu = () => {
   isOpen.value = !isOpen.value;
