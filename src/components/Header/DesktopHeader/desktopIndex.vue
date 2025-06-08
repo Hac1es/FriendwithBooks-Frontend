@@ -100,6 +100,7 @@ import SearchBar from "../../SearchBar.vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import axios from "../../../utils/axios";
+import { supabase } from "../../../utils/supabase";
 
 let dynamicRoute = ref({
   profile: "/UserProfile",
@@ -115,6 +116,11 @@ const userInfo = computed(() => store.state.userInfo);
 let searchTimeout = null;
 
 function logout() {
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      supabase.auth.signOut();
+    }
+  });
   localStorage.removeItem("token");
   localStorage.removeItem("userInfo");
   store.dispatch("logout");
