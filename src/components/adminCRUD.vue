@@ -979,6 +979,7 @@
   </div>
 </div>
 
+
     <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div class="bg-white rounded-lg max-w-md w-full p-6 my-8">
@@ -1001,6 +1002,150 @@
         </div>
       </div>
     </div>
+
+    <!-- Quick View Modal -->
+
+
+
+
+    <div v-if="quickViewBook" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+
+
+      <div class="bg-white rounded-lg max-w-4xl w-full my-8">
+
+
+        <div class="flex justify-end p-2 sticky top-0 bg-white z-10">
+
+
+          <button @click="quickViewBook = null" class="text-gray-500 hover:text-gray-700">
+
+
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+
+
+            </svg>
+
+
+          </button>
+
+
+        </div>
+
+
+        <div class="p-6 max-h-[70vh] overflow-y-auto">
+
+
+          <div class="flex flex-col md:flex-row">
+
+
+            <div class="md:w-1/3">
+
+
+              <img :src="quickViewBook.imgURL1 || '/placeholder.svg?height=400&width=300'" alt="Book cover" class="w-full h-auto object-cover rounded-md" />
+
+
+            </div>
+
+
+            <div class="md:w-2/3 md:pl-6 mt-4 md:mt-0">
+
+
+              <h2 class="text-2xl font-bold">{{ quickViewBook.title }}</h2>
+
+
+              <div class="mt-2 flex items-center">
+
+
+                <div class="flex text-amber-500">
+
+
+                  <svg v-for="i in 5" :key="i" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="{ 'text-gray-300': i > Math.floor(quickViewBook.avgRating || 0) }" fill="currentColor" viewBox="0 0 24 24">
+
+
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />Add commentMore actions
+
+
+                  </svg>
+                </div>
+                </div>
+        <!-- Info Section -->
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-xl font-bold text-gray-900">{{ quickViewBook.title }}</h3>
+            <p class="text-gray-600">{{ quickViewBook.author }}</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="text-gray-500">ID:</span>
+              <span class="font-medium ml-2">{{ quickViewBook.bookID }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">Nhà xuất bản:</span>
+              <span class="font-medium ml-2">{{ quickViewBook.supplier }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">Năm xuất bản:</span>
+              <span class="font-medium ml-2">{{ quickViewBook.publishYear }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">Số trang:</span>
+              <span class="font-medium ml-2">{{ quickViewBook.pageNum }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">Ngôn ngữ:</span>
+              <span class="font-medium ml-2">{{ quickViewBook.language }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">Hình thức:</span>
+              <span class="font-medium ml-2">{{ quickViewBook.binding }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">Độ tuổi:</span>
+              <span class="font-medium ml-2">{{ getAgeFilterText(quickViewBook.ageGroup) }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">Tồn kho:</span>
+              <span class="font-medium ml-2">{{ quickViewBook.stock }}</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-2">
+              <span class="text-2xl font-bold text-green-600">{{ formatPrice(quickViewBook.discountPrice) }} đ</span>
+              <span v-if="quickViewBook.discount > 0" class="bg-red-500 text-white text-xs px-2 py-1 rounded">-{{ quickViewBook.discount }}%</span>
+            </div>
+            <div v-if="quickViewBook.discount > 0" class="text-gray-500 line-through">{{ formatPrice(quickViewBook.originalPrice) }} đ</div>
+          </div>
+
+          <div v-if="quickViewBook.description" class="space-y-2">
+            <h4 class="font-medium text-gray-900">Mô tả:</h4>
+            <p class="text-gray-600 text-sm">{{ quickViewBook.description }}</p>
+          </div>
+
+          <div class="flex space-x-2 pt-4">
+            <button 
+              class="bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 flex-1"
+              @click="openEditBookModal(quickViewBook)"
+            >
+              Chỉnh sửa
+            </button>
+            <button 
+              class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex-1"
+              @click="confirmDeleteBook(quickViewBook)"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
   </div>
 </template>
 
@@ -2268,13 +2413,6 @@ onMounted(async () => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Flash sale badge animation */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-}
 /* Flash sale badge animation */
 @keyframes pulse {
   0%, 100% {
