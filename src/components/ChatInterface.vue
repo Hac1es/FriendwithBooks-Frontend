@@ -26,7 +26,7 @@
           >
             <div class="relative">
               <img
-                :src="conv.senderAvatar"
+                :src="conv.partnerAvatar"
                 alt="User Avatar"
                 class="h-10 w-10 rounded-full"
               />
@@ -36,9 +36,15 @@
             </div>
             <div class="ml-3">
               <p class="font-medium text-gray-800">
-                {{ conv.sender == userInfo.name ? "Bạn: " : conv.sender }}
+                {{ conv.partnerName }}
               </p>
-              <p class="text-sm text-gray-500">{{ conv.lastMessage }}</p>
+              <p class="text-sm text-gray-500">
+                {{
+                  conv.isAdminSendLast
+                    ? `Bạn: ${conv.lastMessage}`
+                    : conv.lastMessage
+                }}
+              </p>
             </div>
           </div>
         </div>
@@ -62,7 +68,10 @@
         </div>
 
         <!-- Messages -->
-        <div class="flex-1 p-4 overflow-y-auto space-y-6">
+        <div
+          class="flex-1 p-4 overflow-y-auto space-y-6"
+          ref="messagesContainer"
+        >
           <div
             v-for="(msg, idx) in conversation.messages"
             :key="msg.id || idx"
@@ -136,6 +145,7 @@
               placeholder="Nhập tin nhắn..."
               class="flex-1 px-4 py-2 focus:outline-none bg-white"
               v-model="message"
+              @keyup.enter="sendMessage"
             />
             <button class="p-2 text-gray-500 hover:text-gray-700">
               <PaperclipIcon class="h-5 w-5" />
@@ -170,6 +180,7 @@ const message = ref("");
 const connection = ref(null);
 const isLoading = ref(false);
 const currentPartnerId = ref(null);
+const messagesContainer = ref(null);
 
 const getConversation = async () => {
   const response = await axios.get("/Chat/conversations/partners");
@@ -189,6 +200,12 @@ const getConv = async (partnerId) => {
   };
   currentPartnerId.value = partnerId;
   isLoading.value = false;
+};
+
+const scrollToBottom = () => {
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  }
 };
 
 const initializeSignalR = async () => {
@@ -215,6 +232,7 @@ const initializeSignalR = async () => {
           timestamp: msg.timestamp,
         });
         localStorage.setItem("latestMessageId", id);
+        scrollToBottom();
       }
     });
 
@@ -244,6 +262,7 @@ const sendMessage = async () => {
     timestamp: new Date().toISOString(),
   };
   conversation.value.messages.push(msgObj);
+  scrollToBottom();
 
   // Gửi lên server
   try {

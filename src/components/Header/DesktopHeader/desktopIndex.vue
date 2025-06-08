@@ -48,7 +48,10 @@
           />
         </svg>
         <div v-else class="w-6 h-6 mb-1">
-          <img :src="userInfo.avatar" class="rounded-full object-cover" />
+          <img
+            :src="userInfo.avatar"
+            class="w-full h-full rounded-full object-cover"
+          />
         </div>
         <span class="text-xs" :class="auth && userInfo ? 'font-bold' : ''">{{
           auth && userInfo ? userInfo.name.trim().split(" ").pop() : "Tài khoản"

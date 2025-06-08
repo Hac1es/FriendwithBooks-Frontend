@@ -18,6 +18,7 @@
         <!-- Chat messages -->
         <div
           class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4 min-h-0 max-h-72"
+          ref="messagesContainer"
         >
           <div
             v-for="(msg, index) in messages"
@@ -120,6 +121,7 @@ const currentPage = ref(1);
 const totalPages = ref(1);
 const isLoading = ref(false);
 const chatBox = ref(null);
+const messagesContainer = ref(null);
 
 const loadMsg = async (page = 1) => {
   if (isLoading.value) return;
@@ -170,6 +172,12 @@ function handleUnauthorized() {
   alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
 }
 
+const scrollToBottom = () => {
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  }
+};
+
 // SignalR setup
 const initializeSignalR = async () => {
   try {
@@ -191,6 +199,7 @@ const initializeSignalR = async () => {
         id: msg.id,
       });
       localStorage.setItem("latestMessageId", id);
+      scrollToBottom();
     });
 
     connection.value.onclose((error) => {
@@ -227,6 +236,7 @@ const sendMessage = async () => {
     sender: userInfo.value.name,
     senderAvatar: userInfo.value.avatar,
   });
+  scrollToBottom();
 
   // Gửi lên server
   try {
