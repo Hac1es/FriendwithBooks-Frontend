@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen py-3">
-
     <!-- Main Content -->
     <div class="container mx-auto px-4 flex flex-col md:flex-row">
       <!-- Sidebar Filters -->
@@ -173,7 +172,7 @@
               
               <!-- Stock info -->
               <div class="text-center text-xs text-gray-500 mt-1">
-                Tồn kho: {{ book.stock }}
+                Tồn kho: {{ book.stock || 0 }}
               </div>
               
               <!-- Admin Controls -->
@@ -326,659 +325,659 @@
 
     <!-- Flash Sale Management Modal -->
     <div v-if="showFlashSaleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-  <div class="bg-white rounded-lg max-w-6xl w-full my-8 max-h-[90vh] flex flex-col">
-    <div class="flex justify-between items-center p-4 border-b bg-white">
-      <h2 class="text-xl font-bold text-red-600 flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        Quản lý Flash Sale
-      </h2>
-      <button @click="showFlashSaleModal = false" class="text-gray-500 hover:text-gray-700 p-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <div class="p-4 overflow-y-auto flex-1">
-      <!-- Add New Flash Sale Section -->
-      <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-        <h3 class="text-lg font-medium text-red-800 mb-3 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Thêm Flash Sale mới
-        </h3>
-        <form @submit.prevent="createFlashSale" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-          <!-- Book Selection with Search -->
-          <div class="lg:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Chọn sách</label>
-            <div class="relative">
-              <input 
-                type="text"
-                v-model="bookSearchQuery"
-                @input="filterBooks"
-                @focus="showBookDropdown = true"
-                @blur="handleBookInputBlur"
-                placeholder="Tìm kiếm sách theo tên, tác giả hoặc ID..."
-                class="w-full border border-gray-300 rounded-md px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
-              />
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <div class="bg-white rounded-lg max-w-6xl w-full my-8 max-h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b bg-white">
+          <h2 class="text-xl font-bold text-red-600 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Quản lý Flash Sale
+          </h2>
+          <button @click="showFlashSaleModal = false" class="text-gray-500 hover:text-gray-700 p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-4 overflow-y-auto flex-1">
+          <!-- Add New Flash Sale Section -->
+          <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h3 class="text-lg font-medium text-red-800 mb-3 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
-              
-              <!-- Dropdown for book selection -->
-              <div v-if="showBookDropdown && filteredBooksForSelection.length > 0" 
-                   class="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                <div v-for="book in filteredBooksForSelection.slice(0, 8)" 
-                     :key="book.bookID"
-                     @mousedown.prevent="selectBook(book)"
-                     class="flex items-center p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
-                  <img :src="book.imgURL1 || '/placeholder.svg?height=32&width=24'" 
-                       alt="" 
-                       class="w-6 h-8 object-cover rounded mr-2 flex-shrink-0">
-                  <div class="flex-1 min-w-0">
-                    <div class="text-xs font-medium text-gray-900 truncate">{{ book.title }}</div>
-                    <div class="text-xs text-gray-500">ID: {{ book.bookID }} • {{ book.author }}</div>
+              Thêm Flash Sale mới
+            </h3>
+            <form @submit.prevent="createFlashSale" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+              <!-- Book Selection with Search -->
+              <div class="lg:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Chọn sách</label>
+                <div class="relative">
+                  <input 
+                    type="text"
+                    v-model="bookSearchQuery"
+                    @input="filterBooks"
+                    @focus="showBookDropdown = true"
+                    @blur="handleBookInputBlur"
+                    placeholder="Tìm kiếm sách theo tên, tác giả hoặc ID..."
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
+                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  
+                  <!-- Dropdown for book selection -->
+                  <div v-if="showBookDropdown && filteredBooksForSelection.length > 0" 
+                       class="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    <div v-for="book in filteredBooksForSelection.slice(0, 8)" 
+                         :key="book.bookID"
+                         @mousedown.prevent="selectBook(book)"
+                         class="flex items-center p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                      <img :src="book.imgURL1 || '/placeholder.svg?height=32&width=24'" 
+                           alt="" 
+                           class="w-6 h-8 object-cover rounded mr-2 flex-shrink-0">
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs font-medium text-gray-900 truncate">{{ book.title }}</div>
+                        <div class="text-xs text-gray-500">ID: {{ book.bookID }} • {{ book.author }}</div>
+                      </div>
+                    </div>
+                    <div v-if="filteredBooksForSelection.length > 8" class="p-2 text-center text-xs text-gray-500 bg-gray-50">
+                      Và {{ filteredBooksForSelection.length - 8 }} sách khác...
+                    </div>
                   </div>
-                </div>
-                <div v-if="filteredBooksForSelection.length > 8" class="p-2 text-center text-xs text-gray-500 bg-gray-50">
-                  Và {{ filteredBooksForSelection.length - 8 }} sách khác...
+                  
+                  <!-- Selected book display -->
+                  <div v-if="selectedBookForFlashSale" class="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                    <div class="flex items-center text-sm">
+                      <img :src="selectedBookForFlashSale.imgURL1 || '/placeholder.svg?height=32&width=24'" 
+                           alt="" 
+                           class="w-6 h-8 object-cover rounded mr-2">
+                      <div class="flex-1">
+                        <div class="font-medium text-gray-900 truncate">{{ selectedBookForFlashSale.title }}</div>
+                        <div class="text-xs text-gray-500">ID: {{ selectedBookForFlashSale.bookID }}</div>
+                      </div>
+                      <button type="button" @click="clearSelectedBookForFlashSale" class="text-red-500 hover:text-red-700 ml-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               
-              <!-- Selected book display -->
-              <div v-if="selectedBookForFlashSale" class="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
-                <div class="flex items-center text-sm">
-                  <img :src="selectedBookForFlashSale.imgURL1 || '/placeholder.svg?height=32&width=24'" 
-                       alt="" 
-                       class="w-6 h-8 object-cover rounded mr-2">
-                  <div class="flex-1">
-                    <div class="font-medium text-gray-900 truncate">{{ selectedBookForFlashSale.title }}</div>
-                    <div class="text-xs text-gray-500">ID: {{ selectedBookForFlashSale.bookID }}</div>
-                  </div>
-                  <button type="button" @click="clearSelectedBookForFlashSale" class="text-red-500 hover:text-red-700 ml-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Giảm giá (%)</label>
+                <input 
+                  type="number" 
+                  v-model="newFlashSale.discountPercent"
+                  min="1" 
+                  max="90"
+                  class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                  placeholder="20"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bắt đầu</label>
+                <input 
+                  type="datetime-local" 
+                  v-model="newFlashSale.startTime"
+                  class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kết thúc</label>
+                <input 
+                  type="datetime-local" 
+                  v-model="newFlashSale.endTime"
+                  class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                  required
+                />
+              </div>
+              
+              <div class="lg:col-span-5 flex justify-end">
+                <button 
+                  type="submit"
+                  :disabled="!canCreateFlashSale || isLoading"
+                  class="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Tạo Flash Sale
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Flash Sales List -->
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-medium text-gray-800">Danh sách Flash Sale</h3>
+              <div class="text-sm text-gray-500">
+                Tổng: {{ allFlashSales.length }}
+              </div>
+            </div>
+            
+            <!-- Filter tabs -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              <button 
+                @click="flashSaleFilter = 'all'"
+                :class="[
+                  'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                  flashSaleFilter === 'all' 
+                    ? 'bg-red-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ]"
+              >
+                Tất cả ({{ allFlashSales.length }})
+              </button>
+              <button 
+                @click="flashSaleFilter = 'active'"
+                :class="[
+                  'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                  flashSaleFilter === 'active' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ]"
+              >
+                Hoạt động ({{ activeFlashSales.length }})
+              </button>
+              <button 
+                @click="flashSaleFilter = 'upcoming'"
+                :class="[
+                  'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                  flashSaleFilter === 'upcoming' 
+                    ? 'bg-yellow-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ]"
+              >
+                Sắp tới ({{ upcomingFlashSales.length }})
+              </button>
+              <button 
+                @click="flashSaleFilter = 'expired'"
+                :class="[
+                  'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                  flashSaleFilter === 'expired' 
+                    ? 'bg-gray-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ]"
+              >
+                Đã kết thúc ({{ expiredFlashSales.length }})
+              </button>
+            </div>
+
+            <!-- Flash Sales Table -->
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sách</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giảm giá</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thời gian</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <tr v-for="flashSale in filteredFlashSales" :key="flashSale.flashSaleID" class="hover:bg-gray-50">
+                      <td class="px-4 py-3">
+                        <div class="flex items-center">
+                          <img :src="flashSale.bookImgURL || '/placeholder.svg?height=32&width=24'" alt="" class="w-8 h-10 object-cover rounded mr-3">
+                          <div class="min-w-0 flex-1">
+                            <div class="text-sm font-medium text-gray-900 truncate">{{ flashSale.bookTitle }}</div>
+                            <div class="text-xs text-gray-500">ID: {{ flashSale.bookID }}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          -{{ flashSale.discountPercent }}%
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-xs text-gray-900">
+                        <div>{{ formatDateTime(flashSale.startTime) }}</div>
+                        <div class="text-gray-500">{{ formatDateTime(flashSale.endTime) }}</div>
+                      </td>
+                      <td class="px-4 py-3">
+                        <span :class="[
+                          'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                          getFlashSaleStatus(flashSale) === 'active' ? 'bg-green-100 text-green-800' :
+                          getFlashSaleStatus(flashSale) === 'upcoming' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        ]">
+                          {{ getFlashSaleStatusText(flashSale) }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex space-x-2">
+                          <button 
+                            @click="editFlashSale(flashSale)"
+                            class="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                            :disabled="getFlashSaleStatus(flashSale) === 'expired'"
+                          >
+                            Sửa
+                          </button>
+                          <button 
+                            @click="deleteFlashSale(flashSale.flashSaleID)"
+                            class="text-red-600 hover:text-red-800 text-xs font-medium"
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div v-if="filteredFlashSales.length === 0" class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <p class="text-sm text-gray-500">Không có Flash Sale nào</p>
               </div>
             </div>
           </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Giảm giá (%)</label>
-            <input 
-              type="number" 
-              v-model="newFlashSale.discountPercent"
-              min="1" 
-              max="90"
-              class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-              placeholder="20"
-              required
-            />
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Bắt đầu</label>
-            <input 
-              type="datetime-local" 
-              v-model="newFlashSale.startTime"
-              class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-              required
-            />
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Kết thúc</label>
-            <input 
-              type="datetime-local" 
-              v-model="newFlashSale.endTime"
-              class="w-full border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-              required
-            />
-          </div>
-          
-          <div class="lg:col-span-5 flex justify-end">
-            <button 
-              type="submit"
-              :disabled="!canCreateFlashSale || isLoading"
-              class="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Tạo Flash Sale
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Flash Sales List -->
-      <div>
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-medium text-gray-800">Danh sách Flash Sale</h3>
-          <div class="text-sm text-gray-500">
-            Tổng: {{ allFlashSales.length }}
-          </div>
-        </div>
-        
-        <!-- Filter tabs -->
-        <div class="flex flex-wrap gap-2 mb-4">
-          <button 
-            @click="flashSaleFilter = 'all'"
-            :class="[
-              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
-              flashSaleFilter === 'all' 
-                ? 'bg-red-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            ]"
-          >
-            Tất cả ({{ allFlashSales.length }})
-          </button>
-          <button 
-            @click="flashSaleFilter = 'active'"
-            :class="[
-              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
-              flashSaleFilter === 'active' 
-                ? 'bg-green-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            ]"
-          >
-            Hoạt động ({{ activeFlashSales.length }})
-          </button>
-          <button 
-            @click="flashSaleFilter = 'upcoming'"
-            :class="[
-              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
-              flashSaleFilter === 'upcoming' 
-                ? 'bg-yellow-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            ]"
-          >
-            Sắp tới ({{ upcomingFlashSales.length }})
-          </button>
-          <button 
-            @click="flashSaleFilter = 'expired'"
-            :class="[
-              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
-              flashSaleFilter === 'expired' 
-                ? 'bg-gray-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            ]"
-          >
-            Đã kết thúc ({{ expiredFlashSales.length }})
-          </button>
-        </div>
-
-        <!-- Flash Sales Table -->
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sách</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giảm giá</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thời gian</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="flashSale in filteredFlashSales" :key="flashSale.flashSaleID" class="hover:bg-gray-50">
-                  <td class="px-4 py-3">
-                    <div class="flex items-center">
-                      <img :src="flashSale.bookImgURL || '/placeholder.svg?height=32&width=24'" alt="" class="w-8 h-10 object-cover rounded mr-3">
-                      <div class="min-w-0 flex-1">
-                        <div class="text-sm font-medium text-gray-900 truncate">{{ flashSale.bookTitle }}</div>
-                        <div class="text-xs text-gray-500">ID: {{ flashSale.bookID }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      -{{ flashSale.discountPercent }}%
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-xs text-gray-900">
-                    <div>{{ formatDateTime(flashSale.startTime) }}</div>
-                    <div class="text-gray-500">{{ formatDateTime(flashSale.endTime) }}</div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <span :class="[
-                      'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-                      getFlashSaleStatus(flashSale) === 'active' ? 'bg-green-100 text-green-800' :
-                      getFlashSaleStatus(flashSale) === 'upcoming' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    ]">
-                      {{ getFlashSaleStatusText(flashSale) }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="flex space-x-2">
-                      <button 
-                        @click="editFlashSale(flashSale)"
-                        class="text-blue-600 hover:text-blue-800 text-xs font-medium"
-                        :disabled="getFlashSaleStatus(flashSale) === 'expired'"
-                      >
-                        Sửa
-                      </button>
-                      <button 
-                        @click="deleteFlashSale(flashSale.flashSaleID)"
-                        class="text-red-600 hover:text-red-800 text-xs font-medium"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div v-if="filteredFlashSales.length === 0" class="text-center py-8">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <p class="text-sm text-gray-500">Không có Flash Sale nào</p>
-          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
     <!-- Edit Flash Sale Modal -->
     <div v-if="showEditFlashSaleModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-lg max-w-md w-full">
-    <div class="flex justify-between items-center p-4 border-b">
-      <h2 class="text-lg font-bold text-red-600">Chỉnh sửa Flash Sale</h2>
-      <button @click="showEditFlashSaleModal = false" class="text-gray-500 hover:text-gray-700">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <div class="p-4">
-      <form @submit.prevent="updateFlashSale" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Giảm giá (%)</label>
-          <input 
-            type="number" 
-            v-model="editingFlashSale.discountPercent"
-            min="1" 
-            max="90"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-            required
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian bắt đầu</label>
-          <input 
-            type="datetime-local" 
-            v-model="editingFlashSale.startTime"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-            required
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian kết thúc</label>
-          <input 
-            type="datetime-local" 
-            v-model="editingFlashSale.endTime"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-            required
-          />
-        </div>
-        <div class="flex justify-end space-x-3 pt-2">
-          <button 
-            type="button"
-            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 text-sm"
-            @click="showEditFlashSaleModal = false"
-          >
-            Hủy
-          </button>
-          <button 
-            type="submit"
-            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
-            :disabled="isLoading"
-          >
-            Cập nhật
+      <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h2 class="text-lg font-bold text-red-600">Chỉnh sửa Flash Sale</h2>
+          <button @click="showEditFlashSaleModal = false" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
-      </form>
+        <div class="p-4">
+          <form @submit.prevent="updateFlashSale" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Giảm giá (%)</label>
+              <input 
+                type="number" 
+                v-model="editingFlashSale.discountPercent"
+                min="1" 
+                max="90"
+                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian bắt đầu</label>
+              <input 
+                type="datetime-local" 
+                v-model="editingFlashSale.startTime"
+                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian kết thúc</label>
+              <input 
+                type="datetime-local" 
+                v-model="editingFlashSale.endTime"
+                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                required
+              />
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+              <button 
+                type="button"
+                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 text-sm"
+                @click="showEditFlashSaleModal = false"
+              >
+                Hủy
+              </button>
+              <button 
+                type="submit"
+                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                :disabled="isLoading"
+              >
+                Cập nhật
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <!-- Add/Edit Book Modal -->
     <div v-if="showBookModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-  <div class="bg-white rounded-lg max-w-5xl w-full my-8 max-h-[90vh] flex flex-col">
-    <div class="flex justify-between items-center p-4 border-b bg-white">
-      <h2 class="text-lg font-bold">{{ isEditMode ? 'Chỉnh sửa sách' : 'Thêm sách mới' }}</h2>
-      <button @click="showBookModal = false" class="text-gray-500 hover:text-gray-700">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <div class="p-4 overflow-y-auto flex-1">
-      <form @submit.prevent="saveBook">
-        <!-- Image Upload Section -->
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-2 font-medium text-sm">Hình ảnh sản phẩm</label>
-          <div class="grid grid-cols-3 gap-3">
-            <!-- Image 1 -->
-            <div class="space-y-1">
-              <label class="text-xs text-gray-600">Ảnh chính</label>
-              <div 
-                class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
-                :class="{ 
-                  'border-amber-500 bg-amber-50': dragStates.img1,
-                  'border-green-500 bg-green-50': imagePreviews.img1
-                }"
-                @dragover.prevent="handleDragOver('img1')"
-                @dragleave.prevent="handleDragLeave('img1')"
-                @drop.prevent="handleDrop($event, 'img1')"
-                @click="triggerFileInput('img1')"
-              >
-                <input 
-                  ref="fileInput1"
-                  type="file" 
-                  class="hidden"
-                  accept="image/*"
-                  @change="handleFileSelect($event, 'img1')"
-                />
-                
-                <div v-if="!imagePreviews.img1" class="text-center h-full flex flex-col justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
-                </div>
-                
-                <div v-else class="relative h-full">
-                  <img :src="imagePreviews.img1" alt="Preview" class="w-full h-full object-cover rounded" />
-                  <button 
-                    type="button"
-                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                    @click.stop="removeImage('img1')"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-              <input 
-                type="url" 
-                v-model="editingBook.imgURL1" 
-                placeholder="URL ảnh"
-                class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                @input="handleUrlInput('img1')"
-              />
-            </div>
-
-            <!-- Image 2 -->
-            <div class="space-y-1">
-              <label class="text-xs text-gray-600">Ảnh phụ 1</label>
-              <div 
-                class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
-                :class="{ 
-                  'border-amber-500 bg-amber-50': dragStates.img2,
-                  'border-green-500 bg-green-50': imagePreviews.img2
-                }"
-                @dragover.prevent="handleDragOver('img2')"
-                @dragleave.prevent="handleDragLeave('img2')"
-                @drop.prevent="handleDrop($event, 'img2')"
-                @click="triggerFileInput('img2')"
-              >
-                <input 
-                  ref="fileInput2"
-                  type="file" 
-                  class="hidden"
-                  accept="image/*"
-                  @change="handleFileSelect($event, 'img2')"
-                />
-                
-                <div v-if="!imagePreviews.img2" class="text-center h-full flex flex-col justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
-                </div>
-                
-                <div v-else class="relative h-full">
-                  <img :src="imagePreviews.img2" alt="Preview" class="w-full h-full object-cover rounded" />
-                  <button 
-                    type="button"
-                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                    @click.stop="removeImage('img2')"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-              <input 
-                type="url" 
-                v-model="editingBook.imgURL2" 
-                placeholder="URL ảnh"
-                class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                @input="handleUrlInput('img2')"
-              />
-            </div>
-
-            <!-- Image 3 -->
-            <div class="space-y-1">
-              <label class="text-xs text-gray-600">Ảnh phụ 2</label>
-              <div 
-                class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
-                :class="{ 
-                  'border-amber-500 bg-amber-50': dragStates.img3,
-                  'border-green-500 bg-green-50': imagePreviews.img3
-                }"
-                @dragover.prevent="handleDragOver('img3')"
-                @dragleave.prevent="handleDragLeave('img3')"
-                @drop.prevent="handleDrop($event, 'img3')"
-                @click="triggerFileInput('img3')"
-              >
-                <input 
-                  ref="fileInput3"
-                  type="file" 
-                  class="hidden"
-                  accept="image/*"
-                  @change="handleFileSelect($event, 'img3')"
-                />
-                
-                <div v-if="!imagePreviews.img3" class="text-center h-full flex flex-col justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
-                </div>
-                
-                <div v-else class="relative h-full">
-                  <img :src="imagePreviews.img3" alt="Preview" class="w-full h-full object-cover rounded" />
-                  <button 
-                    type="button"
-                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                    @click.stop="removeImage('img3')"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-              <input 
-                type="url" 
-                v-model="editingBook.imgURL3" 
-                placeholder="URL ảnh"
-                class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                @input="handleUrlInput('img3')"
-              />
-            </div>
-          </div>
-          <div v-if="uploadError" class="mt-2 text-red-600 text-xs">{{ uploadError }}</div>
-        </div>
-
-        <!-- Form Fields -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="lg:col-span-3">
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Tiêu đề *</label>
-            <input 
-              type="text" 
-              v-model="editingBook.title" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-              required
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Tác giả *</label>
-            <input 
-              type="text" 
-              v-model="editingBook.author" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-              required
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Nhà xuất bản *</label>
-            <input 
-              type="text" 
-              v-model="editingBook.supplier" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-              required
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Danh mục *</label>
-            <select 
-              v-model="editingBook.categoryID" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-              required
-            >
-              <option v-for="category in allCategories" :key="category.categoryID" :value="category.categoryID">
-                {{ category.categoryName }}
-              </option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Giá (đ) *</label>
-            <input 
-              type="number" 
-              v-model="editingBook.price" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-              required
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Giảm giá (%)</label>
-            <input 
-              type="number" 
-              v-model="editingBook.discount" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-              min="0"
-              max="100"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Tồn kho *</label>
-            <input 
-              type="number" 
-              v-model="editingBook.stock" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-              min="0"
-              required
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Năm xuất bản</label>
-            <input 
-              type="number" 
-              v-model="editingBook.publishYear" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Số trang</label>
-            <input 
-              type="number" 
-              v-model="editingBook.pageNum" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Ngôn ngữ</label>
-            <input 
-              type="text" 
-              v-model="editingBook.language" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Độ tuổi</label>
-            <select 
-              v-model="editingBook.ageGroup" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-            >
-              <option value="12">Trên 12 tuổi</option>
-              <option value="18">Trên 18 tuổi</option>
-              <option value="all">Mọi lứa tuổi</option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Hình thức</label>
-            <select 
-              v-model="editingBook.binding" 
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-            >
-              <option value="Bìa mềm">Bìa mềm</option>
-              <option value="Bìa cứng">Bìa cứng</option>
-              <option value="Bìa da">Bìa da</option>
-            </select>
-          </div>
-          
-          <div class="lg:col-span-3">
-            <label class="block text-gray-700 mb-1 text-sm font-medium">Mô tả *</label>
-            <textarea 
-              v-model="editingBook.description" 
-              rows="3"
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-              required
-            ></textarea>
-          </div>
-        </div>
-        
-        <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
-          <button 
-            type="button"
-            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 text-sm"
-            @click="showBookModal = false"
-          >
-            Hủy
-          </button>
-          <button 
-            type="submit"
-            class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 text-sm"
-            :disabled="isLoading || isUploading"
-          >
-            {{ isEditMode ? 'Lưu thay đổi' : 'Thêm sách' }}
+      <div class="bg-white rounded-lg max-w-5xl w-full my-8 max-h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b bg-white">
+          <h2 class="text-lg font-bold">{{ isEditMode ? 'Chỉnh sửa sách' : 'Thêm sách mới' }}</h2>
+          <button @click="showBookModal = false" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
-      </form>
-    </div>
-  </div>
-</div>
+        <div class="p-4 overflow-y-auto flex-1">
+          <form @submit.prevent="saveBook">
+            <!-- Image Upload Section -->
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2 font-medium text-sm">Hình ảnh sản phẩm</label>
+              <div class="grid grid-cols-3 gap-3">
+                <!-- Image 1 -->
+                <div class="space-y-1">
+                  <label class="text-xs text-gray-600">Ảnh chính</label>
+                  <div 
+                    class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
+                    :class="{ 
+                      'border-amber-500 bg-amber-50': dragStates.img1,
+                      'border-green-500 bg-green-50': imagePreviews.img1
+                    }"
+                    @dragover.prevent="handleDragOver('img1')"
+                    @dragleave.prevent="handleDragLeave('img1')"
+                    @drop.prevent="handleDrop($event, 'img1')"
+                    @click="triggerFileInput('img1')"
+                  >
+                    <input 
+                      ref="fileInput1"
+                      type="file" 
+                      class="hidden"
+                      accept="image/*"
+                      @change="handleFileSelect($event, 'img1')"
+                    />
+                    
+                    <div v-if="!imagePreviews.img1" class="text-center h-full flex flex-col justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
+                    </div>
+                    
+                    <div v-else class="relative h-full">
+                      <img :src="imagePreviews.img1" alt="Preview" class="w-full h-full object-cover rounded" />
+                      <button 
+                        type="button"
+                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        @click.stop="removeImage('img1')"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                  <input 
+                    type="url" 
+                    v-model="editingBook.imgURL1" 
+                    placeholder="URL ảnh"
+                    class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    @input="handleUrlInput('img1')"
+                  />
+                </div>
 
+                <!-- Image 2 -->
+                <div class="space-y-1">
+                  <label class="text-xs text-gray-600">Ảnh phụ 1</label>
+                  <div 
+                    class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
+                    :class="{ 
+                      'border-amber-500 bg-amber-50': dragStates.img2,
+                      'border-green-500 bg-green-50': imagePreviews.img2
+                    }"
+                    @dragover.prevent="handleDragOver('img2')"
+                    @dragleave.prevent="handleDragLeave('img2')"
+                    @drop.prevent="handleDrop($event, 'img2')"
+                    @click="triggerFileInput('img2')"
+                  >
+                    <input 
+                      ref="fileInput2"
+                      type="file" 
+                      class="hidden"
+                      accept="image/*"
+                      @change="handleFileSelect($event, 'img2')"
+                    />
+                    
+                    <div v-if="!imagePreviews.img2" class="text-center h-full flex flex-col justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
+                    </div>
+                    
+                    <div v-else class="relative h-full">
+                      <img :src="imagePreviews.img2" alt="Preview" class="w-full h-full object-cover rounded" />
+                      <button 
+                        type="button"
+                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        @click.stop="removeImage('img2')"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                  <input 
+                    type="url" 
+                    v-model="editingBook.imgURL2" 
+                    placeholder="URL ảnh"
+                    class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    @input="handleUrlInput('img2')"
+                  />
+                </div>
+
+                <!-- Image 3 -->
+                <div class="space-y-1">
+                  <label class="text-xs text-gray-600">Ảnh phụ 2</label>
+                  <div 
+                    class="relative border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-amber-500 transition-colors cursor-pointer h-32"
+                    :class="{ 
+                      'border-amber-500 bg-amber-50': dragStates.img3,
+                      'border-green-500 bg-green-50': imagePreviews.img3
+                    }"
+                    @dragover.prevent="handleDragOver('img3')"
+                    @dragleave.prevent="handleDragLeave('img3')"
+                    @drop.prevent="handleDrop($event, 'img3')"
+                    @click="triggerFileInput('img3')"
+                  >
+                    <input 
+                      ref="fileInput3"
+                      type="file" 
+                      class="hidden"
+                      accept="image/*"
+                      @change="handleFileSelect($event, 'img3')"
+                    />
+                    
+                    <div v-if="!imagePreviews.img3" class="text-center h-full flex flex-col justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p class="mt-1 text-xs text-gray-600">Kéo thả ảnh</p>
+                    </div>
+                    
+                    <div v-else class="relative h-full">
+                      <img :src="imagePreviews.img3" alt="Preview" class="w-full h-full object-cover rounded" />
+                      <button 
+                        type="button"
+                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        @click.stop="removeImage('img3')"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                  <input 
+                    type="url" 
+                    v-model="editingBook.imgURL3" 
+                    placeholder="URL ảnh"
+                    class="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    @input="handleUrlInput('img3')"
+                  />
+                </div>
+              </div>
+              <div v-if="uploadError" class="mt-2 text-red-600 text-xs">{{ uploadError }}</div>
+            </div>
+
+            <!-- Form Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div class="lg:col-span-3">
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Tiêu đề *</label>
+                <input 
+                  type="text" 
+                  v-model="editingBook.title" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Tác giả *</label>
+                <input 
+                  type="text" 
+                  v-model="editingBook.author" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Nhà xuất bản *</label>
+                <input 
+                  type="text" 
+                  v-model="editingBook.supplier" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Danh mục *</label>
+                <select 
+                  v-model="editingBook.categoryID" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  required
+                >
+                  <option v-for="category in allCategories" :key="category.categoryID" :value="category.categoryID">
+                    {{ category.categoryName }}
+                  </option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Giá (đ) *</label>
+                <input 
+                  type="number" 
+                  v-model="editingBook.price" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Giảm giá (%)</label>
+                <input 
+                  type="number" 
+                  v-model="editingBook.discount" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Tồn kho *</label>
+                <input 
+                  type="number" 
+                  v-model.number="editingBook.stock" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  min="0"
+                  step="1"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Năm xuất bản</label>
+                <input 
+                  type="number" 
+                  v-model="editingBook.publishYear" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Số trang</label>
+                <input 
+                  type="number" 
+                  v-model="editingBook.pageNum" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Ngôn ngữ</label>
+                <input 
+                  type="text" 
+                  v-model="editingBook.language" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                />
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Độ tuổi</label>
+                <select 
+                  v-model="editingBook.ageGroup" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                >
+                  <option value="12">Trên 12 tuổi</option>
+                  <option value="18">Trên 18 tuổi</option>
+                  <option value="all">Mọi lứa tuổi</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Hình thức</label>
+                <select 
+                  v-model="editingBook.binding" 
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                >
+                  <option value="Bìa mềm">Bìa mềm</option>
+                  <option value="Bìa cứng">Bìa cứng</option>
+                  <option value="Bìa da">Bìa da</option>
+                </select>
+              </div>
+              
+              <div class="lg:col-span-3">
+                <label class="block text-gray-700 mb-1 text-sm font-medium">Mô tả *</label>
+                <textarea 
+                  v-model="editingBook.description" 
+                  rows="3"
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  required
+                ></textarea>
+              </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
+              <button 
+                type="button"
+                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 text-sm"
+                @click="showBookModal = false"
+              >
+                Hủy
+              </button>
+              <button 
+                type="submit"
+                class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 text-sm"
+                :disabled="isLoading || isUploading"
+              >
+                {{ isEditMode ? 'Lưu thay đổi' : 'Thêm sách' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
     <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -1004,148 +1003,96 @@
     </div>
 
     <!-- Quick View Modal -->
-
-
-
-
     <div v-if="quickViewBook" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-
-
       <div class="bg-white rounded-lg max-w-4xl w-full my-8">
-
-
         <div class="flex justify-end p-2 sticky top-0 bg-white z-10">
-
-
           <button @click="quickViewBook = null" class="text-gray-500 hover:text-gray-700">
-
-
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-
-
             </svg>
-
-
           </button>
-
-
         </div>
-
-
         <div class="p-6 max-h-[70vh] overflow-y-auto">
-
-
           <div class="flex flex-col md:flex-row">
-
-
             <div class="md:w-1/3">
-
-
               <img :src="quickViewBook.imgURL1 || '/placeholder.svg?height=400&width=300'" alt="Book cover" class="w-full h-auto object-cover rounded-md" />
-
-
             </div>
-
-
             <div class="md:w-2/3 md:pl-6 mt-4 md:mt-0">
-
-
-              <h2 class="text-2xl font-bold">{{ quickViewBook.title }}</h2>
-
-
-              <div class="mt-2 flex items-center">
-
-
-                <div class="flex text-amber-500">
-
-
-                  <svg v-for="i in 5" :key="i" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="{ 'text-gray-300': i > Math.floor(quickViewBook.avgRating || 0) }" fill="currentColor" viewBox="0 0 24 24">
-
-
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />Add commentMore actions
-
-
-                  </svg>
+              <!-- Info Section -->
+              <div class="space-y-4">
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900">{{ quickViewBook.title }}</h3>
+                  <p class="text-gray-600">{{ quickViewBook.author }}</p>
                 </div>
+
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span class="text-gray-500">ID:</span>
+                    <span class="font-medium ml-2">{{ quickViewBook.bookID }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500">Nhà xuất bản:</span>
+                    <span class="font-medium ml-2">{{ quickViewBook.supplier || 'Không có thông tin' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500">Năm xuất bản:</span>
+                    <span class="font-medium ml-2">{{ quickViewBook.publishYear }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500">Số trang:</span>
+                    <span class="font-medium ml-2">{{ quickViewBook.pageNum }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500">Ngôn ngữ:</span>
+                    <span class="font-medium ml-2">{{ quickViewBook.language }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500">Hình thức:</span>
+                    <span class="font-medium ml-2">{{ quickViewBook.binding }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500">Độ tuổi:</span>
+                    <span class="font-medium ml-2">{{ getAgeFilterText(quickViewBook.ageGroup) }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500">Tồn kho:</span>
+                    <span class="font-medium ml-2">{{ quickViewBook.stock !== undefined ? quickViewBook.stock : 'Không có thông tin' }}</span>
+                  </div>
                 </div>
-        <!-- Info Section -->
-        <div class="space-y-4">
-          <div>
-            <h3 class="text-xl font-bold text-gray-900">{{ quickViewBook.title }}</h3>
-            <p class="text-gray-600">{{ quickViewBook.author }}</p>
-          </div>
 
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span class="text-gray-500">ID:</span>
-              <span class="font-medium ml-2">{{ quickViewBook.bookID }}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Nhà xuất bản:</span>
-              <span class="font-medium ml-2">{{ quickViewBook.supplier }}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Năm xuất bản:</span>
-              <span class="font-medium ml-2">{{ quickViewBook.publishYear }}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Số trang:</span>
-              <span class="font-medium ml-2">{{ quickViewBook.pageNum }}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Ngôn ngữ:</span>
-              <span class="font-medium ml-2">{{ quickViewBook.language }}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Hình thức:</span>
-              <span class="font-medium ml-2">{{ quickViewBook.binding }}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Độ tuổi:</span>
-              <span class="font-medium ml-2">{{ getAgeFilterText(quickViewBook.ageGroup) }}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Tồn kho:</span>
-              <span class="font-medium ml-2">{{ quickViewBook.stock }}</span>
-            </div>
-          </div>
+                <div class="space-y-2">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-2xl font-bold text-green-600">{{ formatPrice(calculateDiscountPrice(quickViewBook.price, quickViewBook.discount)) }} đ</span>
+                    <span v-if="quickViewBook.discount > 0" class="bg-red-500 text-white text-xs px-2 py-1 rounded">-{{ quickViewBook.discount }}%</span>
+                  </div>
+                  <div v-if="quickViewBook.discount > 0" class="text-gray-500 line-through">{{ formatPrice(quickViewBook.price) }} đ</div>
+                </div>
 
-          <div class="space-y-2">
-            <div class="flex items-center space-x-2">
-              <span class="text-2xl font-bold text-green-600">{{ formatPrice(quickViewBook.discountPrice) }} đ</span>
-              <span v-if="quickViewBook.discount > 0" class="bg-red-500 text-white text-xs px-2 py-1 rounded">-{{ quickViewBook.discount }}%</span>
+                <div v-if="quickViewBook.description" class="space-y-2">
+                  <h4 class="font-medium text-gray-900">Mô tả:</h4>
+                  <p class="text-gray-600 text-sm">{{ quickViewBook.description }}</p>
+                </div>
+
+                <div class="flex space-x-2 pt-4">
+                  <button 
+                    class="bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 flex-1"
+                    @click="openEditBookModal(quickViewBook)"
+                  >
+                    Chỉnh sửa
+                  </button>
+                  <button 
+                    class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex-1"
+                    @click="confirmDeleteBook(quickViewBook)"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </div>
             </div>
-            <div v-if="quickViewBook.discount > 0" class="text-gray-500 line-through">{{ formatPrice(quickViewBook.originalPrice) }} đ</div>
-          </div>
-
-          <div v-if="quickViewBook.description" class="space-y-2">
-            <h4 class="font-medium text-gray-900">Mô tả:</h4>
-            <p class="text-gray-600 text-sm">{{ quickViewBook.description }}</p>
-          </div>
-
-          <div class="flex space-x-2 pt-4">
-            <button 
-              class="bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 flex-1"
-              @click="openEditBookModal(quickViewBook)"
-            >
-              Chỉnh sửa
-            </button>
-            <button 
-              class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex-1"
-              @click="confirmDeleteBook(quickViewBook)"
-            >
-              Xóa
-            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-  </div>
   </div>
 </template>
 
@@ -1233,6 +1180,35 @@ const bookSearchQuery = ref('');
 const showBookDropdown = ref(false);
 const selectedBookForFlashSale = ref(null);
 const filteredBooksForSelection = ref([]);
+
+// Book modal
+const showBookModal = ref(false);
+const isEditMode = ref(false);
+const editingBook = ref({
+  bookID: null,
+  title: '',
+  price: 0,
+  discount: 0,
+  author: '',
+  supplier: '',
+  publishYear: new Date().getFullYear(),
+  pageNum: 0,
+  language: 'Tiếng Việt',
+  ageGroup: 'all',
+  categoryID: null,
+  binding: 'Bìa mềm',
+  stock: 0,
+  imgURL1: '',
+  imgURL2: '',
+  imgURL3: '',
+  description: '',
+  avgRating: 0,
+  totalRating: 0
+});
+
+// Delete confirmation
+const showDeleteConfirmation = ref(false);
+const bookToDelete = ref(null);
 
 // Computed properties
 const paginatedBooks = computed(() => {
@@ -1554,7 +1530,6 @@ const createFlashSale = async () => {
   }
 };
 
-
 const editFlashSale = (flashSale) => {
   editingFlashSale.value = {
     flashSaleID: flashSale.flashSaleID,
@@ -1806,118 +1781,65 @@ const resetFilters = () => {
 };
 
 // Enhanced fetch books function with search and filter support
+// Trong adminCRUD.vue, thay đổi hàm fetchBooks
 const fetchBooks = async () => {
   try {
     isLoading.value = true;
     error.value = null;
-    
-    const queryParams = new URLSearchParams();
-    queryParams.append("page", currentPage.value.toString());
-    
-    // Use Book/query endpoint for filtering
-    if (searchQuery.value && searchQuery.value.trim()) {
-      const searchTerm = searchQuery.value.trim();
-      
-      // If it's a numeric search, we'll handle it differently
-      if (/^\d+$/.test(searchTerm)) {
-        // For ID search, we might need to use admin endpoint
-        try {
-          const response = await axios.get(`/admin/products/${searchTerm}`);
-          filteredBooks.value = [response.data].map((book) => ({
-            bookID: book.bookID,
-            title: book.title,
-            author: book.author,
-            price: book.price,
-            discount: book.discount || 0,
-            imgURL1: book.imgURL1,
-            imgURL2: book.imgURL2,
-            imgURL3: book.imgURL3,
-            stock: book.stock || 0,
-            avgRating: book.avgRating || 0,
-            totalRating: book.totalRating || 0,
-            description: book.description || '',
-            supplier: book.supplier || '',
-            publishYear: book.publishYear || new Date().getFullYear(),
-            pageNum: book.pageNum || 0,
-            language: book.language || 'Tiếng Việt',
-            binding: book.binding || 'Bìa mềm',
-            ageGroup: book.ageGroup || 'all',
-            categoryID: book.categoryID || null,
-            discountPrice: book.discount > 0 ? 
-              (book.price * (100 - book.discount) / 100) : book.price,
-            originalPrice: book.price,
-            isFlashSale: false // We'll check this separately
-          }));
-          
-          currentPage.value = 1;
-          totalItems.value = 1;
-          totalPages.value = 1;
-          return;
-        } catch (err) {
-          // If ID search fails, fall back to name search
-          queryParams.append("name", searchTerm);
-        }
+
+    const queryParams = new URLSearchParams({
+      page: currentPage.value,
+      pageSize: pageSize.value
+    });
+
+    // Add search parameter
+    if (isSearching.value) {
+      if (isNumericSearch.value) {
+        queryParams.append('id', searchQuery.value.trim());
       } else {
-        queryParams.append("name", searchTerm);
+        queryParams.append('title', searchQuery.value.trim());
       }
     }
-    
-    // Apply filters
+
+    // Add filter parameters
     if (currentFilters.value.promo) {
-      queryParams.append("promo", "true");
+      queryParams.append('promo', 'true');
     }
     
     if (currentFilters.value.price) {
-      queryParams.append("price", currentFilters.value.price);
-    } else if (currentFilters.value.priceMin && currentFilters.value.priceMax) {
-      queryParams.append("priceMin", currentFilters.value.priceMin);
-      queryParams.append("priceMax", currentFilters.value.priceMax);
+      queryParams.append('price', currentFilters.value.price);
     }
     
     if (currentFilters.value.age) {
-      queryParams.append("age", currentFilters.value.age);
+      queryParams.append('age', currentFilters.value.age);
     }
     
     if (currentFilters.value.type) {
-      queryParams.append("type", currentFilters.value.type);
+      queryParams.append('type', currentFilters.value.type);
     }
     
     if (currentFilters.value.selectedCategoryId) {
-      queryParams.append("category", currentFilters.value.selectedCategoryId.toString());
+      queryParams.append('categoryId', currentFilters.value.selectedCategoryId);
     }
-    
-    // Use Book/query endpoint for filtering
-    const response = await axios.get(`/Book/query?${queryParams.toString()}`);
+
+    console.log('Fetching with params:', queryParams.toString());
+
+    // Sử dụng endpoint admin mới
+    const response = await axios.get(`/Book/admin/query?${queryParams.toString()}`);
     const data = response.data;
+
+    console.log('API Response:', data);
 
     // Get flash sales to mark books
     const flashSalesResponse = await axios.get('/Home/FlashSale');
     const flashSaleBooks = new Set(flashSalesResponse.data.map(fs => fs.bookID));
 
+    // Mapping dữ liệu với đầy đủ thông tin
     filteredBooks.value = data.items.map((book) => ({
-      bookID: book.bookID,
-      title: book.title,
-      author: book.author,
-      price: book.price,
-      discount: book.discount || 0,
-      imgURL1: book.imgURL1,
-      imgURL2: book.imgURL2,
-      imgURL3: book.imgURL3,
-      stock: book.stock || 0,
-      avgRating: book.avgRating || 0,
-      totalRating: book.totalRating || 0,
-      description: book.description || '',
-      supplier: book.supplier || '',
-      publishYear: book.publishYear || new Date().getFullYear(),
-      pageNum: book.pageNum || 0,
-      language: book.language || 'Tiếng Việt',
-      binding: book.binding || 'Bìa mềm',
-      ageGroup: book.ageGroup || 'all',
-      categoryID: book.categoryID || null,
-      discountPrice: book.discount > 0 ? 
-        (book.price * (100 - book.discount) / 100) : book.price,
-      originalPrice: book.price,
-      isFlashSale: flashSaleBooks.has(book.bookID)
+      ...book,
+      isFlashSale: flashSaleBooks.has(book.bookID),
+      discountPrice: book.discount > 0 ? book.price * (100 - book.discount) / 100 : book.price,
+      originalPrice: book.price
     }));
 
     currentPage.value = data.currentPage;
@@ -1933,7 +1855,7 @@ const fetchBooks = async () => {
       totalPages.value = 0;
       currentPage.value = 1;
     } else {
-      error.value = "Có lỗi xảy ra khi tải dữ liệu sách. Vui lòng thử lại sau.";
+      error.value = 'Không thể tải danh sách sách. Vui lòng thử lại.';
     }
   } finally {
     isLoading.value = false;
@@ -2012,6 +1934,7 @@ const getCategoryId = (parent, sub) => {
 const fetchProductDetails = async (bookId) => {
   try {
     const response = await axios.get(`/admin/products/${bookId}`);
+    console.log('Detailed book response:', response.data); // Debug log
     return response.data;
   } catch (err) {
     console.error('Error fetching book details:', err);
@@ -2023,44 +1946,28 @@ const fetchProductDetails = async (bookId) => {
 const openQuickView = async (book) => {
   try {
     isLoading.value = true;
+    
+    // Fetch detailed book info
     const detailedBook = await fetchProductDetails(book.bookID);
+    
+    // Merge data, prioritizing detailed book data
     quickViewBook.value = {
-      ...book,
-      ...detailedBook,
-      discountPrice: book.discountPrice,
-      originalPrice: book.originalPrice
+      ...book,           // Base data from list
+      ...detailedBook,   // Detailed data from API (this should override)
+      // Ensure these fields are properly set
+      stock: detailedBook.stock !== undefined ? detailedBook.stock : (book.stock || 0),
+      supplier: detailedBook.supplier || book.supplier || 'Không có',
+      description: detailedBook.description || book.description || '',
     };
+    
+    console.log('Quick view book data:', quickViewBook.value); // Debug log
   } catch (err) {
+    console.error('Error in openQuickView:', err);
     error.value = err.message;
   } finally {
     isLoading.value = false;
   }
 };
-
-// Book modal
-const showBookModal = ref(false);
-const isEditMode = ref(false);
-const editingBook = ref({
-  bookID: null,
-  title: '',
-  price: 0,
-  discount: 0,
-  author: '',
-  supplier: '',
-  publishYear: new Date().getFullYear(),
-  pageNum: 0,
-  language: 'Tiếng Việt',
-  ageGroup: 'all',
-  categoryID: null,
-  binding: 'Bìa mềm',
-  stock: 0,
-  imgURL1: '',
-  imgURL2: '',
-  imgURL3: '',
-  description: '',
-  avgRating: 0,
-  totalRating: 0
-});
 
 // Reset image states when modal opens/closes
 const resetImageStates = () => {
@@ -2100,6 +2007,8 @@ const openAddBookModal = () => {
 
 // Open edit book modal
 const openEditBookModal = async (book) => {
+  console.log('Opening edit modal for book:', book);
+  
   isEditMode.value = true;
   
   editingBook.value = {
@@ -2108,7 +2017,7 @@ const openEditBookModal = async (book) => {
     author: book.author || '',
     description: book.description || '',
     price: Number(book.price) || 0,
-    stock: Number(book.stock) || 0,
+    stock: parseInt(book.stock) || 0, // Ensure it's an integer
     categoryID: Number(book.categoryID) || allCategories.value[0]?.categoryID || null,
     discount: Number(book.discount) || 0,
     imgURL1: book.imgURL1 || '',
@@ -2123,6 +2032,8 @@ const openEditBookModal = async (book) => {
     avgRating: Number(book.avgRating) || 0,
     totalRating: Number(book.totalRating) || 0
   };
+  
+  console.log('Editing book data:', editingBook.value);
   
   // Set image previews for existing images
   imagePreviews.value = {
@@ -2156,7 +2067,7 @@ const saveBook = async () => {
       author: String(editingBook.value.author).trim(),
       description: String(editingBook.value.description || '').trim(),
       price: Number(editingBook.value.price),
-      stock: Number(editingBook.value.stock) || 0,
+      stock: parseInt(editingBook.value.stock) || 0, // Ensure it's an integer
       categoryID: Number(editingBook.value.categoryID),
       discount: Number(editingBook.value.discount) || 0,
       
@@ -2185,6 +2096,10 @@ const saveBook = async () => {
     
     if (bookData.stock < 0) {
       throw new Error('Số lượng tồn kho không thể âm');
+    }
+    
+    if (!Number.isInteger(bookData.stock)) {
+      throw new Error('Số lượng tồn kho phải là số nguyên');
     }
     
     if (!bookData.categoryID || bookData.categoryID <= 0) {
@@ -2262,10 +2177,6 @@ const handlePageJump = () => {
     jumpToPage.value = null;
   }
 };
-
-// Delete confirmation
-const showDeleteConfirmation = ref(false);
-const bookToDelete = ref(null);
 
 const confirmDeleteBook = (book) => {
   bookToDelete.value = book;
