@@ -91,12 +91,14 @@
               </div>
             </div>
 
-            <div>
+            <div
+              class="max-md:mx-auto max-md:flex max-md:justify-center max-md:flex-wrap"
+            >
               <h2 class="text-lg font-bold mb-4 text-gray-800 mt-5">
                 Thông tin chi tiết
               </h2>
 
-              <div class="md:text-sm text-xs">
+              <div class="md:text-sm text-xs max-md:pl-[20%]">
                 <div class="grid grid-cols-3 gap-4 md:py-3 py-1">
                   <div class="col-span-1 text-gray-600">Mã hàng</div>
                   <div class="col-span-2 text-gray-800">
@@ -160,7 +162,7 @@
         </div>
 
         <!-- Description Section -->
-        <div class="mt-3 md:mt-6">
+        <div class="mt-3 md:mt-6 max-md:pl-[5%]">
           <h1
             class="text-[18px] md:text-[27px] text-[#661c1c] font-semibold font-instrument"
           >
@@ -170,7 +172,7 @@
         </div>
 
         <!-- Review Section -->
-        <div class="mt-3 md:mt-6">
+        <div class="mt-3 md:mt-6 max-md:pl-[5%]">
           <div
             class="w-full flex flex-col gap-4 md:mb-6 mb-3"
             v-if="isLoggedIn"
@@ -178,14 +180,14 @@
             <!-- Add review -->
             <div class="flex items-center gap-4">
               <span
-                class="text-[18px] md:text-[27px] text-[#661c1c] font-semibold font-instrument"
+                class="text-[14px] md:text-[27px] text-[#661c1c] font-semibold font-instrument"
                 >Thêm bình luận</span
               >
               <div class="flex gap-2 ml-4">
                 <button
                   v-for="rating in 5"
                   :key="rating"
-                  class="border rounded-full px-3 py-1 flex items-center gap-1 transition-colors"
+                  class="border rounded-full px-2 md:px-3 py-1 flex items-center gap-1 transition-colors text-xs md:text-bas"
                   :class="{
                     'border-red-500 text-red-500': selectedRating === rating,
                     'border-gray-300': selectedRating !== rating,
@@ -205,7 +207,7 @@
                 v-model="reviewContent"
               />
               <button
-                class="bg-black text-white px-6 py-2 font-semibold"
+                class="bg-black text-white px-4 md:px-6 py-1 md:py-2 md:font-semibold max-md:text-sm"
                 @click="sendReview"
               >
                 Gửi bình luận

@@ -9,50 +9,60 @@
       <!-- Header -->
       <div class="bg-white p-4 border-b flex justify-between items-center">
         <h2 class="text-2xl font-bold text-gray-800">Hỗ trợ</h2>
-        <div class="flex space-x-3">
-          <button class="text-amber-400 hover:text-amber-500">
-            <AlertTriangleIcon class="h-5 w-5" />
-          </button>
-          <button class="text-gray-400 hover:text-gray-500">
-            <TrashIcon class="h-5 w-5" />
-          </button>
-        </div>
+        <button class="text-gray-400 hover:text-gray-500">
+          <TrashIcon class="h-5 w-5" />
+        </button>
       </div>
 
-      <!-- Chat messages -->
-      <div class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
+      <n-spin :show="isLoading" class="flex-1 flex flex-col">
+        <!-- Chat messages -->
         <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          :class="msg.sender === 'user' ? 'flex justify-end' : 'flex'"
+          class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4 min-h-0 max-h-72"
         >
           <div
-            v-if="msg.sender === 'support'"
-            class="w-8 h-8 rounded-full bg-gray-300 mr-2 self-end overflow-hidden"
+            v-for="(msg, index) in messages"
+            :key="msg.id || index"
+            :class="
+              msg.senderId === Number(userInfo.id)
+                ? 'flex justify-end items-end'
+                : 'flex items-end'
+            "
           >
-            <img
-              :src="msg.senderAvatar || '/user.png'"
-              alt="Support"
-              class="h-8 w-8 rounded-full"
-            />
-          </div>
-          <div
-            class="bg-white rounded-lg p-3 max-w-xs shadow-sm border border-gray-200 relative"
-          >
-            <p class="text-gray-800">{{ msg.text }}</p>
-          </div>
-          <div
-            v-if="msg.sender === 'user'"
-            class="w-8 h-8 rounded-full bg-gray-300 ml-2 self-end overflow-hidden"
-          >
-            <img
-              :src="userInfo.avatar || '/user.png'"
-              alt="User"
-              class="h-8 w-8 rounded-full"
-            />
+            <!-- Avatar bên trái nếu là support/admin -->
+            <div
+              v-if="msg.senderId !== Number(userInfo.id)"
+              class="w-8 h-8 rounded-full bg-gray-300 mr-2 self-end overflow-hidden"
+            >
+              <img
+                :src="msg.senderAvatar || '/user.png'"
+                alt="Support"
+                class="h-8 w-8 rounded-full"
+              />
+            </div>
+            <!-- Nội dung tin nhắn -->
+            <div
+              class="bg-white rounded-lg p-3 max-w-xs shadow-sm border border-gray-200 relative"
+            >
+              <p class="text-gray-800">{{ msg.message || msg.text }}</p>
+              <span class="block text-xs text-gray-400 mt-1">{{
+                msg.sender
+              }}</span>
+            </div>
+            <!-- Avatar bên phải nếu là user -->
+            <div
+              v-if="msg.senderId === Number(userInfo.id)"
+              class="w-8 h-8 rounded-full bg-gray-300 ml-2 self-end overflow-hidden"
+            >
+              <img
+                :src="userInfo.avatar || '/user.png'"
+                alt="User"
+                class="h-8 w-8 rounded-full"
+              />
+            </div>
           </div>
         </div>
-      </div>
+        <template #description> Wait for it... </template>
+      </n-spin>
 
       <!-- Input area -->
       <div class="p-4 border-t bg-white">
@@ -63,7 +73,7 @@
             v-model="message"
             type="text"
             placeholder="Chúng tôi có thể hỗ trợ bạn như thế nào?"
-            class="flex-1 outline-none text-gray-700"
+            class="flex-1 outline-none text-gray-700 bg-white"
             @keyup.enter="sendMessage"
           />
           <div class="flex space-x-2">
@@ -94,6 +104,7 @@ import {
 import { useStore } from "vuex";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import { useRouter } from "vue-router";
+import axios from "../utils/axios";
 
 // Store & user info
 const store = useStore();
@@ -103,21 +114,56 @@ const router = useRouter();
 
 // Chat state
 const message = ref("");
-const messages = ref([
-  {
-    text: "Chào bạn! Tôi có thể giúp gì cho bạn?",
-    sender: "support",
-    senderAvatar: "/user.png",
-  },
-]);
+const messages = ref([]);
 const connection = ref(null);
+const currentPage = ref(1);
+const totalPages = ref(1);
+const isLoading = ref(false);
+const chatBox = ref(null);
+
+const loadMsg = async (page = 1) => {
+  if (isLoading.value) return;
+  isLoading.value = true;
+  try {
+    const resp = await axios.get(`/Chat/conversations?page=${page}`);
+    console.log(resp.data);
+    totalPages.value = resp.data.totalPages;
+    currentPage.value = resp.data.currentPage;
+    if (resp.data.totalCount === 0 && page === 1) {
+      messages.value = [
+        {
+          text: "Chào bạn! Tôi có thể giúp gì cho bạn?",
+          sender: "support",
+          senderAvatar: "/user.png",
+        },
+      ];
+    } else {
+      if (page === 1) {
+        messages.value = resp.data.messages;
+      } else {
+        messages.value = [...resp.data.messages, ...messages.value];
+      }
+    }
+    if (messages.value.length > 0) {
+      localStorage.setItem(
+        "latestMessageId",
+        messages.value[messages.value.length - 1].id
+      );
+    }
+  } catch (err) {
+    console.error("Load messages error:", err);
+  }
+  isLoading.value = false;
+};
 
 function handleUnauthorized() {
   // Xóa token
   localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userInfo");
   // Đóng chat popup
   store.commit("hideChat");
+  // Xóa thông tin user
+  store.dispatch("logout");
   // Chuyển hướng về login
   router.push("/login");
   // Thông báo cho user
@@ -136,13 +182,15 @@ const initializeSignalR = async () => {
       .build();
 
     // Lắng nghe tin nhắn mới từ server
-    connection.value.on("ReceiveMessage", (fullName, avatar, msg) => {
+    connection.value.on("ReceiveMessage", (msg) => {
       messages.value.push({
-        text: msg,
-        sender: "support",
-        senderName: fullName,
-        senderAvatar: avatar,
+        text: msg.message,
+        sender: "admin",
+        senderName: msg.sender,
+        senderAvatar: msg.senderAvatar,
+        id: msg.id,
       });
+      localStorage.setItem("latestMessageId", id);
     });
 
     connection.value.onclose((error) => {
@@ -175,19 +223,14 @@ const sendMessage = async () => {
   // Hiển thị tin nhắn của user ngay lập tức
   messages.value.push({
     text: message.value,
-    sender: "user",
+    senderId: Number(userInfo.value.id),
+    sender: userInfo.value.name,
+    senderAvatar: userInfo.value.avatar,
   });
 
   // Gửi lên server
   try {
-    await connection.value.invoke(
-      "SendMessage",
-      Number(userInfo.value.id),
-      String(userInfo.value.name),
-      String(userInfo.value.avatar),
-      String(message.value),
-      0
-    );
+    await connection.value.invoke("SendMessage", String(message.value), 152);
   } catch (err) {
     console.error("SendMessage error:", err);
   }
@@ -199,10 +242,16 @@ const sendMessage = async () => {
 const close = () => store.commit("hideChat");
 
 // Đóng popup khi click ra ngoài
-const chatBox = ref(null);
 function handleClickOutside(event) {
   if (chatBox.value && !chatBox.value.contains(event.target)) {
     close();
+  }
+}
+
+function onScroll() {
+  const el = chatBox.value;
+  if (el && el.scrollTop === 0 && currentPage.value < totalPages.value) {
+    loadMsg(currentPage.value + 1);
   }
 }
 
@@ -210,9 +259,34 @@ function handleClickOutside(event) {
 onMounted(async () => {
   await initializeSignalR();
   document.addEventListener("click", handleClickOutside);
+  await loadMsg(1);
+
+  // Lấy latestMessageId từ localStorage
+  const latestMessageId = localStorage.getItem("latestMessageId");
+  if (latestMessageId) {
+    // Gọi API lấy các tin nhắn mới hơn
+    const resp = await axios.get(
+      `/Chat/conversations/latest?lastMessageId=${latestMessageId}&partnerId=152`
+    );
+    if (resp.data && resp.data.length > 0) {
+      messages.value = [...messages.value, ...resp.data];
+      // Cập nhật lại latestMessageId
+      localStorage.setItem(
+        "latestMessageId",
+        messages.value[messages.value.length - 1].id
+      );
+    }
+  }
+
+  if (chatBox.value) {
+    chatBox.value.addEventListener("scroll", onScroll);
+  }
 });
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
   if (connection.value) connection.value.stop();
+  if (chatBox.value) {
+    chatBox.value.removeEventListener("scroll", onScroll);
+  }
 });
 </script>

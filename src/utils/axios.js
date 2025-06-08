@@ -3,7 +3,7 @@ import axios from "axios";
 import router from "../router/index.js";
 
 const instance = axios.create({
-  baseURL: "http://localhost:5240/api",
+  baseURL: "https://localhost:7129/api",
 });
 
 instance.interceptors.request.use((config) => {
@@ -20,7 +20,7 @@ instance.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Xóa token
       localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userInfo");
       store.dispatch("logout");
       router.push("/login");
       alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");

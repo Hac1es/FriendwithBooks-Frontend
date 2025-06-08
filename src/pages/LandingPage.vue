@@ -179,6 +179,7 @@
           color="#CD6D5F"
           class="absolute bottom-2 right-2 md:bottom-20 md:right-0 font-inter text-sm md:text-2xl md:py-8 md:px-6 px-3 py-4"
           :size="buttonSize"
+          @click="navigateToGOAT"
           >Mua ngay</n-button
         >
       </div>
@@ -214,6 +215,7 @@ import axios from "../utils/axios";
 import { useCountdown } from "../composables/useCountdown";
 import { ArrowBack, ArrowForward } from "@vicons/ionicons5";
 import { buildProductUrl } from "../utils/urlHelper";
+import { useRouter } from "vue-router";
 
 // Components
 import Header from "../components/Header/index.vue";
@@ -227,6 +229,7 @@ import ProdCard from "../components/ProdCard.vue";
  * ========================= */
 const bestSellingBooks = ref([]);
 const flashSale = ref([]);
+const router = useRouter();
 
 const testimonials = [
   {
@@ -324,4 +327,8 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
 });
+
+const navigateToGOAT = () => {
+  router.push("/Products/357");
+};
 </script>

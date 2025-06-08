@@ -5,7 +5,9 @@
     </div>
 
     <div class="md:hidden block">
-      <MobileFilter />
+      <MobileFilter
+        @filterChange="(payload) => $emit('filterChange', payload)"
+      />
     </div>
   </div>
 </template>
