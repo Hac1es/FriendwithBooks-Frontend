@@ -95,7 +95,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  nextTick,
+  watch,
+} from "vue";
 import {
   AlertTriangle as AlertTriangleIcon,
   Trash as TrashIcon,
@@ -180,6 +187,11 @@ const scrollToBottom = () => {
 
 // SignalR setup
 const initializeSignalR = async () => {
+  if (!userInfo.value) {
+    console.log("User not logged in, skipping SignalR initialization");
+    return;
+  }
+
   try {
     console.log(localStorage.getItem("token"));
     connection.value = new HubConnectionBuilder()
@@ -197,31 +209,47 @@ const initializeSignalR = async () => {
         senderName: msg.sender,
         senderAvatar: msg.senderAvatar,
         id: msg.id,
+        timestamp: msg.timestamp,
       });
-      localStorage.setItem("latestMessageId", id);
-      scrollToBottom();
+      localStorage.setItem("latestMessageId", msg.id);
+      nextTick(() => scrollToBottom());
     });
 
     connection.value.onclose((error) => {
       if (error && error.message && error.message.includes("401")) {
         handleUnauthorized();
+      } else {
+        console.log("Connection closed, attempting to reconnect...");
       }
+    });
+
+    connection.value.onreconnecting((error) => {
+      console.log("Reconnecting to SignalR...", error);
+    });
+
+    connection.value.onreconnected((connectionId) => {
+      console.log("Reconnected to SignalR with connection ID:", connectionId);
     });
 
     await connection.value.start();
     console.log("SignalR Connected!");
   } catch (err) {
-    // Bắt lỗi 401
     if (err && err.message && err.message.includes("401")) {
       handleUnauthorized();
     } else {
       console.error("SignalR Connection Error: ", err);
+      alert("Không thể kết nối đến máy chủ chat. Vui lòng thử lại sau!");
     }
   }
 };
 
 // Gửi tin nhắn lên server
 const sendMessage = async () => {
+  if (!userInfo.value) {
+    alert("Vui lòng đăng nhập để sử dụng tính năng chat!");
+    return;
+  }
+
   if (
     !message.value.trim() ||
     !connection.value ||
@@ -230,22 +258,26 @@ const sendMessage = async () => {
     return;
 
   // Hiển thị tin nhắn của user ngay lập tức
-  messages.value.push({
+  const tempMessage = {
     text: message.value,
     senderId: Number(userInfo.value.id),
     sender: userInfo.value.name,
     senderAvatar: userInfo.value.avatar,
-  });
+    timestamp: new Date().toISOString(),
+  };
+  messages.value.push(tempMessage);
   scrollToBottom();
 
   // Gửi lên server
   try {
     await connection.value.invoke("SendMessage", String(message.value), 152);
+    message.value = "";
   } catch (err) {
     console.error("SendMessage error:", err);
+    // Xóa tin nhắn tạm nếu gửi thất bại
+    messages.value.pop();
+    alert("Không thể gửi tin nhắn. Vui lòng thử lại sau!");
   }
-
-  message.value = "";
 };
 
 // Đóng chat popup
@@ -291,7 +323,20 @@ onMounted(async () => {
   if (chatBox.value) {
     chatBox.value.addEventListener("scroll", onScroll);
   }
+
+  scrollToBottom();
 });
+
+watch(
+  () => messages.value,
+  (newVal) => {
+    if (newVal?.messages) {
+      nextTick(() => scrollToBottom());
+    }
+  },
+  { deep: true }
+);
+
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
   if (connection.value) connection.value.stop();

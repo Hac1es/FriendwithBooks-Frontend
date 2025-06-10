@@ -141,7 +141,7 @@ const registerWithEmail = async () => {
 
       store.dispatch("login", decoded.role);
       // Lưu thông tin user vào store và lưu vào localStorage
-      store.dispatch("setUserInfo", response.data.user);
+      store.dispatch("setUserInfo", JSON.stringify(decoded));
       localStorage.setItem("userInfo", JSON.stringify(decoded));
     } else {
       alert(response.data.message || "Đăng ký thất bại.");

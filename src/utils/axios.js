@@ -11,6 +11,10 @@ instance.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  if (config.url.includes("cloudinary.com")) {
+    // Không thêm Authorization cho Cloudinary
+    delete config.headers.Authorization;
+  }
   return config;
 });
 

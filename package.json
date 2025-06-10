@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cloudinary/url-gen": "^1.21.0",
+    "@cloudinary/vue": "^1.13.3",
     "@microsoft/signalr": "^8.0.7",
     "@supabase/supabase-js": "^2.49.8",
     "@vicons/ionicons5": "^0.13.0",
