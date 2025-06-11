@@ -142,7 +142,7 @@
             <div class="font-bold text-base">{{ formatPrice(totalAmount) }}</div>
           </div>
           <button
-            @click="placeOrder"
+            @click.once="placeOrder"
             class="bg-[#d97c5e] hover:bg-[#c56e52] text-white font-semibold py-3 px-8 rounded-md transition duration-200 text-base min-w-[140px]"
             :disabled="loading || orderItems.length === 0"
           >
@@ -252,17 +252,6 @@ const getPaymentMethods = async () => {
 };
 
 const placeOrder = async () => {
-  console.log("Attempting to place order. Current token:", localStorage.getItem('token'));
-
-  if (!selectedPaymentMethod.value) {
-    error.value = 'Vui lòng chọn phương thức thanh toán';
-    return;
-  }
-  if (orderItems.value.length === 0) {
-      error.value = 'Giỏ hàng trống. Không thể đặt hàng.';
-      return;
-  }
-
   try {
     loading.value = true;
     // Bước 1: Tạo Order
@@ -283,11 +272,22 @@ const placeOrder = async () => {
 
     console.log("Order creation response:", orderResponse.data);
 
-    const orderID = orderResponse.data.data.OrderID; // Đảm bảo lấy đúng OrderID từ phản hồi của backend
+    const orderID = orderResponse.data.data.orderID; // Changed from OrderID to orderID
 
-    if (selectedPaymentMethod.value !== paymentMethods.value.find(m => m.name === 'tiền mặt')?.id) {
-        const paymentRes = await axios.post(`https://localhost:7129/api/payment/process/${orderID}`,
-            null // Changed from orderID to null, as orderID is now in the URL
+    console.log("Order ID before payment processing:", orderID);
+    console.log("Selected payment method ID:", selectedPaymentMethod.value);
+
+    // Tìm phương thức thanh toán tiền mặt từ danh sách đã tải
+    // Giả sử 'tiền mặt' là tên phương thức bạn muốn kiểm tra
+    const cashPaymentMethod = paymentMethods.value.find(m => m.name === 'tiền mặt');
+    console.log("Cash payment method object from loaded methods:", cashPaymentMethod);
+    console.log("Cash payment method ID from object:", cashPaymentMethod?.id);
+
+
+    if (selectedPaymentMethod.value !== cashPaymentMethod?.id) {
+        console.log("Selected method is NOT cash. Attempting to process online payment (Momo/VnPay)...");
+        const paymentRes = await axios.post(`https://localhost:7129/api/payment/process/${String(orderID)}`,
+            {} // Changed from null to an empty object
         , {
             headers: {
                 'Content-Type': 'application/json', // Indicate JSON content
@@ -295,12 +295,19 @@ const placeOrder = async () => {
             }
         });
 
-        if (paymentRes.data.paymentUrl) {
-            window.location.href = paymentRes.data.paymentUrl;
+        console.log("Payment API response:", paymentRes.data);
+
+        // Kiểm tra xem paymentRes.data và paymentRes.data.data có tồn tại không
+        if (paymentRes.data && paymentRes.data.data && paymentRes.data.data.paymentUrl) {
+            console.log("Redirecting to payment URL:", paymentRes.data.data.paymentUrl);
+            window.location.href = paymentRes.data.data.paymentUrl;
         } else {
-            router.push(`/order-success/${orderID}`);
+            // Nếu không có paymentUrl (ví dụ: backend không trả về hoặc có lỗi khác)
+            console.error("Error: paymentUrl is undefined or not found in response for online payment. Redirecting to order success page as a fallback.");
+            router.push(`/order-success/${orderID}`); // Chuyển hướng đến trang thành công nếu không có paymentUrl
         }
     } else {
+        console.log("Selected method IS cash. Redirecting directly to order success page.");
         router.push(`/order-success/${orderID}`);
     }
 
@@ -311,7 +318,6 @@ const placeOrder = async () => {
     loading.value = false;
   }
 };
-
 const formatPrice = (price) => {
   return (
     new Intl.NumberFormat("vi-VN", {
