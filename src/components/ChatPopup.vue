@@ -192,7 +192,7 @@ const initializeSignalR = async () => {
   try {
     console.log(localStorage.getItem("token"));
     connection.value = new HubConnectionBuilder()
-      .withUrl("https://friendwithbooks.id.vn/api/chathub", {
+      .withUrl("https://localhost:7129/api/chathub", {
         accessTokenFactory: () => localStorage.getItem("token"),
       })
       .withAutomaticReconnect()

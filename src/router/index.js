@@ -12,6 +12,7 @@ import LandingAdmin from "../pages/LandingAdmin.vue";
 import CartView from "../pages/CartView.vue";
 import PayMent from "../pages/PayMent.vue";
 import UserProfile from "../pages/UserProfile.vue";
+import OrderSuccess from "../pages/OrderSuccess.vue";
 import store from "../store/index.js";
 import LoginGoogle from "../pages/LoginGoogle.vue";
 import AdminOrders from "../pages/AdminOrders.vue";
@@ -76,6 +77,13 @@ const routes = [
     name: "UserProfile",
     component: UserProfile,
     meta: { title: "Hồ sơ người dùng" },
+  },
+  {
+    path: "/order-success/:orderId",
+    name: "OrderSuccess",
+    component: OrderSuccess,
+    props: true,
+    meta: { title: "Đặt hàng thành công" },
   },
   {
     path: "/License",

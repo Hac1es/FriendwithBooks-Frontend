@@ -188,7 +188,7 @@
 </template>
 
 <script setup>
-import { SearchIcon, PaperclipIcon, SendIcon, Trash2 } from "lucide-vue-next";
+import { SearchIcon, SendIcon, Trash2 } from "lucide-vue-next";
 import axios from "../utils/axios";
 import {
   ref,
@@ -262,7 +262,7 @@ const scrollToBottom = () => {
 const initializeSignalR = async () => {
   try {
     connection.value = new HubConnectionBuilder()
-      .withUrl("https://friendwithbooks.id.vn/api/chathub", {
+      .withUrl("https://localhost:7129/api/chathub", {
         accessTokenFactory: () => localStorage.getItem("token"),
       })
       .withAutomaticReconnect()
