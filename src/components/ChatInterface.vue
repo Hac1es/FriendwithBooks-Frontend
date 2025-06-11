@@ -1,5 +1,5 @@
 <template>
-  <div class="flex m-4 flex-col min-h-screen">
+  <div class="flex m-4 flex-col">
     <!-- Main Content -->
     <div class="flex-1 container mx-auto flex">
       <!-- Sidebar -->
@@ -19,6 +19,13 @@
         <!-- Conversation List -->
         <div class="space-y-2">
           <div
+            class="space-y-2 min-h-[200px] flex items-center justify-center"
+            v-if="isLoading"
+          >
+            <n-spin />
+          </div>
+          <div
+            v-else
             v-for="(conv, index) in conversations"
             :key="index"
             class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer bg-white"
@@ -52,110 +59,119 @@
 
       <!-- Chat Area -->
       <div
-        class="w-3/4 flex flex-col bg-white rounded-lg border border-gray-200"
+        class="w-3/4 bg-white rounded-lg border border-gray-200 h-[550px]"
+        :class="isLoading.value ? 'flex justify-center items-center' : ''"
       >
-        <!-- Chat Header -->
-        <div class="p-4 border-b border-gray-200 flex items-center">
-          <img
-            :src="currentPartner.avatar"
-            alt="User Avatar"
-            class="h-10 w-10 rounded-full"
-          />
-          <div class="ml-3">
-            <p class="font-medium">{{ currentPartner.name }}</p>
-            <p class="text-xs text-gray-500">#{{ currentPartner.id }}</p>
-          </div>
-        </div>
-
-        <!-- Messages -->
         <div
-          class="flex-1 p-4 overflow-y-auto space-y-6"
-          ref="messagesContainer"
+          v-if="isLoading"
+          class="flex flex-1 justify-center items-center h-full"
         >
+          <n-spin />
+        </div>
+        <div class="flex flex-col h-full" v-else>
+          <!-- Chat Header -->
+          <div class="p-4 border-b border-gray-200 flex items-center">
+            <img
+              :src="currentPartner.avatar"
+              alt="User Avatar"
+              class="h-10 w-10 rounded-full"
+            />
+            <div class="ml-3">
+              <p class="font-medium">{{ currentPartner.name }}</p>
+              <p class="text-xs text-gray-500">#{{ currentPartner.id }}</p>
+            </div>
+          </div>
+
+          <!-- Messages -->
           <div
-            v-for="(msg, idx) in conversation.messages"
-            :key="msg.id || idx"
-            :class="
-              msg.senderId === Number(userInfo.id)
-                ? 'flex items-center justify-end'
-                : 'flex items-center'
-            "
+            class="flex-1 p-4 overflow-y-auto space-y-6"
+            ref="messagesContainer"
           >
-            <!-- Nếu là tin nhắn của người khác -->
-            <template v-if="msg.senderId !== Number(userInfo.id)">
-              <div
-                class="flex-shrink-0 h-8 w-8 rounded-full bg-purple-200 flex items-center justify-center text-xs text-purple-600"
-              >
+            <div
+              v-for="(msg, idx) in conversation.messages"
+              :key="msg.id || idx"
+              :class="
+                msg.senderId === Number(userInfo.id)
+                  ? 'flex items-center justify-end'
+                  : 'flex items-center'
+              "
+            >
+              <!-- Nếu là tin nhắn của người khác -->
+              <template v-if="msg.senderId !== Number(userInfo.id)">
+                <div
+                  class="flex-shrink-0 h-8 w-8 rounded-full bg-purple-200 flex items-center justify-center text-xs text-purple-600"
+                >
+                  <img
+                    :src="msg.senderAvatar || '/user.png'"
+                    class="h-8 w-8 rounded-full"
+                  />
+                </div>
+                <div class="ml-2 max-w-md">
+                  <div class="bg-gray-100 rounded-lg p-3 text-sm">
+                    <p>{{ msg.message || msg.text }}</p>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{
+                      new Date(msg.timestamp).toLocaleString("vi-VN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })
+                    }}
+                  </p>
+                </div>
+              </template>
+              <!-- Nếu là tin nhắn của mình -->
+              <template v-else>
+                <div class="mr-2 max-w-md">
+                  <div class="bg-indigo-400 rounded-lg p-3 text-sm text-white">
+                    <p>{{ msg.message || msg.text }}</p>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1 text-right">
+                    {{
+                      new Date(msg.timestamp).toLocaleString("vi-VN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })
+                    }}
+                  </p>
+                </div>
                 <img
                   :src="msg.senderAvatar || '/user.png'"
+                  alt="User Avatar"
                   class="h-8 w-8 rounded-full"
                 />
-              </div>
-              <div class="ml-2 max-w-md">
-                <div class="bg-gray-100 rounded-lg p-3 text-sm">
-                  <p>{{ msg.message || msg.text }}</p>
-                </div>
-                <p class="text-xs text-gray-500 mt-1">
-                  {{
-                    new Date(msg.timestamp).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })
-                  }}
-                </p>
-              </div>
-            </template>
-            <!-- Nếu là tin nhắn của mình -->
-            <template v-else>
-              <div class="mr-2 max-w-md">
-                <div class="bg-indigo-400 rounded-lg p-3 text-sm text-white">
-                  <p>{{ msg.message || msg.text }}</p>
-                </div>
-                <p class="text-xs text-gray-500 mt-1 text-right">
-                  {{
-                    new Date(msg.timestamp).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })
-                  }}
-                </p>
-              </div>
-              <img
-                :src="msg.senderAvatar || '/user.png'"
-                alt="User Avatar"
-                class="h-8 w-8 rounded-full"
-              />
-            </template>
+              </template>
+            </div>
           </div>
-        </div>
 
-        <!-- Message Input -->
-        <div class="p-4 border-t border-gray-200">
-          <div
-            class="flex items-center border border-gray-300 rounded-full overflow-hidden"
-          >
-            <input
-              type="text"
-              placeholder="Nhập tin nhắn..."
-              class="flex-1 px-4 py-2 focus:outline-none bg-white"
-              v-model="message"
-              @keyup.enter="sendMessage"
-            />
-            <button class="p-2 text-gray-500 hover:text-gray-700">
-              <PaperclipIcon class="h-5 w-5" />
-            </button>
-            <button
-              class="p-2 text-indigo-500 hover:text-indigo-700 mr-3"
-              @click="sendMessage"
+          <!-- Message Input -->
+          <div class="p-4 border-t border-gray-200">
+            <div
+              class="flex items-center border border-gray-300 rounded-full overflow-hidden"
             >
-              <SendIcon class="h-5 w-5" />
-            </button>
+              <input
+                type="text"
+                placeholder="Nhập tin nhắn..."
+                class="flex-1 px-4 py-2 focus:outline-none bg-white"
+                v-model="message"
+                @keyup.enter="sendMessage"
+              />
+              <button class="p-2 text-gray-500 hover:text-gray-700">
+                <PaperclipIcon class="h-5 w-5" />
+              </button>
+              <button
+                class="p-2 text-indigo-500 hover:text-indigo-700 mr-3"
+                @click="sendMessage"
+              >
+                <SendIcon class="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -166,7 +182,15 @@
 <script setup>
 import { SearchIcon, PaperclipIcon, SendIcon } from "lucide-vue-next";
 import axios from "../utils/axios";
-import { ref, onMounted, onBeforeUnmount, computed, reactive } from "vue";
+import {
+  ref,
+  onMounted,
+  onBeforeUnmount,
+  computed,
+  reactive,
+  nextTick,
+  watch,
+} from "vue";
 import { useStore } from "vuex";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
@@ -183,8 +207,15 @@ const currentPartnerId = ref(null);
 const messagesContainer = ref(null);
 
 const getConversation = async () => {
+  isLoading.value = true;
   const response = await axios.get("/Chat/conversations/partners");
   conversations.value = response.data.partners;
+
+  // Tự động load cuộc trò chuyện đầu tiên nếu có
+  if (conversations.value.length > 0 && !currentPartnerId.value) {
+    await getConv(conversations.value[0].partnerId);
+  }
+  isLoading.value = false;
 };
 
 const getConv = async (partnerId) => {
@@ -201,6 +232,18 @@ const getConv = async (partnerId) => {
   currentPartnerId.value = partnerId;
   isLoading.value = false;
 };
+
+function handleUnauthorized() {
+  // Xóa token
+  localStorage.removeItem("token");
+  localStorage.removeItem("userInfo");
+  // Xóa thông tin user
+  store.dispatch("logout");
+  // Chuyển hướng về login
+  router.push("/login");
+  // Thông báo cho user
+  alert("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+}
 
 const scrollToBottom = () => {
   if (messagesContainer.value) {
@@ -231,15 +274,53 @@ const initializeSignalR = async () => {
           id: msg.id,
           timestamp: msg.timestamp,
         });
-        localStorage.setItem("latestMessageId", id);
+        localStorage.setItem("latestMessageId", msg.id);
         scrollToBottom();
+      }
+
+      // Cập nhật nhanh cuộc trò chuyện
+      const idx = conversations.value.findIndex(
+        (c) => c.partnerId === msg.senderId || c.partnerId === msg.receiverId
+      );
+      if (idx !== -1) {
+        const targetConv = conversations.value[idx];
+        targetConv.lastMessage = msg.message;
+        targetConv.isAdminSendLast = msg.senderId === Number(userInfo.value.id);
+
+        // Di chuyển cuộc trò chuyện này lên đầu danh sách
+        conversations.value.splice(idx, 1);
+        conversations.value.unshift(targetConv);
+      } else {
+        const newConv = {
+          partnerId:
+            msg.senderId === Number(userInfo.value.id)
+              ? msg.receiverId
+              : msg.senderId,
+          partnerName: msg.sender,
+          partnerAvatar: msg.senderAvatar || "/user.png",
+          lastMessage: msg.message,
+          isAdminSendLast: msg.senderId === Number(userInfo.value.id),
+        };
+
+        conversations.value.unshift(newConv);
+      }
+    });
+
+    connection.value.onclose((error) => {
+      if (error && error.message && error.message.includes("401")) {
+        handleUnauthorized();
       }
     });
 
     await connection.value.start();
     console.log("SignalR Connected!");
   } catch (err) {
-    console.error("SignalR Connection Error: ", err);
+    // Bắt lỗi 401
+    if (err && err.message && err.message.includes("401")) {
+      handleUnauthorized();
+    } else {
+      console.error("SignalR Connection Error: ", err);
+    }
   }
 };
 
@@ -261,6 +342,13 @@ const sendMessage = async () => {
     receiverId: currentPartnerId.value,
     timestamp: new Date().toISOString(),
   };
+  const currentCov = conversations.value.find(
+    (c) => c.partnerId === currentPartnerId.value
+  );
+  if (currentCov) {
+    currentCov.lastMessage = message.value;
+    currentCov.isAdminSendLast = true;
+  }
   conversation.value.messages.push(msgObj);
   scrollToBottom();
 
@@ -278,10 +366,21 @@ const sendMessage = async () => {
   message.value = "";
 };
 
-onMounted(() => {
-  getConversation();
-  initializeSignalR();
+onMounted(async () => {
+  await getConversation();
+  await initializeSignalR();
+  scrollToBottom();
 });
+
+watch(
+  () => conversation.value,
+  (newVal) => {
+    if (newVal?.messages) {
+      nextTick(() => scrollToBottom());
+    }
+  },
+  { deep: true }
+);
 
 onBeforeUnmount(() => {
   if (connection.value) connection.value.stop();

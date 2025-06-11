@@ -11,5 +11,5 @@
 </template>
 
 <script setup>
-import MoblieNavigation from "./MoblieNavigation.vue";
+import MoblieNavigation from "./mobileNavigation.vue";
 </script>

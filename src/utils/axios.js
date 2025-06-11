@@ -3,13 +3,17 @@ import axios from "axios";
 import router from "../router/index.js";
 
 const instance = axios.create({
-  baseURL: "https://localhost:7129/api",
+  baseURL: "https://friendwithbooks.id.vn/api",
 });
 
 instance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (config.url.includes("cloudinary.com")) {
+    // Không thêm Authorization cho Cloudinary
+    delete config.headers.Authorization;
   }
   return config;
 });
