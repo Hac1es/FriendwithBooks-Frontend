@@ -60,6 +60,7 @@
                 </div>
                 <button
                   class="bg-[#cd6d5f] text-white py-2 px-4 rounded hover:bg-red-800 transition-colors w-48"
+                  @click="addToCart"
                 >
                   Thêm vào giỏ hàng
                 </button>
@@ -679,4 +680,23 @@ const handleSortChange = (type) => {
 function goToDetail(id) {
   router.push(`/Products/${id}`);
 }
+
+const addToCart = async () => {
+  try {
+    await axios.post(
+      "https://localhost:7129/api/cart",
+      {
+        bookID: productData.value.bookID,
+        quantity: 1,
+      },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      }
+    );
+    alert("Đã thêm vào giỏ hàng!");
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    alert("Thêm vào giỏ hàng thất bại!");
+  }
+};
 </script>

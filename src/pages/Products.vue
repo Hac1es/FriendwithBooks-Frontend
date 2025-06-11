@@ -37,7 +37,9 @@
             :discount="data.discount"
             :scale="respScaling"
             @click="() => goToDetail(data.id)"
-          />
+          >
+            <button @click="addToCart(data.id)">Thêm vào giỏ hàng</button>
+          </ProdCard>
         </div>
 
         <!-- No results -->
@@ -256,6 +258,26 @@ watch(
     });
   }
 );
+
+const addToCart = async (bookId) => {
+  try {
+    await axios.post(
+      "http://localhost:8080/api/cart/add",
+      {
+        bookID: bookId,
+        quantity: 1,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    alert("Đã thêm vào giỏ hàng!");
+  } catch (err) {
+    alert("Thêm vào giỏ hàng thất bại!");
+  }
+};
 
 watch(
   () => route.query.category,

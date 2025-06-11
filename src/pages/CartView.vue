@@ -30,84 +30,92 @@
       </div>
 
       <p class="text-gray-700 mb-4 font-medium">
-        Có {{ cart.length }} món trong giỏ hàng
+        Có {{ cart && cart.length > 0 ? cart.length : 0 }} món trong giỏ hàng
       </p>
 
       <div class="flex flex-col md:flex-row gap-8">
         <!-- Cart items -->
         <div class="w-full md:w-2/3 space-y-5">
-          <div
-            v-for="(item, index) in cart"
-            :key="item.id"
-            class="bg-white rounded-xl border border-[#e0d6c3] shadow flex items-center justify-between px-5 py-4"
-          >
-            <div class="flex items-center">
-              <!-- Ảnh Đắc Nhân Tâm -->
-              <img
-                :src="item.image"
-                alt="Book cover"
-                class="w-16 h-24 object-cover rounded-lg border border-[#e3dac9] bg-white mr-4"
-              />
-              <div>
-                <h3 class="font-bold text-base text-[#222]">
-                  {{ item.title }}
-                </h3>
-                <p class="text-gray-500 text-sm">{{ item.author }}</p>
+          <div v-if="loading">Đang tải...</div>
+          <div v-else-if="error" class="text-red-500">{{ error }}</div>
+          <div v-else>
+            <div v-if="cart && cart.length > 0">
+              <div
+                v-for="(item, index) in cart"
+                :key="item.cartID"
+                class="bg-white rounded-xl border border-[#e0d6c3] shadow flex items-center justify-between px-5 py-4"
+              >
+                <div class="flex items-center">
+                  <img
+                    :src="item.book?.imgURL1"
+                    alt="Book cover"
+                    class="w-16 h-24 object-cover rounded-lg border border-[#e3dac9] bg-white mr-4"
+                  />
+                  <div>
+                    <h3 class="font-bold text-base text-[#222]">
+                      {{ item.book?.title }}
+                    </h3>
+                    <p class="text-gray-500 text-sm">{{ item.book?.author }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-6">
+                  <div
+                    class="flex items-center border border-[#e3dac9] rounded-lg bg-[#faf7f2]"
+                  >
+                    <button
+                      @click="decreaseQuantity(index)"
+                      :disabled="item.quantity <= 1"
+                      class="px-3 py-1 text-lg font-bold text-[#d05749] hover:bg-[#f9ece5] rounded-l-lg transition"
+                    >
+                      -
+                    </button>
+                    <span class="px-4 py-1 font-semibold text-[#222]">{{
+                      item.quantity
+                    }}</span>
+                    <button
+                      @click="increaseQuantity(index)"
+                      class="px-3 py-1 text-lg font-bold text-[#d05749] hover:bg-[#f9ece5] rounded-r-lg transition"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div class="flex flex-col items-end min-w-[90px]">
+                    <p class="font-semibold text-[#222] text-base">
+                      {{ formatPrice(item.book?.price) }}
+                    </p>
+                    <button
+                      @click="removeItem(index)"
+                      class="text-[#d05749] hover:text-[#b84a3d] mt-2 transition"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                      >
+                        <rect
+                          x="9"
+                          y="3"
+                          width="6"
+                          height="2"
+                          rx="1"
+                          fill="#d05749"
+                        />
+                        <path
+                          stroke="#d05749"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M10 5h4m-7 2h10m-1 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="flex items-center gap-6">
-              <div
-                class="flex items-center border border-[#e3dac9] rounded-lg bg-[#faf7f2]"
-              >
-                <button
-                  @click="decreaseQuantity(index)"
-                  class="px-3 py-1 text-lg font-bold text-[#d05749] hover:bg-[#f9ece5] rounded-l-lg transition"
-                >
-                  -
-                </button>
-                <span class="px-4 py-1 font-semibold text-[#222]">{{
-                  item.quantity
-                }}</span>
-                <button
-                  @click="increaseQuantity(index)"
-                  class="px-3 py-1 text-lg font-bold text-[#d05749] hover:bg-[#f9ece5] rounded-r-lg transition"
-                >
-                  +
-                </button>
-              </div>
-              <div class="flex flex-col items-end min-w-[90px]">
-                <p class="font-semibold text-[#222] text-base">
-                  {{ formatPrice(item.price) }}
-                </p>
-                <button
-                  @click="removeItem(index)"
-                  class="text-[#d05749] hover:text-[#b84a3d] mt-2 transition"
-                >
-                  <!-- Sọt rác SVG -->
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                  >
-                    <rect
-                      x="9"
-                      y="3"
-                      width="6"
-                      height="2"
-                      rx="1"
-                      fill="#d05749"
-                    />
-                    <path
-                      stroke="#d05749"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M10 5h4m-7 2h10m-1 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V7"
-                    />
-                  </svg>
-                </button>
-              </div>
+            <div v-else>
+              <p>Không có sản phẩm nào trong giỏ hàng.</p>
             </div>
           </div>
         </div>
@@ -179,6 +187,7 @@
             <button
               @click="checkout"
               class="w-full bg-[#d05749] text-white py-3 rounded-lg mt-4 font-semibold text-lg shadow hover:bg-[#b84a3d] transition"
+              :disabled="!cart || cart.length === 0"
             >
               Thanh toán
             </button>
@@ -191,48 +200,47 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
-import { useRouter } from "vue-router"; // <-- Thêm import useRouter
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
 import Footer from "../components/Footer.vue";
 import Breadcrumb1 from "../components/Breadcrumb1.vue";
 import Header from "../components/Header/index.vue";
-const router = useRouter(); // <-- Khởi tạo router
 
-const cart = ref([
-  {
-    id: 1,
-    title: "Đắc Nhân Tâm",
-    author: "Dale Carnegie",
-    price: 100000,
-    quantity: 1,
-    image:
-      "https://salt.tikicdn.com/cache/w1200/ts/product/df/7d/da/d340edda2b0eacb7ddc47537cddb5e08.jpg",
-  },
-  {
-    id: 2,
-    title: "Đắc Nhân Tâm",
-    author: "Dale Carnegie",
-    price: 100000,
-    quantity: 1,
-    image:
-      "https://salt.tikicdn.com/cache/w1200/ts/product/df/7d/da/d340edda2b0eacb7ddc47537cddb5e08.jpg",
-  },
-  {
-    id: 3,
-    title: "Đắc Nhân Tâm",
-    author: "Dale Carnegie",
-    price: 100000,
-    quantity: 1,
-    image:
-      "https://salt.tikicdn.com/cache/w1200/ts/product/df/7d/da/d340edda2b0eacb7ddc47537cddb5e08.jpg",
-  },
-]);
+const router = useRouter();
 
+// Cart state
+const cart = ref([]);
 const paymentMethod = ref("momo");
+const loading = ref(true);
+const error = ref(null);
+
+// Fetch cart from backend API
+const fetchCart = async () => {
+  try {
+    loading.value = true;
+    const response = await axios.get("https://localhost:7129/api/cart/my", {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    console.log('API Response for Cart:', response.data);
+    cart.value = response.data.data.items || [];
+    error.value = null;
+  } catch (err) {
+    error.value = "Không thể tải giỏ hàng";
+    cart.value = [];
+    console.error('Error fetching cart:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchCart();
+});
 
 const totalAmount = computed(() => {
   return cart.value.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) => total + (item.book?.price || 0) * item.quantity,
     0
   );
 });
@@ -246,18 +254,51 @@ const formatPrice = (price) => {
   );
 };
 
-const increaseQuantity = (index) => {
-  cart.value[index].quantity++;
-};
-
-const decreaseQuantity = (index) => {
-  if (cart.value[index].quantity > 1) {
-    cart.value[index].quantity--;
+const increaseQuantity = async (index) => {
+  const item = cart.value[index];
+  const newQuantity = item.quantity + 1;
+  try {
+    await axios.put(`https://localhost:7129/api/cart/${item.cartID}`, {
+      quantity: newQuantity
+    }, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    await fetchCart();
+  } catch (err) {
+    error.value = 'Không thể cập nhật số lượng';
+    console.error('Error increasing quantity:', err);
   }
 };
 
-const removeItem = (index) => {
-  cart.value.splice(index, 1);
+const decreaseQuantity = async (index) => {
+  const item = cart.value[index];
+  const newQuantity = item.quantity - 1;
+  if (newQuantity > 0) {
+    try {
+      await axios.put(`https://localhost:7129/api/cart/${item.cartID}`, {
+        quantity: newQuantity
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      await fetchCart();
+    } catch (err) {
+      error.value = 'Không thể cập nhật số lượng';
+      console.error('Error decreasing quantity:', err);
+    }
+  }
+};
+
+const removeItem = async (index) => {
+  const item = cart.value[index];
+  try {
+    await axios.delete(`https://localhost:7129/api/cart/${item.cartID}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    await fetchCart();
+  } catch (err) {
+    error.value = 'Không thể xóa sản phẩm';
+    console.error('Error removing item:', err);
+  }
 };
 
 const checkout = () => {
