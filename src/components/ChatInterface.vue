@@ -162,9 +162,6 @@
                 v-model="message"
                 @keyup.enter="sendMessage"
               />
-              <button class="p-2 text-gray-500 hover:text-gray-700">
-                <PaperclipIcon class="h-5 w-5" />
-              </button>
               <button
                 class="p-2 text-indigo-500 hover:text-indigo-700 mr-3"
                 @click="sendMessage"

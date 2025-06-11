@@ -78,9 +78,6 @@
             @keyup.enter="sendMessage"
           />
           <div class="flex space-x-2">
-            <button class="text-gray-500 hover:text-gray-700">
-              <PaperclipIcon class="h-5 w-5" />
-            </button>
             <button
               @click="sendMessage"
               class="text-gray-500 hover:text-gray-700"

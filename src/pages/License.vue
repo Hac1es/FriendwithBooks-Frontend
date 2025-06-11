@@ -37,7 +37,7 @@
         Mật khẩu sử dụng một lần (OTP) được gửi qua email để đảm bảo việc truy
         cập tài khoản được xác thực.
       </li>
-      <li>Tiêu chuẩn mã hóa MD5 128 bit.</li>
+      <li>Tiêu chuẩn mã hóa SHA 256 bit.</li>
       <li>
         Các nguyên tắc và quy định bảo mật thông tin trong ngành tài chính ngân
         hàng theo quy định của Ngân hàng Nhà nước Việt Nam.

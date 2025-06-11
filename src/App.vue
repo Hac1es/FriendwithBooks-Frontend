@@ -1,5 +1,5 @@
 <template>
-  <router-view :key="$route.fullPath" />
+  <router-view :key="$route.path" />
   <ChatPopup v-if="isAuthenticated && role === 'user'" />
 </template>
 
@@ -39,9 +39,13 @@ watch([isAuthenticated, role], ([newAuth, newRole]) => {
   if (newAuth && newRole === "admin") {
     router.push("/admin/chat");
   } else if (newAuth && newRole === "user") {
-    router.push("/");
+    if (router.currentRoute.value.path !== "/") {
+      router.push("/");
+    }
   } else {
-    router.push("/");
+    if (router.currentRoute.value.path !== "/") {
+      router.push("/");
+    }
   }
 });
 </script>

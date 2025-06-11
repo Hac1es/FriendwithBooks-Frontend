@@ -17,47 +17,101 @@ import LoginGoogle from "../pages/LoginGoogle.vue";
 
 const routes = [
   // Public routes
-  { path: "/login", name: "Login", component: Login },
-  { path: "/loginGoogle", name: "LoginGoogle", component: LoginGoogle },
-  { path: "/register", name: "Register", component: Register },
-  { path: "/forgot-password", name: "ForgotPass", component: ForgotPass },
-  { path: "/license", name: "License", component: License },
-  { path: "/", name: "LandingPage", component: LandingPage },
-  { path: "/products", name: "Products", component: Products },
+  {
+    path: "/login",
+    name: "Login",
+    component: Login,
+    meta: { title: "Đăng nhập" },
+  },
+  {
+    path: "/loginGoogle",
+    name: "LoginGoogle",
+    component: LoginGoogle,
+    meta: { title: "Đăng nhập với Google" },
+  },
+  {
+    path: "/register",
+    name: "Register",
+    component: Register,
+    meta: { title: "Đăng ký" },
+  },
+  {
+    path: "/forgot-password",
+    name: "ForgotPass",
+    component: ForgotPass,
+    meta: { title: "Quên mật khẩu" },
+  },
+  {
+    path: "/",
+    name: "LandingPage",
+    component: LandingPage,
+    meta: { title: "FriendwithBooks - Books and Chill" },
+  },
+  {
+    path: "/products",
+    name: "Products",
+    component: Products,
+    meta: { title: "Danh mục sản phẩm" },
+  },
   {
     path: "/products/:categories*/:id",
     name: "ProductDetail",
     component: ProductDetail,
     props: true, // Để truyền params vào component
   },
-  { path: "/CartView", name: "CartView", component: CartView },
-  { path: "/PayMent", name: "PayMent", component: PayMent },
-  { path: "/UserProfile", name: "UserProfile", component: UserProfile },
-  { path: "/License", name: "License", component: License },
+  {
+    path: "/CartView",
+    name: "CartView",
+    component: CartView,
+    meta: { title: "Giỏ hàng" },
+  },
+  {
+    path: "/PayMent",
+    name: "PayMent",
+    component: PayMent,
+    meta: { title: "Thanh toán" },
+  },
+  {
+    path: "/UserProfile",
+    name: "UserProfile",
+    component: UserProfile,
+    meta: { title: "Hồ sơ người dùng" },
+  },
+  {
+    path: "/License",
+    name: "License",
+    component: License,
+    meta: { title: "Điều khoản sử dụng" },
+  },
   // Admin routes (protected)
   {
     path: "/admin/chat",
     name: "LandingAdmin",
     component: LandingAdmin,
-    meta: { requiresAuth: true, role: "admin" },
+    meta: { requiresAuth: true, role: "admin", title: "Chăm sóc khách hàng" },
   },
   {
     path: "/admin/products",
     name: "AdminProducts",
     component: AdminProducts,
-    meta: { requiresAuth: true, role: "admin" },
+    meta: { requiresAuth: true, role: "admin", title: "Quản lý sản phẩm" },
   },
   {
     path: "/admin/stats",
     name: "AdminDashboard",
     component: AdminDashboard,
-    meta: { requiresAuth: true, role: "admin" },
+    meta: { requiresAuth: true, role: "admin", title: "Thống kê" },
   },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.afterEach((to) => {
+  const defaultTitle = "FriendwithBooks - Books and Chill";
+  document.title = to.meta.title || defaultTitle;
 });
 
 // Middleware để bảo vệ route

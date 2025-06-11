@@ -1,8 +1,8 @@
 <template>
   <div class="w-full md:w-[calc(100%-224px)] mx-auto py-4 flex justify-between">
-    <div class="w-[214px] h-[77px]">
+    <router-link class="w-[214px] h-[77px]" to="/">
       <img src="/Logo.png" class="object-cover w-full h-full" />
-    </div>
+    </router-link>
     <div class="flex gap-4 justify-between items-center relative">
       <SearchBar
         placeholder="Tìm kiếm sản phẩm"
@@ -104,7 +104,7 @@
       </router-link>
     </div>
   </div>
-  <Navigation />
+  <Navigation @categorySelect="(payload) => $emit('categorySelect', payload)" />
 </template>
 
 <script setup>

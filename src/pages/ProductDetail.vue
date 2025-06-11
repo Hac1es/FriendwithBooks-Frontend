@@ -215,6 +215,13 @@
             </div>
           </div>
 
+          <div v-else class="md:mb-6 mb-3">
+            <span
+              class="text-[14px] md:text-[27px] text-[#661c1c] font-semibold font-instrument"
+              >Đăng nhập để thêm đánh giá!</span
+            >
+          </div>
+
           <!-- Reviews header with count and filters -->
           <div class="mb-6">
             <div class="flex items-baseline justify-between mb-4">
@@ -485,6 +492,7 @@ const handleRatingClick = (rating) => {
 };
 
 const fetchReviews = async () => {
+  document.title = "Đang tải...";
   try {
     const [response, reviewsResp] = await Promise.all([
       axios.get("/Book/" + productId),
@@ -500,6 +508,7 @@ const fetchReviews = async () => {
     productData.value = response.data.book;
     relatedProducts.value = response.data.relatedBooks;
     reviewsData.value = reviewsResp.data;
+    document.title = productData.value.title;
 
     // Set hasMore based on initial response
     hasMore.value = reviewsResp.data.length === perPage.value;
@@ -530,6 +539,7 @@ const fetchReviews = async () => {
 
     isLoading.value = false;
   } catch (error) {
+    document.title = "FriendwithBooks - Books and Chill";
     console.error("Error fetching product data:", error);
   }
 };

@@ -4,48 +4,30 @@
   >
     <div class="flex justify-between items-center px-16">
       <!-- Trang chủ -->
-      <router-link
-        to="/"
-        class="hover:text-[#a50202]"
-      >
-        Trang chủ
-      </router-link>
+      <router-link to="/" class="hover:text-[#a50202]"> Trang chủ </router-link>
 
       <!-- Sản phẩm -->
-      <router-link
-        to="/products"
-        @mouseenter="openMenu"
-        @mouseleave="closeMenu"
-      >
-        <span class="hover:text-[#a50202] cursor-pointer">Sản phẩm</span>
+      <div @mouseenter="openMenu" @mouseleave="closeMenu">
+        <router-link class="hover:text-[#a50202] cursor-pointer" to="/products"
+          >Sản phẩm</router-link
+        >
         <transition name="slide-fade">
           <div
-            v-if="isOpen"
+            v-show="isOpen"
             class="absolute left-0 top-full w-full p-4 bg-[#f8f8f8] flex justify-between px-8 text-sm z-50"
           >
-            <!-- Cột 1 -->
-            <div>
-              <h3 class="font-bold text-[#894a4a] mb-2">Sách Tiếng Việt</h3>
+            <!-- Cột 1 và 2 -->
+            <div v-for="(subCategories, parent) in categories" :key="parent">
+              <h3 class="font-bold text-[#894a4a] mb-2">{{ parent }}</h3>
               <ul class="space-y-1">
-                <li>Tiểu thuyết</li>
-                <li>Sách giáo khoa – Tham khảo</li>
-                <li>Khoa học – Kỹ thuật</li>
-                <li>Lịch sử – Nghệ thuật - Tôn giáo</li>
-                <li>Kinh tế</li>
-                <li>Văn hóa – Địa lý – Du lịch</li>
-                <li>Chính trị</li>
-              </ul>
-            </div>
-
-            <!-- Cột 2 -->
-            <div>
-              <h3 class="font-bold text-[#894a4a] mb-2">Foreign Books</h3>
-              <ul class="space-y-1">
-                <li>Fantasy & Sci-Fi</li>
-                <li>Novel</li>
-                <li>Business & Management</li>
-                <li>Science & Technology</li>
-                <li>History & Politics</li>
+                <li
+                  v-for="sub in subCategories"
+                  :key="sub"
+                  class="cursor-pointer hover:text-[#a50202]"
+                  @click.stop="goToCategory(parent, sub)"
+                >
+                  {{ sub }}
+                </li>
               </ul>
             </div>
 
@@ -53,10 +35,18 @@
             <div>
               <h3 class="font-bold text-[#894a4a] mb-2">Văn phòng phẩm</h3>
               <ul class="space-y-1">
-                <li>Bút – Viết các loại</li>
-                <li>Sổ tay các loại</li>
-                <li>Dụng cụ học sinh</li>
-                <li>Dụng cụ văn phòng</li>
+                <li class="cursor-pointer hover:text-[#a50202]">
+                  Bút – Viết các loại
+                </li>
+                <li class="cursor-pointer hover:text-[#a50202]">
+                  Sổ tay các loại
+                </li>
+                <li class="cursor-pointer hover:text-[#a50202]">
+                  Dụng cụ học sinh
+                </li>
+                <li class="cursor-pointer hover:text-[#a50202]">
+                  Dụng cụ văn phòng
+                </li>
               </ul>
             </div>
 
@@ -66,15 +56,19 @@
                 Quà lưu niệm – Đồ chơi
               </h3>
               <ul class="space-y-1">
-                <li>Thú nhồi bông</li>
-                <li>Mô hình</li>
-                <li>Đồ chơi theo phim</li>
-                <li>Khác</li>
+                <li class="cursor-pointer hover:text-[#a50202]">
+                  Thú nhồi bông
+                </li>
+                <li class="cursor-pointer hover:text-[#a50202]">Mô hình</li>
+                <li class="cursor-pointer hover:text-[#a50202]">
+                  Đồ chơi theo phim
+                </li>
+                <li class="cursor-pointer hover:text-[#a50202]">Khác</li>
               </ul>
             </div>
           </div>
         </transition>
-      </router-link>
+      </div>
 
       <!-- Chính sách -->
       <router-link to="/License" class="hover:text-[#a50202] cursor-pointer"
@@ -95,10 +89,14 @@
 <script setup>
 import { ref, onBeforeUnmount } from "vue";
 import { useStore } from "vuex";
+import { useFilter } from "../../../composables/useFilter.js";
+import { useRouter } from "vue-router";
 
 const isOpen = ref(false);
 const store = useStore();
 let timeoutId = null;
+const router = useRouter();
+const { categories, getCategoryId } = useFilter(() => {}); // Không cần emit ở đây
 
 const openMenu = () => {
   clearTimeout(timeoutId);
@@ -113,6 +111,14 @@ const closeMenu = () => {
 
 const showChat = () => {
   store.commit("showChat");
+};
+
+const goToCategory = (parent, sub) => {
+  const categoryId = getCategoryId(parent, sub);
+  if (categoryId) {
+    router.push({ path: "/products", query: { category: categoryId } });
+    isOpen.value = false;
+  }
 };
 
 onBeforeUnmount(() => {

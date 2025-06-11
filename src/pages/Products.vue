@@ -201,7 +201,19 @@ const handlePageChange = (page) => {
 // Fetch initial data on mount
 onMounted(() => {
   window.addEventListener("resize", handleResize);
-  fetchProducts();
+
+  // Ưu tiên lấy category từ query nếu có
+  if (route.query.category) {
+    handleFilterChange({
+      filters: {
+        ...currentFilters.value,
+        selectedCategoryId: Number(route.query.category),
+      },
+      categoryTree: getCategoryTreeById(route.query.category),
+    });
+  } else {
+    fetchProducts({ name: route.query.name || undefined });
+  }
 });
 
 let windowWidth = ref(window.innerWidth);
@@ -209,11 +221,6 @@ let windowWidth = ref(window.innerWidth);
 const handleResize = () => {
   windowWidth.value = window.innerWidth;
 };
-
-onMounted(() => {
-  window.addEventListener("resize", handleResize);
-  fetchProducts({ name: route.query.name || undefined });
-});
 
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
@@ -249,4 +256,51 @@ watch(
     });
   }
 );
+
+watch(
+  () => route.query.category,
+  (categoryId) => {
+    if (categoryId) {
+      const tree = getCategoryTreeById(categoryId);
+      handleFilterChange({
+        filters: {
+          ...currentFilters.value,
+          selectedCategoryId: Number(categoryId),
+        },
+        categoryTree: tree,
+      });
+    }
+  },
+  { immediate: true }
+);
+
+function getCategoryTreeById(categoryId) {
+  // Copy từ useFilter.js
+  const categoryMappings = {
+    "Sách Tiếng Việt": {
+      "Tiểu thuyết": 3,
+      "Sách giáo khoa – Tham khảo": 4,
+      "Khoa học – Kỹ thuật": 5,
+      "Lịch sử – Nghệ thuật - Tôn giáo": 6,
+      "Kinh tế": 7,
+      "Văn hóa – Địa lý – Du lịch": 8,
+      "Chính trị": 9,
+    },
+    "Foreign Books": {
+      "Fantasy & Sci-Fi": 10,
+      Novel: 11,
+      "Business & Management": 12,
+      "Science & Technology": 13,
+      "History & Politics": 14,
+    },
+  };
+  for (const parent in categoryMappings) {
+    for (const sub in categoryMappings[parent]) {
+      if (categoryMappings[parent][sub] === Number(categoryId)) {
+        return { parent, sub };
+      }
+    }
+  }
+  return { parent: null, sub: null };
+}
 </script>
