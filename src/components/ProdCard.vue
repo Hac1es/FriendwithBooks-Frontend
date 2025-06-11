@@ -25,7 +25,10 @@
 
           <div class="space-x-3 flex items-center flex-nowrap">
             <div class="text-[#661c1c] font-semibold font-inter text-lg mt-1">
-              {{ price }} đ
+              {{
+                new Intl.NumberFormat("vi-VN").format(Math.round(Number(price)))
+              }}
+              đ
             </div>
 
             <span
@@ -40,7 +43,12 @@
             <span
               class="text-gray-400 line-through text-sm font-semibold font-inter"
             >
-              {{ oldPrice }} đ
+              {{
+                new Intl.NumberFormat("vi-VN").format(
+                  Math.round(Number(oldPrice))
+                )
+              }}
+              đ
             </span>
           </div>
         </div>
