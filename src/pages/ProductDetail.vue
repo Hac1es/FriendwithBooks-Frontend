@@ -683,16 +683,10 @@ function goToDetail(id) {
 
 const addToCart = async () => {
   try {
-    await axios.post(
-      "https://localhost:7129/api/cart",
-      {
-        bookID: productData.value.bookID,
-        quantity: 1,
-      },
-      {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      }
-    );
+    await axios.post("/cart", {
+      bookID: productData.value.bookID,
+      quantity: 1,
+    });
     alert("Đã thêm vào giỏ hàng!");
   } catch (error) {
     console.error(error.response?.data || error.message);

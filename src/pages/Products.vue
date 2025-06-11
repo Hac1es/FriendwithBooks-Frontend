@@ -36,10 +36,8 @@
             :oldPrice="data.oldPrice"
             :discount="data.discount"
             :scale="respScaling"
-            @click="() => goToDetail(data.id)"
-          >
-            <button @click="addToCart(data.id)">Thêm vào giỏ hàng</button>
-          </ProdCard>
+            :to="`/Products/${data.id}`"
+          />
         </div>
 
         <!-- No results -->
@@ -242,11 +240,6 @@ const themeOverride = {
     itemBorderActive: "1px solid #400b0b",
   },
 };
-
-const router = useRouter();
-function goToDetail(id) {
-  router.push(`/Products/${id}`);
-}
 
 watch(
   () => route.query.name,

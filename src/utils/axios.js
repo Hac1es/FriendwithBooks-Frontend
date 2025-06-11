@@ -1,7 +1,9 @@
 // src/utils/axios.js
 import axios from "axios";
 import router from "../router/index.js";
+import { useStore } from "vuex";
 
+const store = useStore();
 const instance = axios.create({
   baseURL: "https://friendwithbooks.id.vn/api",
 });

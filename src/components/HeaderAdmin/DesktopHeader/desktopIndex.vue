@@ -35,6 +35,7 @@
 import Navigation from "./Navigation.vue";
 import { useStore } from "vuex";
 import { computed } from "vue";
+import { supabase } from "../../../utils/supabase";
 
 const store = useStore();
 const auth = computed(() => store.state.isAuthenticated);
