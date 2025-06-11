@@ -33,13 +33,11 @@
             :imgSrc="data.image"
             :title="data.name"
             :price="data.price"
-            :oldPrice="data.oldPrice"
             :discount="data.discount"
+            :oldPrice="data.oldPrice"
             :scale="respScaling"
-            @click="() => goToDetail(data.id)"
-          >
-            <button @click="addToCart(data.id)">Thêm vào giỏ hàng</button>
-          </ProdCard>
+            :to="`/Products/${data.id}`"
+          />
         </div>
 
         <!-- No results -->
@@ -140,8 +138,8 @@ const fetchProducts = async (params = {}) => {
       id: book.bookID,
       name: book.title,
       image: book.imgURL1,
-      price: book.price,
-      oldPrice: book.price,
+      price: (book.price * (100 - book.discount)) / 100,
+      oldPrice: book.discount === 0 ? null : book.price,
       discount: book.discount === 0 ? null : book.discount,
       author: book.author,
     }));
@@ -242,11 +240,6 @@ const themeOverride = {
     itemBorderActive: "1px solid #400b0b",
   },
 };
-
-const router = useRouter();
-function goToDetail(id) {
-  router.push(`/Products/${id}`);
-}
 
 watch(
   () => route.query.name,

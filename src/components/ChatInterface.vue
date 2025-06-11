@@ -70,16 +70,27 @@
         </div>
         <div class="flex flex-col h-full" v-else>
           <!-- Chat Header -->
-          <div class="p-4 border-b border-gray-200 flex items-center">
-            <img
-              :src="currentPartner.avatar"
-              alt="User Avatar"
-              class="h-10 w-10 rounded-full"
-            />
-            <div class="ml-3">
-              <p class="font-medium">{{ currentPartner.name }}</p>
-              <p class="text-xs text-gray-500">#{{ currentPartner.id }}</p>
+          <div
+            class="p-4 border-b border-gray-200 flex items-center justify-between"
+          >
+            <div class="flex items-center">
+              <img
+                :src="currentPartner.avatar"
+                alt="User Avatar"
+                class="h-10 w-10 rounded-full"
+              />
+              <div class="ml-3">
+                <p class="font-medium">{{ currentPartner.name }}</p>
+                <p class="text-xs text-gray-500">#{{ currentPartner.id }}</p>
+              </div>
             </div>
+            <button
+              @click="deleteConversation"
+              class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
+              title="Xóa cuộc trò chuyện"
+            >
+              <Trash2 class="h-5 w-5" />
+            </button>
           </div>
 
           <!-- Messages -->
@@ -177,7 +188,7 @@
 </template>
 
 <script setup>
-import { SearchIcon, PaperclipIcon, SendIcon } from "lucide-vue-next";
+import { SearchIcon, SendIcon, Trash2 } from "lucide-vue-next";
 import axios from "../utils/axios";
 import {
   ref,
@@ -361,6 +372,46 @@ const sendMessage = async () => {
   }
 
   message.value = "";
+};
+
+const deleteConversation = async () => {
+  if (!currentPartnerId.value) return;
+
+  // Xác nhận xóa
+  const confirmed = confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?");
+  if (!confirmed) return;
+
+  try {
+    const response = await axios.delete(
+      `/Chat/message?partnerId=${currentPartnerId.value}`
+    );
+    if (response.data.success) {
+      // Xóa khỏi danh sách conversations
+      const index = conversations.value.findIndex(
+        (conv) => conv.partnerId === currentPartnerId.value
+      );
+      if (index !== -1) {
+        conversations.value.splice(index, 1);
+      }
+
+      // Reset current conversation
+      conversation.value = { messages: [] };
+      currentPartner.value = {};
+      currentPartnerId.value = null;
+
+      // Load cuộc trò chuyện đầu tiên nếu còn
+      if (conversations.value.length > 0) {
+        await getConv(conversations.value[0].partnerId);
+      }
+
+      alert("Đã xóa thành công cuộc trò chuyện!");
+    } else {
+      alert("Không thể xóa cuộc trò chuyện. Vui lòng thử lại!");
+    }
+  } catch (error) {
+    console.error("Delete conversation error:", error);
+    alert("Có lỗi xảy ra khi xóa cuộc trò chuyện!");
+  }
 };
 
 onMounted(async () => {

@@ -161,44 +161,13 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Đơn hàng -->
-      <div v-show="activeTab == 'orders' && !isLoading">
-        <div class="grid gap-4 md:grid-cols-2 mb-8">
-          <div
-            v-for="(stat, index) in additionalStatsOrders"
-            :key="index"
-            class="rounded-lg border bg-card text-card-foreground shadow-sm"
-          >
-            <div class="flex flex-row items-center justify-between p-6 pb-2">
-              <h3 class="text-sm font-medium">{{ stat.title }}</h3>
-              <component
-                :is="stat.icon"
-                class="h-4 w-4 text-muted-foreground"
-              />
-            </div>
-            <div class="p-6 pt-0">
-              <div class="text-2xl font-bold">{{ stat.value }}</div>
-              <div class="flex items-center pt-1 text-sm">
-                <component
-                  :is="stat.trend > 0 ? ArrowUp : ArrowDown"
-                  class="mr-1 h-4 w-4"
-                  :class="stat.trend > 0 ? 'text-green-500' : 'text-red-500'"
-                />
-                <span
-                  :class="stat.trend > 0 ? 'text-green-500' : 'text-red-500'"
-                  >{{ stat.trend > 0 ? "+" : "" }}{{ stat.trend }}%</span
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Khách hàng -->
-      <div v-show="activeTab == 'customers'">
+    <!-- Đơn hàng -->
+    <div v-show="activeTab == 'orders' && !isLoading">
+      <div class="grid gap-4 md:grid-cols-2 mb-8">
         <div
-          v-for="(stat, index) in topCustomers"
+          v-for="(stat, index) in additionalStatsOrders"
           :key="index"
           class="rounded-lg border bg-card text-card-foreground shadow-sm"
         >
@@ -208,55 +177,6 @@
           </div>
           <div class="p-6 pt-0">
             <div class="text-2xl font-bold">{{ stat.value }}</div>
-            <div class="flex items-center pt-1 text-sm">
-              <component
-                :is="stat.trend > 0 ? ArrowUp : ArrowDown"
-                class="mr-1 h-4 w-4"
-                :class="stat.trend > 0 ? 'text-green-500' : 'text-red-500'"
-              />
-              <span :class="stat.trend > 0 ? 'text-green-500' : 'text-red-500'"
-                >{{ stat.trend > 0 ? "+" : "" }}{{ stat.trend }}%</span
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Top 10 khách hàng mua sắm nhiều nhất -->
-      <div
-        v-show="activeTab == 'customers'"
-        class="rounded-lg border bg-card text-card-foreground shadow-sm mb-8"
-      >
-        <div class="flex flex-col space-y-1.5 p-6">
-          <h3 class="text-lg font-semibold leading-none tracking-tight">
-            Khách hàng mua sắm nhiều nhất
-          </h3>
-          <p class="text-sm text-muted-foreground">
-            Top 10 khách hàng chi tiêu cao nhất trong {{ dateRange }}
-          </p>
-        </div>
-        <div class="p-6 pt-0">
-          <div class="space-y-4">
-            <div
-              v-for="(customer, index) in topCustomers"
-              :key="index"
-              class="flex items-center justify-between"
-            >
-              <div class="flex items-center">
-                <div
-                  class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3"
-                >
-                  <Users class="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <div class="font-medium">{{ customer.name }}</div>
-                  <div class="text-sm text-muted-foreground">
-                    {{ customer.orderCount }} đơn hàng
-                  </div>
-                </div>
-              </div>
-              <div class="font-medium">{{ customer.totalSpent }}</div>
-            </div>
           </div>
         </div>
       </div>
@@ -408,6 +328,45 @@
         </div>
       </div>
     </div>
+
+    <!-- Top 10 khách hàng mua sắm nhiều nhất -->
+    <div
+      v-show="activeTab == 'customers'"
+      class="rounded-lg border bg-card text-card-foreground shadow-sm mb-8"
+    >
+      <div class="flex flex-col space-y-1.5 p-6">
+        <h3 class="text-lg font-semibold leading-none tracking-tight">
+          Khách hàng mua sắm nhiều nhất
+        </h3>
+        <p class="text-sm text-muted-foreground">
+          Top 10 khách hàng chi tiêu cao nhất trong {{ dateRange }}
+        </p>
+      </div>
+      <div class="p-6 pt-0">
+        <div class="space-y-4">
+          <div
+            v-for="(customer, index) in topCustomers"
+            :key="index"
+            class="flex items-center justify-between"
+          >
+            <div class="flex items-center">
+              <div
+                class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3"
+              >
+                <Users class="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <div class="font-medium">{{ customer.name }}</div>
+                <div class="text-sm text-muted-foreground">
+                  {{ customer.orderCount }} đơn hàng
+                </div>
+              </div>
+            </div>
+            <div class="font-medium">{{ customer.totalSpent }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -453,7 +412,7 @@ const chartTypes = [
 
 const overviewStats = ref([
   {
-    title: "Doanh thu tháng",
+    title: "Doanh thu",
     value: "",
     trend: 0,
     icon: FileText,
@@ -475,22 +434,13 @@ const overviewStats = ref([
 const topBooks = ref([]);
 const categories = ref([]);
 
-const additionalStatsOrders = [
+const additionalStatsOrders = ref([
   {
     title: "Tỷ lệ hoàn thành đơn hàng",
-    value: "98.3%",
-    trend: 0.7,
+    value: "",
     icon: ShoppingCart,
   },
-];
-const additionalStatsCustomers = [
-  {
-    title: "Khách hàng mới",
-    value: "1.245",
-    trend: 12.3,
-    icon: Users,
-  },
-];
+]);
 
 const recentOrders = ref([]);
 const topCustomers = ref([]);
@@ -542,122 +492,170 @@ const fetchRevenue = async () => {
     return;
   }
   isLoading.value = true;
-  const { startTime, endTime } = getDateRange();
-  const params = {};
-  if (startTime) params.startTime = startTime;
-  if (endTime) params.endTime = endTime;
-  const res = await axios.get("admin/statistics/revenue", { params });
-  console.log(res.data);
-  overviewStats.value[0].value = res.data.totalRevenue.toLocaleString("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  });
-  overviewStats.value[0].trend = res.data.revenuePercent.toFixed(2);
-  overviewStats.value[1].value = res.data.orderCount;
-  overviewStats.value[1].trend = res.data.orderPercent.toFixed(2);
-  overviewStats.value[2].value = res.data.averageOrderValue.toLocaleString(
-    "vi-VN",
-    { style: "currency", currency: "VND" }
-  );
-  overviewStats.value[2].trend = res.data.avgOrderPercent.toFixed(2);
-  isLoading.value = false;
+  try {
+    const { startTime, endTime } = getDateRange();
+    const params = {};
+    if (startTime) params.startTime = startTime;
+    if (endTime) params.endTime = endTime;
+    const res = await axios.get("admin/statistics/revenue", { params });
+    overviewStats.value[0].value = res.data.totalRevenue.toLocaleString(
+      "vi-VN",
+      {
+        style: "currency",
+        currency: "VND",
+      }
+    );
+    overviewStats.value[0].trend = res.data.revenuePercent.toFixed(2);
+    overviewStats.value[1].value = res.data.orderCount;
+    overviewStats.value[1].trend = res.data.orderPercent.toFixed(2);
+    overviewStats.value[2].value = res.data.averageOrderValue.toLocaleString(
+      "vi-VN",
+      { style: "currency", currency: "VND" }
+    );
+    overviewStats.value[2].trend = res.data.avgOrderPercent.toFixed(2);
+  } catch (err) {
+    console.error("fetchRevenue error:", err);
+    overviewStats.value.forEach((stat) => {
+      stat.value = "-";
+      stat.trend = 0;
+    });
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const fetchTopBooksAndCategories = async () => {
-  const { startTime, endTime } = getDateRange();
-  const params = {};
-  if (startTime) params.startTime = startTime;
-  if (endTime) params.endTime = endTime;
-  // Top 10 books
-  const booksRes = await axios.get("admin/statistics/top5books", { params });
-  topBooks.value = booksRes.data.map((b) => ({
-    name: b.title || b.Title,
-    sales: b.totalSold || b.TotalSold,
-    revenue: (b.totalRevenue || b.TotalRevenue).toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }),
-  }));
-  // Top 10 categories
-  const catRes = await axios.get("admin/statistics/top5categories", {
-    params,
-  });
-  categories.value = catRes.data.map((c) => ({
-    name: c.categoryName || c.CategoryName,
-    percentage: c.revenuePercent || c.RevenuePercent,
-    revenue: (c.totalRevenue || c.TotalRevenue).toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }),
-  }));
+  try {
+    const { startTime, endTime } = getDateRange();
+    const params = {};
+    if (startTime) params.startTime = startTime;
+    if (endTime) params.endTime = endTime;
+    const booksRes = await axios.get("admin/statistics/top5books", { params });
+    topBooks.value = booksRes.data.map((b) => ({
+      name: b.title || b.Title,
+      sales: b.totalSold || b.TotalSold,
+      revenue: (b.totalRevenue || b.TotalRevenue).toLocaleString("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }),
+    }));
+    const catRes = await axios.get("admin/statistics/top5categories", {
+      params,
+    });
+    categories.value = catRes.data.map((c) => ({
+      name: c.categoryName || c.CategoryName,
+      percentage: c.revenuePercent || c.RevenuePercent,
+      revenue: (c.totalRevenue || c.TotalRevenue).toLocaleString("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }),
+    }));
+  } catch (err) {
+    console.error("fetchTopBooksAndCategories error:", err);
+    topBooks.value = [];
+    categories.value = [];
+  }
 };
 
 const fetchChartData = async () => {
-  let period;
-  switch (dateRange.value) {
-    case "ngày":
-      period = "day";
-      break;
-    case "tuần":
-      period = "week";
-      break;
-    case "tháng":
-      period = "month";
-      break;
-    case "năm":
-      period = "year";
-      break;
-    case "khoảng thời gian":
-      period = "custom";
-      break;
-    default:
-      period = "month";
+  try {
+    let period;
+    switch (dateRange.value) {
+      case "ngày":
+        period = "day";
+        break;
+      case "tuần":
+        period = "week";
+        break;
+      case "tháng":
+        period = "month";
+        break;
+      case "năm":
+        period = "year";
+        break;
+      case "khoảng thời gian":
+        period = "custom";
+        break;
+      default:
+        period = "month";
+    }
+    const params = { period };
+    if (
+      dateRange.value === "khoảng thời gian" &&
+      customStart.value &&
+      customEnd.value
+    ) {
+      params.startTime = new Date(customStart.value).toISOString();
+      params.endTime = new Date(customEnd.value).toISOString();
+    }
+    const res = await axios.get("admin/statistics/chartpoints", { params });
+    chartData.value = res.data;
+    renderChart();
+  } catch (err) {
+    console.error("fetchChartData error:", err);
+    chartData.value = [];
+    renderChart();
   }
-
-  const params = { period };
-  if (
-    dateRange.value === "khoảng thời gian" &&
-    customStart.value &&
-    customEnd.value
-  ) {
-    params.startTime = new Date(customStart.value).toISOString();
-    params.endTime = new Date(customEnd.value).toISOString();
-  }
-  const res = await axios.get("admin/statistics/chartpoints", { params });
-  chartData.value = res.data;
-  renderChart();
 };
 
 const fetchLatestOrders = async () => {
-  const res = await axios.get("admin/statistics/latestorders");
-  recentOrders.value = res.data.map((o) => ({
-    id: o.orderID || o.OrderID,
-    customer: o.customerName || o.CustomerName,
-    products: o.itemCount || o.ItemCount,
-    value: (o.totalAmount || o.TotalAmount).toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }),
-    status: o.status || o.Status,
-    date: new Date(o.orderDate || o.OrderDate).toLocaleDateString("vi-VN"),
-  }));
+  try {
+    const res = await axios.get("admin/statistics/latestorders");
+    recentOrders.value = res.data.map((o) => ({
+      id: o.orderID || o.OrderID,
+      customer: o.customerName || o.CustomerName,
+      products: o.itemCount || o.ItemCount,
+      value: (o.totalAmount || o.TotalAmount).toLocaleString("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }),
+      status: o.status || o.Status,
+      date: new Date(o.orderDate || o.OrderDate).toLocaleDateString("vi-VN"),
+    }));
+  } catch (err) {
+    console.error("fetchLatestOrders error:", err);
+    recentOrders.value = [];
+  }
 };
 
 const fetchTopCustomers = async () => {
-  const { startTime, endTime } = getDateRange();
-  const params = {};
-  if (startTime) params.startTime = startTime;
-  if (endTime) params.endTime = endTime;
-  const res = await axios.get("admin/statistics/top10customers", { params });
-  console.log("Top customers API:", res.data);
-  topCustomers.value = res.data.topCustomers.map((c) => ({
-    name: c.customerName,
-    orderCount: c.totalOrders,
-    totalSpent: c.totalSpent.toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }),
-  }));
+  try {
+    const { startTime, endTime } = getDateRange();
+    const params = {};
+    if (startTime) params.startTime = startTime;
+    if (endTime) params.endTime = endTime;
+    const res = await axios.get("admin/statistics/top10customers", { params });
+    topCustomers.value = res.data.topCustomers.map((c) => ({
+      name: c.customerName,
+      orderCount: c.totalOrders,
+      totalSpent: c.totalSpent.toLocaleString("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }),
+    }));
+  } catch (err) {
+    console.error("fetchTopCustomers error:", err);
+    topCustomers.value = [];
+  }
+};
+
+const fetchOrderCompletionRate = async () => {
+  try {
+    const { startTime, endTime } = getDateRange();
+    const params = {};
+    if (startTime) params.startTime = startTime;
+    if (endTime) params.endTime = endTime;
+    const res = await axios.get("admin/statistics/order-completion-rate", {
+      params,
+    });
+    additionalStatsOrders.value[0].value = `${
+      res.data.completionRate || res.data.CompletionRate
+    }%`;
+  } catch (err) {
+    console.error("fetchOrderCompletionRate error:", err);
+    additionalStatsOrders.value[0].value = "-";
+    additionalStatsOrders.value[0].trend = 0;
+  }
 };
 
 const renderChart = () => {
@@ -704,6 +702,7 @@ onMounted(() => {
   fetchTopBooksAndCategories();
   fetchLatestOrders();
   fetchTopCustomers();
+  fetchOrderCompletionRate();
   setTimeout(() => {
     if (chartInstance) chartInstance.resize();
   }, 100);
@@ -729,6 +728,14 @@ watch([dateRange, customStart, customEnd], () => {
     return;
   fetchTopBooksAndCategories();
   fetchTopCustomers();
+  fetchOrderCompletionRate();
+});
+
+watch(dateRange, (newVal) => {
+  if (newVal !== "khoảng thời gian") {
+    customStart.value = null;
+    customEnd.value = null;
+  }
 });
 
 watch(activeTab, (val) => {

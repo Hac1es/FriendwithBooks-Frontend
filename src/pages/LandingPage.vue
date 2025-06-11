@@ -43,6 +43,7 @@
       >
         <n-carousel-item v-for="(data, index) in flashSale" :key="index">
           <ProdCard
+            :productId="data.bookID"
             :imgSrc="data.imgURL"
             :discount="data.discountPercent"
             :oldPrice="data.price"
@@ -96,8 +97,12 @@
       show-arrow
       class="mx-auto w-[90%] h-[400px] md:h-[700px] md:mt-6 mt-2"
     >
-      <n-carousel-item v-for="(data, index) in bestSellingBooks" :key="index">
+      <n-carousel-item
+        v-for="(data, index) in bestSellingBooks"
+        :key="data.bookID"
+      >
         <AdCard
+          :id="data.bookID"
           :imgSrc="data.imgURL"
           :desc="data.description"
           :title="data.title"
