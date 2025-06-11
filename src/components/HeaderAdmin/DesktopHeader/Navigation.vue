@@ -22,6 +22,15 @@
       >
         Kho hàng
       </router-link>
+      <router-link 
+        to="/admin/orders" 
+        :class="[
+          'hover:text-[#a50202]', 
+          isActive('/admin/orders') ? 'font-semibold text-[#a50202]' : ''
+        ]"
+      >
+        Đơn hàng
+      </router-link>
       
       <router-link 
         to="/admin/stats" 

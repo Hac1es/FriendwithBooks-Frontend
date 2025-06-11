@@ -608,7 +608,8 @@
                     placeholder="Tìm kiếm sách theo tên, tác giả hoặc ID..."
                     class="w-full border border-gray-300 rounded-md px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                   />
-                  <svg
+                  <div class="absolute inset-y-0 right-2 fix items-center pointer-events-none">
+                    <svg
                     xmlns="http://www.w3.org/2000/svg"
                     class="h-4 w-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
                     fill="none"
@@ -622,6 +623,8 @@
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
                   </svg>
+                  </div>
+                  
 
                   <!-- Dropdown for book selection -->
                   <div

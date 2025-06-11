@@ -1,807 +1,703 @@
 <template>
-  <main class="container mx-auto px-4 py-6">
-    <!-- Header -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-[#5d4037] mb-2">QUẢN LÝ ĐƠN HÀNG</h1>
-          <p class="text-muted-foreground">Chỉnh sửa và quản lý thông tin đơn hàng</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button 
-            @click="saveOrder"
-            class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <Save class="mr-2 h-4 w-4" />
-            Lưu thay đổi
-          </button>
-          <button 
-            @click="cancelEdit"
-            class="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <X class="mr-2 h-4 w-4" />
-            Hủy
-          </button>
-        </div>
-      </div>
-    </div>
+  <div class="bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-200 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Quản lý Đơn hàng</h1>
 
-    <!-- Bộ lọc và tìm kiếm -->
-    <div class="mb-6 p-4 rounded-lg border bg-card">
-      <div class="grid gap-4 md:grid-cols-4">
-        <div>
-          <label class="text-sm font-medium mb-2 block">Tìm kiếm đơn hàng</label>
-          <div class="relative">
-            <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input 
-              v-model="searchQuery"
-              type="text" 
-              placeholder="Mã đơn, tên khách hàng..."
-              class="flex h-10 w-full rounded-md border border-input bg-background px-10 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            />
+      <!-- BỘ LỌC VÀ TÌM KIẾM -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Filter class="w-6 h-6" />
+          Tìm kiếm & Lọc
+        </h2>
+        <form @submit.prevent="handleSearch">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div class="xl:col-span-2">
+              <label for="searchTerm" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tìm kiếm</label>
+              <input id="searchTerm" type="text" v-model.trim="searchFilters.searchTerm" placeholder="Mã đơn, tên, email, SĐT..." class="form-input" />
+            </div>
+            <div>
+              <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trạng thái</label>
+              <select id="status" v-model="searchFilters.status" class="form-input">
+                <option value="">Tất cả</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="shipping">Shipping</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div>
+              <label for="dateFrom" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Từ ngày</label>
+              <input id="dateFrom" type="date" v-model="searchFilters.dateFrom" class="form-input" />
+            </div>
+            <div>
+              <label for="dateTo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Đến ngày</label>
+              <input id="dateTo" type="date" v-model="searchFilters.dateTo" class="form-input" />
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button type="button" @click="resetFilters" :disabled="isLoading" class="btn btn-secondary">
+              <RotateCcw class="w-4 h-4" /> Đặt lại
+            </button>
+            <button type="submit" :disabled="isLoading" class="btn btn-primary">
+              <Search class="w-4 h-4" />
+              {{ isLoading ? 'Đang tìm...' : 'Tìm kiếm' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- BẢNG DỮ LIỆU -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
+          <p class="text-sm font-medium">Tổng số: <span class="font-bold">{{ pagination.totalItems }}</span> đơn hàng</p>
+          <div class="flex items-center gap-2">
+            <button @click="openBulkUpdateModal" :disabled="selectedOrders.length === 0 || isLoading" class="btn btn-secondary text-sm">
+              <ListChecks class="w-4 h-4" />
+              Cập nhật ({{ selectedOrders.length }})
+            </button>
+            <button @click="() => loadOrders(true)" :disabled="isLoading" class="btn btn-secondary text-sm">
+              <RefreshCw class="w-4 h-4" :class="{'animate-spin': isLoading}" />
+              Làm mới
+            </button>
           </div>
         </div>
-        
-        <div>
-          <label class="text-sm font-medium mb-2 block">Trạng thái</label>
-          <select 
-            v-model="filterStatus"
-            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="pending">Chờ xử lý</option>
-            <option value="confirmed">Đã xác nhận</option>
-            <option value="shipping">Đang giao</option>
-            <option value="delivered">Đã giao</option>
-            <option value="cancelled">Đã hủy</option>
-          </select>
-        </div>
 
-        <div>
-          <label class="text-sm font-medium mb-2 block">Từ ngày</label>
-          <input 
-            v-model="dateFrom"
-            type="date"
-            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          />
-        </div>
-
-        <div>
-          <label class="text-sm font-medium mb-2 block">Đến ngày</label>
-          <input 
-            v-model="dateTo"
-            type="date"
-            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Danh sách đơn hàng -->
-    <div class="rounded-lg border bg-card text-card-foreground shadow-sm mb-6">
-      <div class="flex flex-col space-y-1.5 p-6">
-        <h3 class="text-lg font-semibold leading-none tracking-tight">Danh sách đơn hàng</h3>
-        <p class="text-sm text-muted-foreground">{{ filteredOrders.length }} đơn hàng được tìm thấy</p>
-      </div>
-      <div class="p-6 pt-0">
         <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b">
-                <th class="text-left py-3 px-2">
-                  <input type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300" />
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th scope="col" class="p-4">
+                  <input type="checkbox" @change="toggleSelectAll" :checked="isAllSelected" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                 </th>
-                <th class="text-left py-3 px-2">Mã đơn</th>
-                <th class="text-left py-3 px-2">Khách hàng</th>
-                <th class="text-left py-3 px-2">Ngày đặt</th>
-                <th class="text-right py-3 px-2">Tổng tiền</th>
-                <th class="text-center py-3 px-2">Trạng thái</th>
-                <th class="text-center py-3 px-2">Thao tác</th>
+                <th scope="col" class="th-cell">Mã Đơn</th>
+                <th scope="col" class="th-cell">Khách Hàng</th>
+                <th scope="col" class="th-cell">Ngày Đặt</th>
+                <th scope="col" class="th-cell text-right">Tổng Tiền</th>
+                <th scope="col" class="th-cell text-center">PMTT ID</th>
+                <th scope="col" class="th-cell text-center">Trạng Thái</th>
+                <th scope="col" class="th-cell text-center">Thao Tác</th>
               </tr>
             </thead>
-            <tbody>
-              <tr 
-                v-for="order in paginatedOrders" 
-                :key="order.id" 
-                class="border-b hover:bg-muted/50 cursor-pointer"
-                @click="selectOrder(order)"
-                :class="{ 'bg-muted/30': selectedOrder?.id === order.id }"
-              >
-                <td class="py-3 px-2">
-                  <input 
-                    type="checkbox" 
-                    :checked="selectedOrderIds.includes(order.id)"
-                    @change="toggleOrderSelection(order.id)"
-                    @click.stop
-                    class="rounded border-gray-300" 
-                  />
-                </td>
-                <td class="py-3 px-2 font-medium">{{ order.id }}</td>
-                <td class="py-3 px-2">
-                  <div>
-                    <div class="font-medium">{{ order.customer.name }}</div>
-                    <div class="text-sm text-muted-foreground">{{ order.customer.email }}</div>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tr v-if="isLoading">
+                <td :colspan="8" class="text-center p-12"><LoaderCircle class="w-8 h-8 animate-spin mx-auto text-gray-500" /></td>
+              </tr>
+              <tr v-else-if="error">
+                <td :colspan="8" class="text-center p-12">
+                  <div class="flex flex-col items-center gap-3 text-red-500">
+                    <AlertTriangle class="w-10 h-10"/>
+                    <p class="font-semibold">Không thể tải dữ liệu</p>
+                    <p class="text-sm">{{ error }}</p>
+                    <button @click="() => loadOrders(true)" class="btn btn-primary mt-2">Thử lại</button>
                   </div>
                 </td>
-                <td class="py-3 px-2">{{ formatDate(order.createdAt) }}</td>
-                <td class="py-3 px-2 text-right font-medium">{{ formatCurrency(order.total) }}</td>
-                <td class="py-3 px-2 text-center">
-                  <span :class="getStatusClass(order.status)">
-                    {{ getStatusText(order.status) }}
-                  </span>
+              </tr>
+              <tr v-else-if="orders.length === 0">
+                 <td :colspan="8" class="text-center p-12">
+                  <div class="flex flex-col items-center gap-3 text-gray-500">
+                    <PackageSearch class="w-12 h-12"/>
+                    <p class="font-semibold text-lg">Không tìm thấy đơn hàng</p>
+                  </div>
                 </td>
-                <td class="py-3 px-2 text-center">
-                  <div class="flex items-center justify-center gap-2">
-                    <button 
-                      @click.stop="editOrder(order)"
-                      class="inline-flex items-center justify-center rounded-md h-8 w-8 border border-input bg-background text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <Edit class="h-4 w-4" />
-                    </button>
-                    <button 
-                      @click.stop="deleteOrder(order.id)"
-                      class="inline-flex items-center justify-center rounded-md h-8 w-8 border border-input bg-background text-sm font-medium ring-offset-background transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </button>
+              </tr>
+              <tr v-for="order in orders" :key="order.orderId" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="p-4">
+                  <input type="checkbox" v-model="selectedOrders" :value="order.orderId" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                </td>
+                <td class="td-cell font-mono font-bold text-indigo-600 dark:text-indigo-400">#{{ order.orderId }}</td>
+                <td class="td-cell">
+                  <div class="font-medium text-gray-900 dark:text-white">{{ order.customerName || 'N/A' }}</div>
+                  <div class="text-sm text-gray-500">{{ order.customerEmail || 'N/A' }}</div>
+                </td>
+                <td class="td-cell">{{ formatDate(order.orderDate) }}</td>
+                <td class="td-cell text-right font-medium">{{ formatPrice(order.totalAmount) }}đ</td>
+                <td class="td-cell text-center font-mono">{{ order.paymentMethodId }}</td>
+                <td class="td-cell text-center">
+                  <span :class="['status-badge', `status-${order.status}`]">{{ order.status }}</span>
+                </td>
+                <td class="td-cell">
+                  <div class="flex justify-center items-center gap-2">
+                    <button @click="openEditModal(order.orderId)" class="text-gray-400 hover:text-indigo-600 p-1"><Pencil class="w-5 h-5" /></button>
+                    <button @click="deleteOrder(order)" class="text-gray-400 hover:text-red-600 p-1"><Trash2 class="w-5 h-5" /></button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+        
+        <div v-if="!isLoading && !error && pagination.totalPages > 1" class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+             <p class="text-sm text-gray-700 dark:text-gray-400">
+                Hiển thị
+                <span class="font-medium">{{ (pagination.currentPage - 1) * pagination.pageSize + 1 }}</span>
+                -
+                <span class="font-medium">{{ Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems) }}</span>
+                trên
+                <span class="font-medium">{{ pagination.totalItems }}</span>
+            </p>
+            <div class="flex gap-2">
+                <button @click="pagination.currentPage--" :disabled="pagination.currentPage <= 1" class="btn btn-secondary"><ChevronLeft class="w-4 h-4"/> Trước</button>
+                <button @click="pagination.currentPage++" :disabled="pagination.currentPage >= pagination.totalPages" class="btn btn-secondary">Sau <ChevronRight class="w-4 h-4"/></button>
+            </div>
+        </div>
+      </div>
+    </div>
 
-        <!-- Pagination -->
-        <div class="flex items-center justify-between mt-4">
-          <div class="text-sm text-muted-foreground">
-            Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredOrders.length) }} 
-            trong tổng số {{ filteredOrders.length }} đơn hàng
+    <!-- Edit Order Modal -->
+    <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Chỉnh sửa đơn hàng #{{ selectedOrder?.orderId }}</h2>
+            <button @click="closeEditModal" class="text-gray-500 hover:text-gray-700">
+              <X class="w-6 h-6" />
+            </button>
           </div>
-          <div class="flex items-center gap-2">
-            <button 
-              @click="currentPage--"
-              :disabled="currentPage === 1"
-              class="inline-flex items-center justify-center rounded-md h-8 w-8 border border-input bg-background text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-            >
-              <ChevronLeft class="h-4 w-4" />
-            </button>
-            <span class="text-sm">{{ currentPage }} / {{ totalPages }}</span>
-            <button 
-              @click="currentPage++"
-              :disabled="currentPage === totalPages"
-              class="inline-flex items-center justify-center rounded-md h-8 w-8 border border-input bg-background text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-            >
-              <ChevronRight class="h-4 w-4" />
-            </button>
+
+          <div v-if="isLoadingOrder" class="flex justify-center items-center p-12">
+            <LoaderCircle class="w-8 h-8 animate-spin text-gray-500" />
+          </div>
+
+          <div v-else-if="error" class="text-center p-12">
+            <div class="flex flex-col items-center gap-3 text-red-500">
+              <AlertTriangle class="w-10 h-10"/>
+              <p class="font-semibold">Không thể tải thông tin đơn hàng</p>
+              <p class="text-sm">{{ error }}</p>
+              <button @click="loadSelectedOrder" class="btn btn-primary mt-2">Thử lại</button>
+            </div>
+          </div>
+
+          <div v-else class="space-y-6">
+            <!-- Customer Info -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold mb-3">Thông tin khách hàng</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Họ tên</label>
+                  <input v-model="editedOrder.customer.fullName" type="text" class="form-input mt-1" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                  <input v-model="editedOrder.customer.email" type="email" class="form-input mt-1" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Số điện thoại</label>
+                  <input v-model="editedOrder.customer.phone" type="tel" class="form-input mt-1" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Địa chỉ</label>
+                  <input v-model="editedOrder.customer.address" type="text" class="form-input mt-1" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-semibold">Chi tiết đơn hàng</h3>
+                <button @click="addOrderDetail" class="btn btn-secondary text-sm">
+                  <Plus class="w-4 h-4" /> Thêm sách
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead class="bg-gray-100 dark:bg-gray-700">
+                    <tr>
+                      <th class="th-cell">Sách</th>
+                      <th class="th-cell text-right">Đơn giá</th>
+                      <th class="th-cell text-right">Số lượng</th>
+                      <th class="th-cell text-right">Thành tiền</th>
+                      <th class="th-cell text-center">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr v-for="(detail, index) in editedOrder.orderDetails" :key="index">
+                      <td class="td-cell">
+                        <select v-model="detail.bookId" class="form-input">
+                          <option v-for="book in availableBooks" :key="book.id" :value="book.id">
+                            {{ book.title }} - {{ book.author }}
+                          </option>
+                        </select>
+                      </td>
+                      <td class="td-cell text-right">
+                        <input v-model.number="detail.unitPrice" type="number" class="form-input text-right" />
+                      </td>
+                      <td class="td-cell text-right">
+                        <input v-model.number="detail.quantity" type="number" min="1" class="form-input text-right" />
+                      </td>
+                      <td class="td-cell text-right font-medium">
+                        {{ formatPrice(detail.unitPrice * detail.quantity) }}đ
+                      </td>
+                      <td class="td-cell text-center">
+                        <button @click="removeOrderDetail(index)" class="text-red-500 hover:text-red-700">
+                          <Trash2 class="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="bg-gray-50 dark:bg-gray-700/50">
+                    <tr>
+                      <td colspan="3" class="td-cell text-right font-bold">Tổng cộng:</td>
+                      <td class="td-cell text-right font-bold text-lg text-indigo-600 dark:text-indigo-400">
+                        {{ formatPrice(calculateTotal()) }}đ
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold mb-3">Thông tin thanh toán</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phương thức thanh toán</label>
+                  <select v-model="editedOrder.paymentMethodId" class="form-input mt-1">
+                    <option v-for="method in paymentMethods" :key="method.id" :value="method.id">
+                      {{ method.name }}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Trạng thái</label>
+                  <select v-model="editedOrder.status" class="form-input mt-1">
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipping">Shipping</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button @click="closeEditModal" class="btn btn-secondary">Hủy</button>
+              <button @click="saveOrderChanges" :disabled="isSaving" class="btn btn-primary">
+                <LoaderCircle v-if="isSaving" class="w-4 h-4 animate-spin" />
+                <span v-else>Lưu thay đổi</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Chi tiết đơn hàng -->
-    <div v-if="selectedOrder" class="grid gap-6 lg:grid-cols-3">
-      <!-- Thông tin đơn hàng -->
-      <div class="lg:col-span-2">
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="text-lg font-semibold leading-none tracking-tight">
-              Chi tiết đơn hàng {{ selectedOrder.id }}
-            </h3>
-          </div>
-          <div class="p-6 pt-0">
-            <div class="grid gap-4 md:grid-cols-2 mb-6">
-              <div>
-                <label class="text-sm font-medium mb-2 block">Trạng thái đơn hàng</label>
-                <select 
-                  v-model="selectedOrder.status"
-                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="pending">Chờ xử lý</option>
-                  <option value="confirmed">Đã xác nhận</option>
-                  <option value="shipping">Đang giao</option>
-                  <option value="delivered">Đã giao</option>
-                  <option value="cancelled">Đã hủy</option>
-                </select>
-              </div>
-              
-              <div>
-                <label class="text-sm font-medium mb-2 block">Phương thức thanh toán</label>
-                <select 
-                  v-model="selectedOrder.paymentMethod"
-                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="cod">Thanh toán khi nhận hàng</option>
-                  <option value="bank">Chuyển khoản ngân hàng</option>
-                  <option value="momo">Ví MoMo</option>
-                  <option value="vnpay">VNPay</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Sản phẩm trong đơn hàng -->
-            <div class="mb-6">
-              <h4 class="text-md font-semibold mb-4">Sản phẩm đã đặt</h4>
-              <div class="space-y-4">
-                <div 
-                  v-for="(item, index) in selectedOrder.items" 
-                  :key="index"
-                  class="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div class="flex items-center gap-4">
-                    <img 
-                      :src="item.image" 
-                      :alt="item.name"
-                      class="w-16 h-16 object-cover rounded-md"
-                    />
-                    <div>
-                      <h5 class="font-medium">{{ item.name }}</h5>
-                      <p class="text-sm text-muted-foreground">{{ formatCurrency(item.price) }}</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2">
-                      <button 
-                        @click="updateQuantity(index, item.quantity - 1)"
-                        class="inline-flex items-center justify-center rounded-md h-8 w-8 border border-input bg-background text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <Minus class="h-4 w-4" />
-                      </button>
-                      <input 
-                        v-model.number="item.quantity"
-                        type="number"
-                        min="1"
-                        class="w-16 text-center h-8 rounded-md border border-input bg-background px-2 text-sm"
-                      />
-                      <button 
-                        @click="updateQuantity(index, item.quantity + 1)"
-                        class="inline-flex items-center justify-center rounded-md h-8 w-8 border border-input bg-background text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <Plus class="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div class="text-right">
-                      <div class="font-medium">{{ formatCurrency(item.price * item.quantity) }}</div>
-                    </div>
-                    <button 
-                      @click="removeItem(index)"
-                      class="inline-flex items-center justify-center rounded-md h-8 w-8 border border-input bg-background text-sm font-medium ring-offset-background transition-colors hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <X class="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Ghi chú đơn hàng -->
+    <!-- Bulk Update Modal -->
+    <div v-if="showBulkUpdateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+          <h3 class="text-lg font-semibold mb-4">Cập nhật trạng thái hàng loạt</h3>
+          <div class="space-y-4">
             <div>
-              <label class="text-sm font-medium mb-2 block">Ghi chú đơn hàng</label>
-              <textarea 
-                v-model="selectedOrder.notes"
-                rows="3"
-                placeholder="Thêm ghi chú cho đơn hàng..."
-                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              ></textarea>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trạng thái mới</label>
+              <select v-model="bulkUpdateStatus" class="form-input">
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="shipping">Shipping</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Thông tin khách hàng và thanh toán -->
-      <div class="space-y-6">
-        <!-- Thông tin khách hàng -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="text-lg font-semibold leading-none tracking-tight">Thông tin khách hàng</h3>
-          </div>
-          <div class="p-6 pt-0 space-y-4">
-            <div>
-              <label class="text-sm font-medium mb-2 block">Họ và tên</label>
-              <input 
-                v-model="selectedOrder.customer.name"
-                type="text"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              />
-            </div>
-            <div>
-              <label class="text-sm font-medium mb-2 block">Email</label>
-              <input 
-                v-model="selectedOrder.customer.email"
-                type="email"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              />
-            </div>
-            <div>
-              <label class="text-sm font-medium mb-2 block">Số điện thoại</label>
-              <input 
-                v-model="selectedOrder.customer.phone"
-                type="tel"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              />
-            </div>
-            <div>
-              <label class="text-sm font-medium mb-2 block">Địa chỉ giao hàng</label>
-              <textarea 
-                v-model="selectedOrder.shippingAddress"
-                rows="3"
-                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              ></textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tóm tắt thanh toán -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="text-lg font-semibold leading-none tracking-tight">Tóm tắt thanh toán</h3>
-          </div>
-          <div class="p-6 pt-0 space-y-3">
-            <div class="flex justify-between">
-              <span>Tạm tính:</span>
-              <span>{{ formatCurrency(calculateSubtotal()) }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Phí vận chuyển:</span>
-              <span>{{ formatCurrency(selectedOrder.shippingFee || 0) }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Giảm giá:</span>
-              <span class="text-red-500">-{{ formatCurrency(selectedOrder.discount || 0) }}</span>
-            </div>
-            <hr />
-            <div class="flex justify-between font-semibold text-lg">
-              <span>Tổng cộng:</span>
-              <span>{{ formatCurrency(calculateTotal()) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Lịch sử đơn hàng -->
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="text-lg font-semibold leading-none tracking-tight">Lịch sử đơn hàng</h3>
-          </div>
-          <div class="p-6 pt-0">
-            <div class="space-y-4">
-              <div 
-                v-for="(history, index) in selectedOrder.history" 
-                :key="index"
-                class="flex items-start gap-3"
-              >
-                <div class="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                <div class="flex-1">
-                  <div class="font-medium">{{ history.action }}</div>
-                  <div class="text-sm text-muted-foreground">{{ formatDate(history.timestamp) }}</div>
-                  <div v-if="history.note" class="text-sm text-muted-foreground mt-1">{{ history.note }}</div>
-                </div>
-              </div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button @click="closeBulkUpdateModal" class="btn btn-secondary">Hủy</button>
+              <button @click="handleBulkUpdate" :disabled="isUpdating" class="btn btn-primary">
+                <LoaderCircle v-if="isUpdating" class="w-4 h-4 animate-spin" />
+                <span v-else>Cập nhật</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </main>
+  </div>
 </template>
 
-<script>
-import { ref, computed, onMounted } from 'vue'
+<script setup>
+import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { 
-  Search, 
-  Edit, 
-  Trash2, 
-  Save, 
-  X, 
-  Plus, 
-  Minus, 
-  ChevronLeft, 
-  ChevronRight 
-} from 'lucide-vue-next'
+    Filter, RotateCcw, Search, RefreshCw, ListChecks, LoaderCircle, AlertTriangle, 
+    PackageSearch, Pencil, Trash2, ChevronLeft, ChevronRight, X, Plus
+} from 'lucide-vue-next';
+import axios from '../utils/axios';
 
-export default {
-  components: {
-    Search,
-    Edit,
-    Trash2,
-    Save,
-    X,
-    Plus,
-    Minus,
-    ChevronLeft,
-    ChevronRight
+const API_BASE_URL = ''; 
+
+// --- STATE MANAGEMENT ---
+const orders = ref([]);
+const isLoading = ref(false);
+const error = ref(null);
+const pagination = reactive({ currentPage: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
+const initialSearchFilters = { searchTerm: '', status: '', dateFrom: '', dateTo: '' };
+const searchFilters = reactive({ ...initialSearchFilters });
+const selectedOrders = ref([]);
+
+// Modal state
+const showEditModal = ref(false);
+const selectedOrder = ref(null);
+const isLoadingOrder = ref(false);
+const isSaving = ref(false);
+const editedOrder = reactive({
+  status: '',
+  paymentMethodId: null,
+  customer: {
+    fullName: '',
+    email: '',
+    phone: '',
+    address: ''
   },
-  setup() {
-    const searchQuery = ref('')
-    const filterStatus = ref('')
-    const dateFrom = ref('')
-    const dateTo = ref('')
-    const selectedOrder = ref(null)
-    const selectedOrderIds = ref([])
-    const currentPage = ref(1)
-    const itemsPerPage = ref(10)
+  orderDetails: []
+});
 
-    // Dữ liệu mẫu đơn hàng
-    const orders = ref([
-      {
-        id: 'ĐH-12345',
-        customer: {
-          name: 'Nguyễn Văn A',
-          email: 'nguyenvana@email.com',
-          phone: '0123456789'
-        },
-        createdAt: '2023-03-29T10:30:00Z',
-        status: 'confirmed',
-        paymentMethod: 'cod',
-        shippingAddress: '123 Đường ABC, Phường XYZ, Quận 1, TP.HCM',
-        shippingFee: 30000,
-        discount: 50000,
-        total: 450000,
-        notes: 'Giao hàng trong giờ hành chính',
-        items: [
-          {
-            name: 'Đắc Nhân Tâm',
-            price: 120000,
-            quantity: 2,
-            image: '/placeholder.svg?height=64&width=64'
-          },
-          {
-            name: 'Nhà Giả Kim',
-            price: 150000,
-            quantity: 1,
-            image: '/placeholder.svg?height=64&width=64'
-          }
-        ],
-        history: [
-          {
-            action: 'Đơn hàng được tạo',
-            timestamp: '2023-03-29T10:30:00Z',
-            note: 'Khách hàng đặt hàng online'
-          },
-          {
-            action: 'Đã xác nhận đơn hàng',
-            timestamp: '2023-03-29T11:00:00Z',
-            note: 'Admin xác nhận đơn hàng'
-          }
-        ]
-      },
-      {
-        id: 'ĐH-12344',
-        customer: {
-          name: 'Trần Thị B',
-          email: 'tranthib@email.com',
-          phone: '0987654321'
-        },
-        createdAt: '2023-03-28T14:20:00Z',
-        status: 'shipping',
-        paymentMethod: 'bank',
-        shippingAddress: '456 Đường DEF, Phường UVW, Quận 2, TP.HCM',
-        shippingFee: 25000,
-        discount: 0,
-        total: 320000,
-        notes: '',
-        items: [
-          {
-            name: 'Tư Duy Phản Biện',
-            price: 180000,
-            quantity: 1,
-            image: '/placeholder.svg?height=64&width=64'
-          },
-          {
-            name: 'Đọc Vị Bất Kỳ Ai',
-            price: 115000,
-            quantity: 1,
-            image: '/placeholder.svg?height=64&width=64'
-          }
-        ],
-        history: [
-          {
-            action: 'Đơn hàng được tạo',
-            timestamp: '2023-03-28T14:20:00Z'
-          },
-          {
-            action: 'Đã xác nhận đơn hàng',
-            timestamp: '2023-03-28T15:00:00Z'
-          },
-          {
-            action: 'Đang giao hàng',
-            timestamp: '2023-03-29T09:00:00Z'
-          }
-        ]
+const availableBooks = ref([]);
+const paymentMethods = ref([]);
+
+// Modal state
+const showBulkUpdateModal = ref(false);
+const bulkUpdateStatus = ref('');
+const isUpdating = ref(false);
+
+// --- API CALLS ---
+const loadOrders = async (forceRefresh = false) => {
+  if (isLoading.value && !forceRefresh) return;
+  isLoading.value = true;
+  error.value = null;
+  
+  try {
+    const params = {
+      page: pagination.currentPage,
+      pageSize: pagination.pageSize,
+      ...searchFilters
+    };
+    // Xóa các filter rỗng
+    Object.keys(params).forEach(key => {
+      if (params[key] === '' || params[key] === null || params[key] === undefined) {
+        delete params[key];
       }
-    ])
-
-    // Computed properties
-    const filteredOrders = computed(() => {
-      let filtered = orders.value
-
-      if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase()
-        filtered = filtered.filter(order => 
-          order.id.toLowerCase().includes(query) ||
-          order.customer.name.toLowerCase().includes(query) ||
-          order.customer.email.toLowerCase().includes(query)
-        )
-      }
-
-      if (filterStatus.value) {
-        filtered = filtered.filter(order => order.status === filterStatus.value)
-      }
-
-      if (dateFrom.value) {
-        filtered = filtered.filter(order => 
-          new Date(order.createdAt) >= new Date(dateFrom.value)
-        )
-      }
-
-      if (dateTo.value) {
-        filtered = filtered.filter(order => 
-          new Date(order.createdAt) <= new Date(dateTo.value)
-        )
-      }
-
-      return filtered
-    })
-
-    const paginatedOrders = computed(() => {
-      const start = (currentPage.value - 1) * itemsPerPage.value
-      const end = start + itemsPerPage.value
-      return filteredOrders.value.slice(start, end)
-    })
-
-    const totalPages = computed(() => {
-      return Math.ceil(filteredOrders.value.length / itemsPerPage.value)
-    })
-
-    // Methods
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleDateString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }
-
-    const formatCurrency = (amount) => {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-      }).format(amount)
-    }
-
-    const getStatusClass = (status) => {
-      const classes = {
-        pending: 'px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800',
-        confirmed: 'px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800',
-        shipping: 'px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800',
-        delivered: 'px-2 py-1 rounded-full text-xs bg-green-100 text-green-800',
-        cancelled: 'px-2 py-1 rounded-full text-xs bg-red-100 text-red-800'
-      }
-      return classes[status] || classes.pending
-    }
-
-    const getStatusText = (status) => {
-      const texts = {
-        pending: 'Chờ xử lý',
-        confirmed: 'Đã xác nhận',
-        shipping: 'Đang giao',
-        delivered: 'Đã giao',
-        cancelled: 'Đã hủy'
-      }
-      return texts[status] || 'Không xác định'
-    }
-
-    const selectOrder = (order) => {
-      selectedOrder.value = { ...order }
-    }
-
-    const editOrder = (order) => {
-      selectedOrder.value = { ...order }
-    }
-
-    const toggleOrderSelection = (orderId) => {
-      const index = selectedOrderIds.value.indexOf(orderId)
-      if (index > -1) {
-        selectedOrderIds.value.splice(index, 1)
-      } else {
-        selectedOrderIds.value.push(orderId)
-      }
-    }
-
-    const toggleSelectAll = (event) => {
-      if (event.target.checked) {
-        selectedOrderIds.value = paginatedOrders.value.map(order => order.id)
-      } else {
-        selectedOrderIds.value = []
-      }
-    }
-
-    const updateQuantity = (index, newQuantity) => {
-      if (newQuantity > 0) {
-        selectedOrder.value.items[index].quantity = newQuantity
-      }
-    }
-
-    const removeItem = (index) => {
-      selectedOrder.value.items.splice(index, 1)
-    }
-
-    const calculateSubtotal = () => {
-      if (!selectedOrder.value) return 0
-      return selectedOrder.value.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    }
-
-    const calculateTotal = () => {
-      if (!selectedOrder.value) return 0
-      const subtotal = calculateSubtotal()
-      const shipping = selectedOrder.value.shippingFee || 0
-      const discount = selectedOrder.value.discount || 0
-      return subtotal + shipping - discount
-    }
-
-    const saveOrder = () => {
-      if (selectedOrder.value) {
-        // Cập nhật tổng tiền
-        selectedOrder.value.total = calculateTotal()
-        
-        // Thêm vào lịch sử
-        selectedOrder.value.history.push({
-          action: 'Đơn hàng được cập nhật',
-          timestamp: new Date().toISOString(),
-          note: 'Admin cập nhật thông tin đơn hàng'
-        })
-
-        // Cập nhật trong danh sách
-        const index = orders.value.findIndex(order => order.id === selectedOrder.value.id)
-        if (index > -1) {
-          orders.value[index] = { ...selectedOrder.value }
-        }
-
-        alert('Đã lưu thay đổi thành công!')
-      }
-    }
-
-    const cancelEdit = () => {
-      selectedOrder.value = null
-    }
-
-    const deleteOrder = (orderId) => {
-      if (confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
-        const index = orders.value.findIndex(order => order.id === orderId)
-        if (index > -1) {
-          orders.value.splice(index, 1)
-          if (selectedOrder.value?.id === orderId) {
-            selectedOrder.value = null
-          }
-        }
-      }
-    }
-
-    onMounted(() => {
-      // Chọn đơn hàng đầu tiên khi load trang
-      if (orders.value.length > 0) {
-        selectOrder(orders.value[0])
-      }
-    })
-
-    return {
-      searchQuery,
-      filterStatus,
-      dateFrom,
-      dateTo,
-      selectedOrder,
-      selectedOrderIds,
-      currentPage,
-      itemsPerPage,
-      orders,
-      filteredOrders,
-      paginatedOrders,
-      totalPages,
-      formatDate,
-      formatCurrency,
-      getStatusClass,
-      getStatusText,
-      selectOrder,
-      editOrder,
-      toggleOrderSelection,
-      toggleSelectAll,
-      updateQuantity,
-      removeItem,
-      calculateSubtotal,
-      calculateTotal,
-      saveOrder,
-      cancelEdit,
-      deleteOrder
-    }
+    });
+    const response = await axios.get('/admin/orders', { params });
+    const data = response.data;
+    orders.value = data.items;
+    pagination.totalItems = data.totalItems;
+    pagination.totalPages = data.totalPages;
+    pagination.currentPage = data.currentPage;
+  } catch (err) {
+    console.error('Lỗi khi tải đơn hàng:', err);
+    error.value = err.response?.data?.message || err.message;
+  } finally {
+    isLoading.value = false;
   }
-}
+};
+
+const deleteOrder = async (order) => {
+  if (!confirm(`Bạn có chắc chắn muốn xóa đơn hàng #${order.orderId}?`)) return;
+  try {
+    await axios.delete(`/admin/orders/${order.orderId}`);
+    alert('Đã xóa đơn hàng thành công!');
+    loadOrders(true);
+  } catch (err) {
+    console.error('Lỗi khi xóa đơn hàng:', err);
+    alert(`Lỗi: ${err.response?.data?.message || err.message}`);
+  }
+};
+
+const handleBulkUpdate = async () => {
+  if (!bulkUpdateStatus.value) {
+    alert('Vui lòng chọn trạng thái mới');
+    return;
+  }
+  isUpdating.value = true;
+  try {
+    const response = await axios.post('/admin/orders/bulk-update', {
+      orderIds: selectedOrders.value,
+      status: bulkUpdateStatus.value
+    });
+    alert(response.data.message || 'Cập nhật thành công!');
+    closeBulkUpdateModal();
+    loadOrders(true);
+  } catch (err) {
+    console.error('Lỗi khi cập nhật trạng thái:', err);
+    alert(`Lỗi: ${err.response?.data?.message || err.message}`);
+  } finally {
+    isUpdating.value = false;
+  }
+};
+
+// --- EVENT HANDLERS & WATCHERS ---
+const handleSearch = () => { pagination.currentPage = 1; loadOrders(); };
+const resetFilters = () => { Object.assign(searchFilters, initialSearchFilters); pagination.currentPage = 1; loadOrders(); };
+
+watch(() => pagination.currentPage, loadOrders);
+
+const isAllSelected = computed(() => orders.value.length > 0 && selectedOrders.value.length === orders.value.length);
+const toggleSelectAll = (event) => {
+    selectedOrders.value = event.target.checked ? orders.value.map(o => o.orderId) : [];
+};
+
+// Modal handlers
+const openEditModal = async (orderId) => {
+  selectedOrder.value = { orderId };
+  showEditModal.value = true;
+  await loadSelectedOrder();
+};
+
+const closeEditModal = () => {
+  showEditModal.value = false;
+  selectedOrder.value = null;
+  error.value = null;
+};
+
+const loadSelectedOrder = async () => {
+  if (!selectedOrder.value) return;
+  isLoadingOrder.value = true;
+  error.value = null;
+  try {
+    const response = await axios.get(`/admin/orders/${selectedOrder.value.orderId}`);
+    const orderData = response.data;
+    selectedOrder.value = orderData;
+    resetEditedOrder();
+  } catch (err) {
+    console.error('Error loading order:', err);
+    error.value = err.response?.data?.message || err.message;
+  } finally {
+    isLoadingOrder.value = false;
+  }
+};
+
+const resetEditedOrder = () => {
+  if (!selectedOrder.value) return;
+  editedOrder.status = selectedOrder.value.status;
+  editedOrder.paymentMethodId = selectedOrder.value.paymentMethodId;
+  editedOrder.customer = { ...selectedOrder.value.customer };
+  editedOrder.orderDetails = selectedOrder.value.orderDetails.map(detail => ({
+    ...detail,
+    book: { ...detail.book }
+  }));
+};
+
+const calculateTotal = () => {
+  return editedOrder.orderDetails.reduce((total, detail) => {
+    return total + (detail.unitPrice * detail.quantity);
+  }, 0);
+};
+
+const addOrderDetail = () => {
+  editedOrder.orderDetails.push({
+    bookId: null,
+    quantity: 1,
+    unitPrice: 0,
+    book: { title: '', author: '', imgUrl1: '', price: 0 }
+  });
+};
+
+const removeOrderDetail = (index) => {
+  editedOrder.orderDetails.splice(index, 1);
+};
+
+const saveOrderChanges = async () => {
+  isSaving.value = true;
+  try {
+    await axios.put(`/admin/orders/${selectedOrder.value.orderId}`, {
+      status: editedOrder.status,
+      paymentMethodId: editedOrder.paymentMethodId,
+      customerInfo: editedOrder.customer,
+      orderDetails: editedOrder.orderDetails.map(detail => ({
+        bookId: detail.bookId,
+        quantity: detail.quantity,
+        unitPrice: detail.unitPrice
+      })),
+      totalAmount: calculateTotal()
+    });
+    await loadOrders(true);
+    closeEditModal();
+  } catch (err) {
+    console.error('Error saving changes:', err);
+    alert('Failed to save changes: ' + (err.response?.data?.message || err.message));
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+// --- HELPERS ---
+const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN');
+const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price);
+
+// --- LIFECYCLE HOOK ---
+onMounted(async () => {
+  await loadOrders();
+  // Load available books and payment methods
+  try {
+    const [booksResponse, methodsResponse] = await Promise.all([
+      axios.get('/admin/books'),
+      axios.get('/admin/payment-methods')
+    ]);
+    availableBooks.value = booksResponse.data;
+    paymentMethods.value = methodsResponse.data;
+  } catch (err) {
+    console.error('Error loading reference data:', err);
+  }
+});
 </script>
 
-<style>
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 25 95% 53%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-  --radius: 0.5rem;
+<style scoped>
+/* CSS cho các thành phần dùng chung */
+.form-input {
+  width: 100%;
+  background-color: rgb(249 250 251);
+  border: 1px solid rgb(209 213 219);
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  font-size: 0.875rem;
+  padding: 0.5rem;
+  transition: all 0.15s ease-in-out;
 }
 
-.bg-background {
-  background-color: hsl(var(--background));
+.form-input:focus {
+  outline: none;
+  border-color: rgb(99 102 241);
+  box-shadow: 0 0 0 3px rgb(99 102 241 / 0.1);
 }
 
-.bg-card {
-  background-color: hsl(var(--card));
+:global(.dark) .form-input {
+  background-color: rgb(55 65 81 / 0.5);
+  border-color: rgb(75 85 99);
+  color: rgb(229 231 235);
 }
 
-.text-card-foreground {
-  color: hsl(var(--card-foreground));
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
 }
 
-.bg-muted {
-  background-color: hsl(var(--muted));
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.text-muted-foreground {
-  color: hsl(var(--muted-foreground));
+.btn-primary {
+  background-color: rgb(79 70 229);
+  color: white;
+  border: none;
 }
 
-.bg-primary {
-  background-color: hsl(var(--primary));
+.btn-primary:hover:not(:disabled) {
+  background-color: rgb(67 56 202);
 }
 
-.text-primary {
-  color: hsl(var(--primary));
+.btn-secondary {
+  background-color: white;
+  color: rgb(55 65 81);
+  border: 1px solid rgb(209 213 219);
 }
 
-.text-primary-foreground {
-  color: hsl(var(--primary-foreground));
+.btn-secondary:hover:not(:disabled) {
+  background-color: rgb(249 250 251);
 }
 
-.border {
-  border-color: hsl(var(--border));
+:global(.dark) .btn-secondary {
+  background-color: rgb(55 65 81);
+  color: rgb(229 231 235);
+  border-color: rgb(75 85 99);
 }
 
-.border-input {
-  border-color: hsl(var(--input));
+:global(.dark) .btn-secondary:hover:not(:disabled) {
+  background-color: rgb(75 85 99);
 }
 
-.bg-accent {
-  background-color: hsl(var(--accent));
+.th-cell {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(107 114 128);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.text-accent-foreground {
-  color: hsl(var(--accent-foreground));
+:global(.dark) .th-cell {
+  color: rgb(209 213 219);
 }
 
-.text-foreground {
-  color: hsl(var(--foreground));
+.td-cell {
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: rgb(75 85 99);
 }
 
-.hover\:bg-primary\/90:hover {
-  background-color: hsl(var(--primary) / 0.9);
+:global(.dark) .td-cell {
+  color: rgb(209 213 219);
 }
 
-.hover\:bg-destructive:hover {
-  background-color: hsl(var(--destructive));
+.status-badge {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  display: inline-block;
+  text-transform: capitalize;
 }
 
-.hover\:text-destructive-foreground:hover {
-  color: hsl(var(--destructive-foreground));
+.status-pending {
+  background-color: rgb(254 240 138);
+  color: rgb(146 64 14);
+}
+
+:global(.dark) .status-pending {
+  background-color: rgb(146 64 14 / 0.5);
+  color: rgb(253 224 71);
+}
+
+.status-confirmed {
+  background-color: rgb(147 197 253);
+  color: rgb(30 64 175);
+}
+
+:global(.dark) .status-confirmed {
+  background-color: rgb(30 64 175 / 0.5);
+  color: rgb(147 197 253);
+}
+
+.status-shipping {
+  background-color: rgb(165 243 252);
+  color: rgb(21 94 117);
+}
+
+:global(.dark) .status-shipping {
+  background-color: rgb(21 94 117 / 0.5);
+  color: rgb(165 243 252);
+}
+
+.status-delivered {
+  background-color: rgb(187 247 208);
+  color: rgb(22 101 52);
+}
+
+:global(.dark) .status-delivered {
+  background-color: rgb(22 101 52 / 0.5);
+  color: rgb(187 247 208);
+}
+
+.status-cancelled {
+  background-color: rgb(229 231 235);
+  color: rgb(31 41 55);
+}
+
+:global(.dark) .status-cancelled {
+  background-color: rgb(75 85 99);
+  color: rgb(243 244 246);
 }
 </style>

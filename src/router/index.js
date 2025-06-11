@@ -14,7 +14,7 @@ import PayMent from "../pages/PayMent.vue";
 import UserProfile from "../pages/UserProfile.vue";
 import store from "../store/index.js";
 import LoginGoogle from "../pages/LoginGoogle.vue";
-
+import AdminOrders from "../pages/AdminOrders.vue";
 const routes = [
   // Public routes
   {
@@ -91,6 +91,12 @@ const routes = [
     meta: { requiresAuth: true, role: "admin", title: "Chăm sóc khách hàng" },
   },
   {
+    path: "/admin/orders",
+    name: "AdminOrders",
+    component: AdminOrders,
+    meta: { requiresAuth: true, role: "admin", title: "Quản lý đơn hàng" },
+  },
+  {
     path: "/admin/products",
     name: "AdminProducts",
     component: AdminProducts,
@@ -102,6 +108,7 @@ const routes = [
     component: AdminDashboard,
     meta: { requiresAuth: true, role: "admin", title: "Thống kê" },
   },
+
 ];
 
 const router = createRouter({
