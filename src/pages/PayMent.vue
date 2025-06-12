@@ -43,13 +43,21 @@
       >
         <div class="font-semibold flex items-center mb-1 text-sm">
           {{ userInfo.fullName }}
-          <span class="ml-2 text-gray-600 font-normal">{{ userInfo.phoneNumber }}</span>
+          <span class="ml-2 text-gray-600 font-normal">{{
+            userInfo.phoneNumber
+          }}</span>
         </div>
         <div class="text-gray-600 text-sm">{{ userInfo.address }}</div>
-        <div class="text-gray-600 text-sm">{{ userInfo.city }}, {{ userInfo.province }}</div>
+        <div class="text-gray-600 text-sm">
+          {{ userInfo.city }}, {{ userInfo.province }}
+        </div>
       </div>
-      <div v-else-if="loading" class="text-center text-gray-500 mb-7">Đang tải thông tin người dùng...</div>
-      <div v-else-if="error" class="text-center text-red-500 mb-7">{{ error }}</div>
+      <div v-else-if="loading" class="text-center text-gray-500 mb-7">
+        Đang tải thông tin người dùng...
+      </div>
+      <div v-else-if="error" class="text-center text-red-500 mb-7">
+        {{ error }}
+      </div>
 
       <!-- Order List -->
       <div class="mb-7">
@@ -67,20 +75,28 @@
             />
             <div class="flex-1 flex justify-between items-center">
               <div>
-                <div class="font-semibold text-base leading-tight">{{ item.book?.title }}</div>
+                <div class="font-semibold text-base leading-tight">
+                  {{ item.book?.title }}
+                </div>
                 <div class="text-gray-600 text-sm font-bold leading-tight">
                   {{ item.book?.author }}
                 </div>
               </div>
               <div class="text-right">
-                <div class="font-semibold text-base">{{ formatPrice(item.book?.price) }}</div>
+                <div class="font-semibold text-base">
+                  {{ formatPrice(item.book?.price) }}
+                </div>
                 <div class="text-gray-500 text-xs">SL: {{ item.quantity }}</div>
               </div>
             </div>
           </div>
         </div>
-        <div v-else-if="loading" class="text-center text-gray-500">Đang tải đơn hàng...</div>
-        <div v-else class="text-center text-gray-500">Không có sản phẩm nào trong đơn hàng.</div>
+        <div v-else-if="loading" class="text-center text-gray-500">
+          Đang tải đơn hàng...
+        </div>
+        <div v-else class="text-center text-gray-500">
+          Không có sản phẩm nào trong đơn hàng.
+        </div>
       </div>
 
       <!-- Payment Methods -->
@@ -127,7 +143,7 @@
                 :src="method.img"
                 :alt="method.name"
                 class="w-8 h-8 ml-2 rounded-full object-contain bg-white border border-gray-200"
-                :class="{'rounded': method.id !== 'momo'}"
+                :class="{ rounded: method.id !== 'momo' }"
               />
             </div>
           </label>
@@ -139,7 +155,9 @@
         <div class="flex flex-col items-end w-full max-w-xs">
           <div class="flex items-center mb-3 w-full justify-between">
             <div class="font-semibold text-sm">Tổng cộng:</div>
-            <div class="font-bold text-base">{{ formatPrice(totalAmount) }}</div>
+            <div class="font-bold text-base">
+              {{ formatPrice(totalAmount) }}
+            </div>
           </div>
           <button
             @click.once="placeOrder"
@@ -156,12 +174,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import axios from '../utils/axios';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, onMounted, computed } from "vue";
+import axios from "../utils/axios";
+import { useRouter, useRoute } from "vue-router";
 import Footer from "../components/Footer.vue";
 import Header from "../components/Header/index.vue";
-import { useStore } from 'vuex';
+import { useStore } from "vuex";
 
 const router = useRouter();
 const route = useRoute();
@@ -177,58 +195,67 @@ const error = ref(null);
 const orderIdFromRoute = ref(route.params.orderId || null);
 
 const fetchUserInfo = async () => {
-    try {
-        // Ưu tiên lấy từ store nếu đã có và xác thực
-        if (store.state.isAuthenticated && store.state.userInfo && store.state.userInfo.fullName) {
-            userInfo.value = store.state.userInfo;
-            console.log("User info from store:", userInfo.value);
-        } else {
-            // Nếu không có trong store hoặc chưa đầy đủ, gọi API để lấy profile người dùng
-            const token = localStorage.getItem('token');
-            if (token) {
-                const response = await axios.get('https://localhost:7129/api/Profile', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                userInfo.value = response.data;
-                console.log("User info from API:", userInfo.value);
-                // Có thể cập nhật store nếu cần
-                // store.commit('setUserInfo', response.data);
-                error.value = null;
-            } else {
-                error.value = "Bạn chưa đăng nhập. Vui lòng đăng nhập lại.";
-            }
-        }
-    } catch (err) {
-        console.error("Error fetching user info:", err.response?.data || err.message);
-        error.value = "Lỗi khi tải thông tin người dùng.";
-        userInfo.value = null;
+  try {
+    // Ưu tiên lấy từ store nếu đã có và xác thực
+    if (
+      store.state.isAuthenticated &&
+      store.state.userInfo &&
+      store.state.userInfo.fullName
+    ) {
+      userInfo.value = store.state.userInfo;
+      console.log("User info from store:", userInfo.value);
+    } else {
+      // Nếu không có trong store hoặc chưa đầy đủ, gọi API để lấy profile người dùng
+      const token = localStorage.getItem("token");
+      if (token) {
+        const response = await axios.get("/Profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        userInfo.value = response.data;
+        console.log("User info from API:", userInfo.value);
+        // Có thể cập nhật store nếu cần
+        // store.commit('setUserInfo', response.data);
+        error.value = null;
+      } else {
+        error.value = "Bạn chưa đăng nhập. Vui lòng đăng nhập lại.";
+      }
     }
+  } catch (err) {
+    console.error(
+      "Error fetching user info:",
+      err.response?.data || err.message
+    );
+    error.value = "Lỗi khi tải thông tin người dùng.";
+    userInfo.value = null;
+  }
 };
 
 const totalAmount = computed(() => {
-    if (orderItems.value && orderItems.value.length > 0) {
-        return orderItems.value.reduce(
-            (total, item) => total + (item.book?.price || 0) * item.quantity,
-            0
-        );
-    } else {
-        return 0;
-    }
+  if (orderItems.value && orderItems.value.length > 0) {
+    return orderItems.value.reduce(
+      (total, item) => total + (item.book?.price || 0) * item.quantity,
+      0
+    );
+  } else {
+    return 0;
+  }
 });
 
 const getMyCart = async () => {
   try {
-    const res = await axios.get('https://localhost:7129/api/cart/my', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    const res = await axios.get("/cart/my", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
     orderItems.value = res.data.data.items || [];
     console.log("Cart items:", orderItems.value);
-    orderItems.value.forEach(item => {
-        console.log(`Book ID: ${item.book?.bookID}, Price: ${item.book?.price}, Quantity: ${item.quantity}`);
+    orderItems.value.forEach((item) => {
+      console.log(
+        `Book ID: ${item.book?.bookID}, Price: ${item.book?.price}, Quantity: ${item.quantity}`
+      );
     });
     error.value = null;
   } catch (err) {
-    error.value = 'Không thể tải giỏ hàng';
+    error.value = "Không thể tải giỏ hàng";
     console.error("Error fetching cart for payment:", err);
     orderItems.value = [];
   }
@@ -236,17 +263,17 @@ const getMyCart = async () => {
 
 const getPaymentMethods = async () => {
   try {
-    const res = await axios.get('https://localhost:7129/api/payment/methods', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    const res = await axios.get("/payment/methods", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
     paymentMethods.value = res.data.data || [];
     console.log("Payment methods loaded:", paymentMethods.value);
     if (paymentMethods.value.length > 0) {
-        selectedPaymentMethod.value = paymentMethods.value[0].id;
+      selectedPaymentMethod.value = paymentMethods.value[0].id;
     }
     error.value = null;
   } catch (err) {
-    error.value = 'Không thể tải phương thức thanh toán';
+    error.value = "Không thể tải phương thức thanh toán";
     console.error("Error fetching payment methods:", err);
   }
 };
@@ -256,19 +283,23 @@ const placeOrder = async () => {
     loading.value = true;
     // Bước 1: Tạo Order
     // API tạo order mong đợi một DTO với paymentMethodId và danh sách các sản phẩm trong giỏ hàng
-    const orderDetails = orderItems.value.map(item => ({
-        bookId: item.book?.bookID, // Đảm bảo trường này khớp với backend
-        quantity: item.quantity
+    const orderDetails = orderItems.value.map((item) => ({
+      bookId: item.book?.bookID, // Đảm bảo trường này khớp với backend
+      quantity: item.quantity,
     }));
 
     console.log("Order details being sent:", JSON.stringify(orderDetails));
 
-    const orderResponse = await axios.post('https://localhost:7129/api/Order', {
-      paymentMethodId: selectedPaymentMethod.value,
-      cartItems: orderDetails // Gửi chi tiết các mặt hàng trong giỏ hàng
-    }, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
+    const orderResponse = await axios.post(
+      "/Order",
+      {
+        paymentMethodId: selectedPaymentMethod.value,
+        cartItems: orderDetails, // Gửi chi tiết các mặt hàng trong giỏ hàng
+      },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
 
     console.log("Order creation response:", orderResponse.data);
 
@@ -279,40 +310,58 @@ const placeOrder = async () => {
 
     // Tìm phương thức thanh toán tiền mặt từ danh sách đã tải
     // Giả sử 'tiền mặt' là tên phương thức bạn muốn kiểm tra
-    const cashPaymentMethod = paymentMethods.value.find(m => m.name === 'tiền mặt');
-    console.log("Cash payment method object from loaded methods:", cashPaymentMethod);
+    const cashPaymentMethod = paymentMethods.value.find(
+      (m) => m.name === "tiền mặt"
+    );
+    console.log(
+      "Cash payment method object from loaded methods:",
+      cashPaymentMethod
+    );
     console.log("Cash payment method ID from object:", cashPaymentMethod?.id);
 
-
     if (selectedPaymentMethod.value !== cashPaymentMethod?.id) {
-        console.log("Selected method is NOT cash. Attempting to process online payment (Momo/VnPay)...");
-        const paymentRes = await axios.post(`https://localhost:7129/api/payment/process/${String(orderID)}`,
-            {} // Changed from null to an empty object
-        , {
-            headers: {
-                'Content-Type': 'application/json', // Indicate JSON content
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-
-        console.log("Payment API response:", paymentRes.data);
-
-        // Kiểm tra xem paymentRes.data và paymentRes.data.data có tồn tại không
-        if (paymentRes.data && paymentRes.data.data && paymentRes.data.data.paymentUrl) {
-            console.log("Redirecting to payment URL:", paymentRes.data.data.paymentUrl);
-            window.location.href = paymentRes.data.data.paymentUrl;
-        } else {
-            // Nếu không có paymentUrl (ví dụ: backend không trả về hoặc có lỗi khác)
-            console.error("Error: paymentUrl is undefined or not found in response for online payment. Redirecting to order success page as a fallback.");
-            router.push(`/order-success/${orderID}`); // Chuyển hướng đến trang thành công nếu không có paymentUrl
+      console.log(
+        "Selected method is NOT cash. Attempting to process online payment (Momo/VnPay)..."
+      );
+      const paymentRes = await axios.post(
+        `/payment/process/${String(orderID)}`,
+        {}, // Changed from null to an empty object
+        {
+          headers: {
+            "Content-Type": "application/json", // Indicate JSON content
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-    } else {
-        console.log("Selected method IS cash. Redirecting directly to order success page.");
-        router.push(`/order-success/${orderID}`);
-    }
+      );
 
+      console.log("Payment API response:", paymentRes.data);
+
+      // Kiểm tra xem paymentRes.data và paymentRes.data.data có tồn tại không
+      if (
+        paymentRes.data &&
+        paymentRes.data.data &&
+        paymentRes.data.data.paymentUrl
+      ) {
+        console.log(
+          "Redirecting to payment URL:",
+          paymentRes.data.data.paymentUrl
+        );
+        window.location.href = paymentRes.data.data.paymentUrl;
+      } else {
+        // Nếu không có paymentUrl (ví dụ: backend không trả về hoặc có lỗi khác)
+        console.error(
+          "Error: paymentUrl is undefined or not found in response for online payment. Redirecting to order success page as a fallback."
+        );
+        router.push(`/order-success/${orderID}`); // Chuyển hướng đến trang thành công nếu không có paymentUrl
+      }
+    } else {
+      console.log(
+        "Selected method IS cash. Redirecting directly to order success page."
+      );
+      router.push(`/order-success/${orderID}`);
+    }
   } catch (err) {
-    error.value = 'Không thể đặt hàng';
+    error.value = "Không thể đặt hàng";
     console.error("Error placing order:", err.response?.data || err.message);
   } finally {
     loading.value = false;
@@ -333,4 +382,3 @@ onMounted(async () => {
   loading.value = false;
 });
 </script>
-
