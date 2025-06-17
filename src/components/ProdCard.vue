@@ -7,49 +7,60 @@
       :style="{ zoom: scale }"
     >
       <div
-        class="w-[45vw] sm:w-[30vw] md:w-48 overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.02] transition-shadow duration-300 bg-white"
+        class="w-[45vw] sm:w-[28vw] md:w-48 overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.02] transition-shadow duration-300 bg-white"
         @click="$emit('click', productId)"
       >
-        <img
-          :src="imgSrc"
-          :alt="title"
-          class="w-full aspect-square object-cover"
-        />
+        <div class="relative w-full">
+          <img
+            :src="imgSrc"
+            :alt="title"
+            class="w-full aspect-square object-cover"
+          />
+          <div
+            v-if="isFlashSale"
+            class="text-white font-bold italic flex items-center md:text-[15px] text-[10px] px-2 py-1 absolute bottom-2 left-2 bg-[#661c1c]"
+          >
+            FLASH <span>⚡</span> SALE
+          </div>
+        </div>
 
         <div class="p-2">
-          <h3
-            class="text-lg font-semibold text-[#661c1c] uppercase truncate font-itim"
+          <div
+            class="text-lg font-semibold text-[#661c1c] uppercase max-md:truncate line-clamp-2 font-itim md:min-h-[3em] md:flex md:items-center"
           >
             {{ title }}
+          </div>
+
+          <h3
+            class="text-[14px] font-semibold text-[#5D4037] uppercase truncate font-inter mt-1"
+          >
+            {{ author }}
           </h3>
 
           <div class="space-x-3 flex items-center flex-nowrap">
             <div class="text-[#661c1c] font-semibold font-inter text-lg mt-1">
-              {{
-                new Intl.NumberFormat("vi-VN").format(Math.round(Number(price)))
-              }}
-              đ
+              {{ formatPrice(price) }} đ
             </div>
 
             <span
               v-if="discount"
-              class="bg-[#661c1c] text-white text-xs font-semibold ml-2 px-1.5 py-0.5 rounded font-inter"
+              class="bg-[#661c1c] text-white text-xs font-semibold ml-2 mt-0.5 px-1.5 py-0.5 rounded font-inter"
             >
               -{{ discount }}%
             </span>
           </div>
 
-          <div class="flex items-center mt-1 min-h-[1.25rem]" v-if="oldPrice">
+          <div class="flex items-center mt-1 min-h-[1.25rem]">
             <span
+              v-if="oldPrice"
               class="text-gray-400 line-through text-sm font-semibold font-inter"
             >
-              {{
-                new Intl.NumberFormat("vi-VN").format(
-                  Math.round(Number(oldPrice))
-                )
-              }}
+              {{ formatPrice(oldPrice) }}
               đ
             </span>
+            <span v-else style="visibility: hidden" class="text-sm font-inter"
+              >0 đ</span
+            >
           </div>
         </div>
       </div>
@@ -73,9 +84,11 @@ const props = defineProps({
   productId: Number,
   imgSrc: String,
   title: String,
+  flashSale: Boolean,
   price: String,
   oldPrice: String,
   discount: String,
+  author: String,
   to: {
     type: [String, Object],
     default: null,
@@ -84,7 +97,9 @@ const props = defineProps({
     type: Number,
     default: 1,
   },
+  isFlashSale: Boolean,
 });
+
 const addToCart = async () => {
   try {
     await axios.post("/cart", {
@@ -97,6 +112,13 @@ const addToCart = async () => {
     alert("Thêm vào giỏ hàng thất bại!");
   }
 };
+
+function formatPrice(price) {
+  // Làm tròn đến hàng nghìn gần nhất
+  const rounded = Math.round(Number(price) / 1000) * 1000;
+  // Thêm dấu chấm ngăn cách
+  return rounded.toLocaleString("vi-VN");
+}
 </script>
 
 <style scoped>

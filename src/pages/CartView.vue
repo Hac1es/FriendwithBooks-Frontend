@@ -202,7 +202,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import axios from "axios";
+import axios from "../utils/axios";
 import Footer from "../components/Footer.vue";
 import Breadcrumb1 from "../components/Breadcrumb1.vue";
 import Header from "../components/Header/index.vue";
@@ -219,16 +219,16 @@ const error = ref(null);
 const fetchCart = async () => {
   try {
     loading.value = true;
-    const response = await axios.get("https://localhost:7129/api/cart/my", {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    const response = await axios.get("/cart/my", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
-    console.log('API Response for Cart:', response.data);
+    console.log("API Response for Cart:", response.data);
     cart.value = response.data.data.items || [];
     error.value = null;
   } catch (err) {
     error.value = "Không thể tải giỏ hàng";
     cart.value = [];
-    console.error('Error fetching cart:', err);
+    console.error("Error fetching cart:", err);
   } finally {
     loading.value = false;
   }
@@ -258,15 +258,19 @@ const increaseQuantity = async (index) => {
   const item = cart.value[index];
   const newQuantity = item.quantity + 1;
   try {
-    await axios.put(`https://localhost:7129/api/cart/${item.cartID}`, {
-      quantity: newQuantity
-    }, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
+    await axios.put(
+      `/cart/${item.cartID}`,
+      {
+        quantity: newQuantity,
+      },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
     await fetchCart();
   } catch (err) {
-    error.value = 'Không thể cập nhật số lượng';
-    console.error('Error increasing quantity:', err);
+    error.value = "Không thể cập nhật số lượng";
+    console.error("Error increasing quantity:", err);
   }
 };
 
@@ -275,15 +279,19 @@ const decreaseQuantity = async (index) => {
   const newQuantity = item.quantity - 1;
   if (newQuantity > 0) {
     try {
-      await axios.put(`https://localhost:7129/api/cart/${item.cartID}`, {
-        quantity: newQuantity
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await axios.put(
+        `/cart/${item.cartID}`,
+        {
+          quantity: newQuantity,
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
       await fetchCart();
     } catch (err) {
-      error.value = 'Không thể cập nhật số lượng';
-      console.error('Error decreasing quantity:', err);
+      error.value = "Không thể cập nhật số lượng";
+      console.error("Error decreasing quantity:", err);
     }
   }
 };
@@ -291,13 +299,13 @@ const decreaseQuantity = async (index) => {
 const removeItem = async (index) => {
   const item = cart.value[index];
   try {
-    await axios.delete(`https://localhost:7129/api/cart/${item.cartID}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    await axios.delete(`/cart/${item.cartID}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
     await fetchCart();
   } catch (err) {
-    error.value = 'Không thể xóa sản phẩm';
-    console.error('Error removing item:', err);
+    error.value = "Không thể xóa sản phẩm";
+    console.error("Error removing item:", err);
   }
 };
 

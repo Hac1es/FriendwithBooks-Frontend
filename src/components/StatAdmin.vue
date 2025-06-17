@@ -302,9 +302,9 @@
                         `px-2 py-1 rounded-full text-xs ` +
                         (order.status === 'delivered'
                           ? 'bg-green-100 text-green-800'
-                          : order.status === 'shipped'
+                          : order.status === 'Paid'
                           ? 'bg-blue-100 text-blue-800'
-                          : order.status === 'pending'
+                          : order.status === 'Pending'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-red-100 text-red-800')
                       "
@@ -312,9 +312,9 @@
                       {{
                         order.status === "delivered"
                           ? "Đã giao"
-                          : order.status === "shipped"
+                          : order.status === "Paid"
                           ? "Đang giao"
-                          : order.status === "pending"
+                          : order.status === "Pending"
                           ? "Chờ xử lý"
                           : "Đã hủy"
                       }}

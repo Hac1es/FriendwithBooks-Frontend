@@ -1,11 +1,13 @@
 <template>
-  <div class="relative w-full max-w-[320px] md:h-[400px]">
+  <div class="relative w-full max-w-[270px] max-md:max-w-[180px] md:h-[300px]">
     <component
       :is="to ? 'router-link' : 'div'"
       :to="to"
-      class="w-full max-w-[320px] flex flex-col items-start gap-3 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+      class="w-full max-w-[270px] max-md:max-w-[180px] flex flex-col items-start gap-1 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
     >
-      <div class="w-full max-w-[320px] md:h-[400px] rounded-lg">
+      <div
+        class="w-full max-w-[270px] max-md:max-w-[180px] h-[300px] max-md:h-[220px] rounded-lg"
+      >
         <img
           :src="imgSrc"
           :alt="title || null"
@@ -13,12 +15,17 @@
         />
       </div>
       <div
-        class="font-inder font-medium sm:text-[30px] text-[12px] text-[#661C1C] md:pl-4 md:pr-2"
+        class="font-inder font-medium sm:text-[24px] text-[12px] text-[#661C1C] md:pr-2 line-clamp-2"
       >
         {{ title }}
       </div>
       <div
-        class="font-inter font-normal sm:text-[14px] text-[7px] text-[#828282] md:pl-4 md:pb-2 pb-1 md:pr-2"
+        class="font-inder font-normal sm:text-[18px] text-[10px] text-[#828282] md:pr-2"
+      >
+        {{ author }}
+      </div>
+      <div
+        class="font-inter font-normal sm:text-[14px] text-[7px] text-[#828282] md:pb-2 pb-1 md:pr-2 line-clamp-[9] max-md:line-clamp-4"
       >
         {{ desc }}
       </div>
@@ -42,6 +49,7 @@ const props = defineProps({
   id: String,
   imgSrc: String,
   title: String,
+  author: String,
   desc: String,
   to: {
     type: [String, Object],

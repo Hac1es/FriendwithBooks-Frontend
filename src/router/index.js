@@ -116,7 +116,6 @@ const routes = [
     component: AdminDashboard,
     meta: { requiresAuth: true, role: "admin", title: "Thống kê" },
   },
-
 ];
 
 const router = createRouter({

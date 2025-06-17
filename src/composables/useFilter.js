@@ -4,7 +4,7 @@ import axios from "../utils/axios";
 export function useFilter(emit) {
   const categories = ref({});
   const categoryTree = ref({ parent: null, sub: null });
-
+  const categoryMappings = ref({});
   const filters = reactive({
     promo: false,
     price: null,
@@ -61,35 +61,42 @@ export function useFilter(emit) {
   };
 
   const getCategoryId = (parent, sub) => {
-    const categoryMappings = {
-      "Sách Tiếng Việt": {
-        "Tiểu thuyết": 3,
-        "Sách giáo khoa – Tham khảo": 4,
-        "Khoa học – Kỹ thuật": 5,
-        "Lịch sử – Nghệ thuật - Tôn giáo": 6,
-        "Kinh tế": 7,
-        "Văn hóa – Địa lý – Du lịch": 8,
-        "Chính trị": 9,
-      },
-      "Foreign Books": {
-        "Fantasy & Sci-Fi": 10,
-        Novel: 11,
-        "Business & Management": 12,
-        "Science & Technology": 13,
-        "History & Politics": 14,
-      },
-    };
-    return categoryMappings[parent]?.[sub];
+    return categoryMappings.value[parent]?.[sub];
   };
 
-  onMounted(async () => {
+  const buildCategoryMapping = (apiData) => {
+    const result = {};
+
+    for (const parentCategory in apiData) {
+      const subcategories = apiData[parentCategory];
+
+      if (!Array.isArray(subcategories) || subcategories.length === 0) {
+        continue;
+      }
+
+      result[parentCategory] = {};
+
+      for (const item of subcategories) {
+        if (item.name && item.categoryID !== undefined) {
+          result[parentCategory][item.name] = item.categoryID;
+        }
+      }
+    }
+
+    return result;
+  };
+
+  const fetchCategories = async () => {
     try {
       const response = await axios.get("/Book/category");
       categories.value = response.data;
+      categoryMappings.value = buildCategoryMapping(response.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
-  });
+  };
+
+  onMounted(fetchCategories);
 
   watch(
     () => filters.price,
@@ -140,5 +147,6 @@ export function useFilter(emit) {
     typeOptions,
     selectCategory,
     getCategoryId,
+    fetchCategories,
   };
 }

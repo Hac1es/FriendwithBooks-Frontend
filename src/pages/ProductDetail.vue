@@ -52,11 +52,31 @@
           <div class="h-full w-full flex-1">
             <div class="flex max-md:scale-[0.7] max-md:gap-4">
               <div class="flex flex-col gap-4 w-full md:w-auto flex-1">
-                <h1 class="text-[#661c1c] font-semibold text-lg">
-                  {{ productData.title }}
-                </h1>
-                <div class="text-[#9b0505] font-semibold text-lg">
-                  {{ productData.price }} đ
+                <div class="flex items-center justify-between">
+                  <h1 class="text-[#661c1c] font-semibold text-lg">
+                    {{ productData.title }}
+                  </h1>
+                  <div
+                    v-if="productData.isFlashSale"
+                    class="text-red-500 font-bold italic flex items-center md:text-[15px] text-[8px]"
+                  >
+                    FLASH <span>⚡</span> SALE
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="text-[#9b0505] font-semibold text-lg">
+                    {{
+                      formatPrice(
+                        productData.price * ((100 - productData.discount) / 100)
+                      )
+                    }}
+                    đ
+                  </div>
+                  <div
+                    class="text-gray-400 text-sm line-through font-semibold text-lg"
+                  >
+                    {{ formatPrice(productData.price) }} đ
+                  </div>
                 </div>
                 <button
                   class="bg-[#cd6d5f] text-white py-2 px-4 rounded hover:bg-red-800 transition-colors w-48"
@@ -391,6 +411,8 @@
               :product-id="data.bookID"
               :img-src="data.imgURL1"
               :title="data.title"
+              :author="data.author"
+              :isFlashSale="data.isFlashSale"
               :price="
                 data.discount === 0
                   ? data.price
@@ -516,9 +538,7 @@ const fetchReviews = async () => {
 
     // Update URL to include category path
     const categoryPath = response.data.categoryPath || [];
-    const sluggedPath = categoryPath
-      .map((c) => convertToSlug(c.categoryName))
-      .join("/");
+    const sluggedPath = convertToSlug(productData.value.title);
 
     // Only update URL if coming from direct access
     if (!route.path.includes(sluggedPath)) {
@@ -693,4 +713,11 @@ const addToCart = async () => {
     alert("Thêm vào giỏ hàng thất bại!");
   }
 };
+
+function formatPrice(price) {
+  // Làm tròn đến hàng nghìn gần nhất
+  const rounded = Math.round(Number(price) / 1000) * 1000;
+  // Thêm dấu chấm ngăn cách
+  return rounded.toLocaleString("vi-VN");
+}
 </script>

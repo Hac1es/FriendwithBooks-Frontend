@@ -4,7 +4,8 @@
     <div class="container mx-auto px-4 flex flex-col md:flex-row">
       <!-- Sidebar Filters -->
       <div class="hidden md:block">
-        <Filter
+        <FilterAdmin
+          ref="filterAdminRef"
           class="mr-4"
           @filterChange="handleFilterChange"
           :categories="allCategories"
@@ -105,6 +106,26 @@
                   />
                 </svg>
                 FLASH SALE
+              </button>
+              <button
+                class="bg-[#F0FFFF] hover:bg-[#CCEFFF] text-black px-3 py-1.5 rounded text-sm transition-colors duration-200 flex items-center"
+                @click="openAddCategoryModal"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                THÊM DANH MỤC
               </button>
             </div>
           </div>
@@ -608,23 +629,24 @@
                     placeholder="Tìm kiếm sách theo tên, tác giả hoặc ID..."
                     class="w-full border border-gray-300 rounded-md px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                   />
-                  <div class="absolute inset-y-0 right-2 fix items-center pointer-events-none">
-                    <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                  <div
+                    class="absolute inset-y-0 right-2 fix items-center pointer-events-none"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
                   </div>
-                  
 
                   <!-- Dropdown for book selection -->
                   <div
@@ -1689,13 +1711,71 @@
         </div>
       </div>
     </div>
+
+    <!-- Add Category Modal -->
+    <div
+      v-if="showCategoryModal"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <h2 class="text-lg font-bold mb-4">Thêm danh mục mới</h2>
+        <div class="mb-3">
+          <label class="block font-medium mb-1">Có phải danh mục cha?</label>
+          <select
+            v-model="isParentCategory"
+            class="w-full border rounded px-2 py-1"
+          >
+            <option :value="true">Có</option>
+            <option :value="false">Không</option>
+          </select>
+        </div>
+        <div v-if="!isParentCategory" class="mb-3">
+          <label class="block font-medium mb-1">Chọn danh mục cha</label>
+          <select
+            v-model="selectedParent"
+            class="w-full border rounded px-2 py-1"
+          >
+            <option value="" disabled>-- Chọn danh mục cha --</option>
+            <option v-for="cat in parentCategories" :key="cat" :value="cat">
+              {{ cat }}
+            </option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="block font-medium mb-1">Tên danh mục</label>
+          <input
+            v-model="newCategoryName"
+            type="text"
+            class="w-full border rounded px-2 py-1"
+            placeholder="Nhập tên danh mục"
+          />
+        </div>
+        <div v-if="errorMsg" class="text-red-600 text-sm mb-2">
+          {{ errorMsg }}
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button
+            @click="showCategoryModal = false"
+            class="px-4 py-2 border rounded"
+          >
+            Hủy
+          </button>
+          <button
+            @click="addCategory"
+            class="px-4 py-2 bg-amber-600 text-white rounded"
+          >
+            Thêm
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { Cloudinary } from "@cloudinary/url-gen";
-import Filter from "./Filter/index.vue";
+import FilterAdmin from "./FilterAdmin.vue";
 import axios from "../utils/axios";
 
 const cld = new Cloudinary({
@@ -1748,7 +1828,7 @@ const currentFilters = ref({
 
 // Books data
 const filteredBooks = ref([]);
-const allCategories = ref([]);
+const allCategories = ref({});
 const allBooks = ref([]);
 
 // Pagination
@@ -2563,8 +2643,8 @@ const fetchCategories = async () => {
     Object.entries(response.data).forEach(([parent, subs]) => {
       subs.forEach((sub) => {
         categories.push({
-          categoryID: getCategoryId(parent, sub),
-          categoryName: `${parent} - ${sub}`,
+          categoryID: getCategoryId(parent, sub.name), // truyền sub.name thay vì sub
+          categoryName: `${parent} - ${sub.name}`, // dùng sub.name thay vì sub
         });
       });
     });
@@ -2598,30 +2678,6 @@ const calculateDiscountPrice = (price, discount) => {
   if (!discount || discount === 0) return price;
   return (price * (100 - discount)) / 100;
 };
-
-const getCategoryId = (parent, sub) => {
-  const categoryMappings = {
-    "Sách Tiếng Việt": {
-      "Tiểu thuyết": 3,
-      "Sách giáo khoa – Tham khảo": 4,
-      "Khoa học – Kỹ thuật": 5,
-      "Lịch sử – Nghệ thuật - Tôn giáo": 6,
-      "Kinh tế": 7,
-      "Văn hóa – Địa lý – Du lịch": 8,
-      "Chính trị": 9,
-    },
-    "Foreign Books": {
-      "Fantasy & Sci-Fi": 10,
-      Novel: 11,
-      "Business & Management": 12,
-      "Science & Technology": 13,
-      "History & Politics": 14,
-    },
-  };
-
-  return categoryMappings[parent]?.[sub];
-};
-
 // Fetch detailed book info
 const fetchProductDetails = async (bookId) => {
   try {
@@ -2993,6 +3049,85 @@ onMounted(async () => {
     }
   });
 });
+
+const showCategoryModal = ref(false);
+const isParentCategory = ref(true); // true = cha, false = con
+const parentCategories = ref([]); // Danh sách cha
+const selectedParent = ref(""); // Tên cha đã chọn
+const newCategoryName = ref("");
+const errorMsg = ref("");
+
+// Validate tên danh mục đã tồn tại
+const isDuplicateCategory = computed(() => {
+  if (isParentCategory.value) {
+    // Kiểm tra trong danh sách cha
+    return parentCategories.value.some(
+      (cat) =>
+        cat.trim().toLowerCase() === newCategoryName.value.trim().toLowerCase()
+    );
+  } else {
+    // Kiểm tra trong sub của cha đã chọn
+    if (!selectedParent.value) return false;
+    const subList = allCategories.value[selectedParent.value] || [];
+    return subList.some(
+      (sub) =>
+        sub.name.trim().toLowerCase() ===
+        newCategoryName.value.trim().toLowerCase()
+    );
+  }
+});
+
+// Lấy toàn bộ categories từ API để check duplicate sub
+const fetchAllCategories = async () => {
+  try {
+    const res = await axios.get("/Book/category");
+    allCategories.value = res.data;
+    parentCategories.value = Object.keys(res.data);
+  } catch (err) {
+    errorMsg.value = "Không thể tải danh mục!";
+  }
+};
+
+// Gọi khi mở modal
+const openAddCategoryModal = () => {
+  showCategoryModal.value = true;
+  isParentCategory.value = true;
+  selectedParent.value = "";
+  newCategoryName.value = "";
+  errorMsg.value = "";
+  fetchAllCategories();
+};
+
+// Gửi request tạo mới
+const addCategory = async () => {
+  errorMsg.value = "";
+  if (!newCategoryName.value.trim()) {
+    errorMsg.value = "Vui lòng nhập tên danh mục!";
+    return;
+  }
+  if (isDuplicateCategory.value) {
+    errorMsg.value = "Danh mục đã tồn tại!";
+    return;
+  }
+  try {
+    // Gửi lên BE: nếu là cha thì không có parentID, nếu là con thì có parentID
+    const payload = {
+      categoryName: newCategoryName.value.trim(),
+      parentName: isParentCategory.value ? null : selectedParent.value,
+    };
+    await axios.post("/Book/category", payload);
+    showCategoryModal.value = false;
+    // TODO: refresh lại list category ở ngoài nếu cần
+    alert("Thêm danh mục thành công!");
+    // Gọi hàm fetch lại danh mục ở FilterAdmin
+    filterAdminRef.value?.fetchCategories?.();
+  } catch (err) {
+    errorMsg.value = "Lỗi khi thêm danh mục!";
+    console.log(err);
+  }
+};
+
+const filterAdminRef = ref(null);
 </script>
 
 <style scoped>

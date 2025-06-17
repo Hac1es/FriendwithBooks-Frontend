@@ -39,16 +39,18 @@
         :slides-per-view="getSlidesPerView"
         draggable
         show-arrow
-        class="mx-auto w-[95%] md:w-[90%] h-[260px] md:h-[375px] mt-6"
+        class="mx-auto w-[95%] md:w-[90%] h-[270px] md:h-[410px] mt-6"
       >
         <n-carousel-item v-for="(data, index) in flashSale" :key="index">
           <ProdCard
             :productId="data.bookID"
+            :author="data.author"
             :imgSrc="data.imgURL"
             :discount="data.discountPercent"
             :oldPrice="data.price"
             :price="data.price * ((100 - data.discountPercent) / 100)"
             :title="data.title"
+            :isFlashSale="data.isFlashSale"
             :to="
               buildProductUrl(
                 data.categoryPath?.map((c) =>
@@ -85,27 +87,25 @@
 
     <!-- Best Seller -->
     <div
-      class="font-itim font-normal sm:text-[40px] text-[20px] w-[90%] mx-auto text-[#b22222] md:mt-7 mt-3"
+      class="font-inkut font-normal sm:text-[30px] text-[16px] w-[90%] mx-auto text-[#b22222] md:mt-7 mt-3"
     >
       BEST SELLER
     </div>
     <n-carousel
-      :space-between="20"
+      :space-between="10"
       :loop="true"
-      slides-per-view="3"
+      :slides-per-view="getSlidesPerView2"
       draggable
       show-arrow
       class="mx-auto w-[90%] h-[400px] md:h-[700px] md:mt-6 mt-2"
     >
-      <n-carousel-item
-        v-for="(data, index) in bestSellingBooks"
-        :key="data.bookID"
-      >
+      <n-carousel-item v-for="data in bestSellingBooks" :key="data.bookID">
         <AdCard
           :id="data.bookID"
           :imgSrc="data.imgURL"
           :desc="data.description"
           :title="data.title"
+          :author="data.author"
           :to="
             buildProductUrl(
               data.categoryPath?.map((c) => encodeURIComponent(c.categoryName)),
@@ -154,7 +154,7 @@
         </div>
 
         <h3
-          class="text-[#680e0e] font-inter font-medium text-[18px] max-md:mb-2 sm:text-[26px] md:text-[32px] uppercase max-md:text-center"
+          class="text-[#680e0e] font-inter font-medium text-[16px] mt-2 max-md:mb-2 sm:text-[26px] md:text-[32px] uppercase max-md:text-center"
         >
           Đắc Nhân Tâm - Cuốn sách thay đổi cuộc đời bạn!
         </h3>
@@ -319,6 +319,7 @@ const buttonSize = computed(() =>
 );
 const prodCardScaling = computed(() => (windowWidth.value < 768 ? 0.7 : 1));
 const getSlidesPerView = computed(() => (windowWidth.value < 768 ? 3 : 5));
+const getSlidesPerView2 = computed(() => (windowWidth.value < 768 ? 2 : 4));
 
 /** =========================
  * 🚀 Lifecycle

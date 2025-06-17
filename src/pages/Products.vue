@@ -24,7 +24,7 @@
         <!-- Products grid -->
         <div
           v-else-if="products.length > 0"
-          class="grid md:grid-cols-3 grid-cols-2 md:gap-x-24 gap-x-5 gap-y-10 grow shrink max-md:w-full max-md:mx-auto px-5 mb-10"
+          class="grid md:grid-cols-4 grid-cols-2 md:gap-x-16 gap-x-5 gap-y-6 grow shrink max-md:w-full max-md:mx-auto px-5 mb-10"
         >
           <ProdCard
             v-for="data in products"
@@ -32,9 +32,11 @@
             :productId="data.id"
             :imgSrc="data.image"
             :title="data.name"
+            :author="data.author"
             :price="data.price"
             :discount="data.discount"
             :oldPrice="data.oldPrice"
+            :isFlashSale="data.isFlashSale"
             :scale="respScaling"
             :to="`/Products/${data.id}`"
           />
@@ -87,6 +89,24 @@ const isLoading = ref(true);
 const currentFilters = ref({});
 const error = ref(null);
 const route = useRoute();
+const categoryMappings = {
+  "Sách Tiếng Việt": {
+    "Tiểu thuyết": 3,
+    "Sách giáo khoa – Tham khảo": 4,
+    "Khoa học – Kỹ thuật": 5,
+    "Lịch sử – Nghệ thuật - Tôn giáo": 6,
+    "Kinh tế": 7,
+    "Văn hóa – Địa lý – Du lịch": 8,
+    "Chính trị": 9,
+  },
+  "Foreign Books": {
+    "Fantasy & Sci-Fi": 10,
+    Novel: 11,
+    "Business & Management": 12,
+    "Science & Technology": 13,
+    "History & Politics": 14,
+  },
+};
 
 // Fetch products with pagination
 const fetchProducts = async (params = {}) => {
@@ -126,11 +146,6 @@ const fetchProducts = async (params = {}) => {
       queryParams.append("name", params.name);
     }
 
-    console.log(
-      "API URL:",
-      `https://localhost:7129/api/Book/query?${queryParams.toString()}`
-    );
-
     const response = await axios.get(`/Book/query?${queryParams.toString()}`);
     const data = response.data;
 
@@ -142,6 +157,7 @@ const fetchProducts = async (params = {}) => {
       oldPrice: book.discount === 0 ? null : book.price,
       discount: book.discount === 0 ? null : book.discount,
       author: book.author,
+      isFlashSale: book.isFlashSale,
     }));
 
     currentPage.value = data.currentPage;
@@ -252,26 +268,6 @@ watch(
   }
 );
 
-const addToCart = async (bookId) => {
-  try {
-    await axios.post(
-      "http://localhost:8080/api/cart/add",
-      {
-        bookID: bookId,
-        quantity: 1,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    alert("Đã thêm vào giỏ hàng!");
-  } catch (err) {
-    alert("Thêm vào giỏ hàng thất bại!");
-  }
-};
-
 watch(
   () => route.query.category,
   (categoryId) => {
@@ -290,25 +286,6 @@ watch(
 );
 
 function getCategoryTreeById(categoryId) {
-  // Copy từ useFilter.js
-  const categoryMappings = {
-    "Sách Tiếng Việt": {
-      "Tiểu thuyết": 3,
-      "Sách giáo khoa – Tham khảo": 4,
-      "Khoa học – Kỹ thuật": 5,
-      "Lịch sử – Nghệ thuật - Tôn giáo": 6,
-      "Kinh tế": 7,
-      "Văn hóa – Địa lý – Du lịch": 8,
-      "Chính trị": 9,
-    },
-    "Foreign Books": {
-      "Fantasy & Sci-Fi": 10,
-      Novel: 11,
-      "Business & Management": 12,
-      "Science & Technology": 13,
-      "History & Politics": 14,
-    },
-  };
   for (const parent in categoryMappings) {
     for (const sub in categoryMappings[parent]) {
       if (categoryMappings[parent][sub] === Number(categoryId)) {

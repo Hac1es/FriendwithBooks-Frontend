@@ -24,9 +24,9 @@
                   v-for="sub in subCategories"
                   :key="sub"
                   class="cursor-pointer hover:text-[#a50202]"
-                  @click.stop="goToCategory(parent, sub)"
+                  @click.stop="goToCategory(parent, sub.name)"
                 >
-                  {{ sub }}
+                  {{ sub.name }}
                 </li>
               </ul>
             </div>

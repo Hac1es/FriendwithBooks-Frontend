@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="md:bg-[#ffffff] bg-[#f8f5e9] p-4 rounded-lg shadow-sm w-64 font-instrument max-h-[900px]"
+    class="md:bg-[#ffffff] bg-[#f8f5e9] p-4 rounded-lg shadow-sm w-64 font-instrument"
   >
     <h2 class="font-bold text-[#661c1c] mb-2 font-itim text-lg">BỘ LỌC</h2>
 
@@ -21,11 +21,20 @@
             class="flex items-center space-x-2 cursor-pointer hover:text-[#a50202]"
             :class="{
               'text-[#a50202]':
-                filters.selectedCategoryId === getCategoryId(parent, sub),
+                filters.selectedCategoryId === getCategoryId(parent, sub.name),
             }"
-            @click="selectCategory(getCategoryId(parent, sub), parent, sub)"
+            @click="
+              selectCategory(getCategoryId(parent, sub.name), parent, sub.name)
+            "
           >
-            <span class="text-sm">{{ sub }}</span>
+            <span class="text-sm">
+              {{ sub.name }}
+              <span
+                v-if="sub.totalStock !== undefined"
+                class="text-xs text-gray-500"
+                >({{ sub.totalStock }})</span
+              >
+            </span>
           </div>
         </div>
       </div>
