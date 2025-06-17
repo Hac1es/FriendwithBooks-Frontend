@@ -1,6 +1,6 @@
 # FriendWithBooks - Frontend
 
-Đây là phần Frontend của đồ án FriendwithBooks, một ứng dụng web để bán sách qua mạng Internet, có 2 phần: Admin và User
+Đây là phần Frontend của đồ án FriendwithBooks, một ứng dụng web để bán sách qua mạng Internet, có 2 giao diện: Admin và User
 
 ## 🛠️ Công nghệ sử dụng
 
