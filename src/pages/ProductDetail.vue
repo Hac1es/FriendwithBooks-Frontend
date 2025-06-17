@@ -74,6 +74,7 @@
                   </div>
                   <div
                     class="text-gray-400 text-sm line-through font-semibold text-lg"
+                    v-if="productData.discount > 0"
                   >
                     {{ formatPrice(productData.price) }} đ
                   </div>
