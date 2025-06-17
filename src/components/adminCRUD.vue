@@ -67,6 +67,47 @@
               </button>
             </div>
             <div class="flex space-x-2">
+              <!-- Select All Controls -->
+              <div v-if="filteredBooks.length > 0" class="flex items-center space-x-2 mr-2">
+                <label class="flex items-center space-x-1 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    :checked="isAllSelected"
+                    @change="toggleSelectAll"
+                    class="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2"
+                  />
+                  <span>Chọn tất cả</span>
+                </label>
+                <button
+                  v-if="selectedBooks.length > 0"
+                  @click="clearSelection"
+                  class="text-xs text-gray-500 hover:text-gray-700 underline"
+                >
+                  Bỏ chọn
+                </button>
+              </div>
+              <!-- Bulk Delete Button -->
+              <button
+                v-if="selectedBooks.length > 0"
+                class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm transition-colors duration-200 flex items-center"
+                @click="confirmBulkDelete"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                XÓA HÀNG LOẠT ({{ selectedBooks.length }})
+              </button>
               <button
                 class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-sm transition-colors duration-200 flex items-center"
                 @click="openAddBookModal"
@@ -275,9 +316,19 @@
             :key="book.bookID"
             class="bg-white rounded-lg shadow-sm overflow-hidden relative"
           >
+            <!-- Bulk Selection Checkbox -->
+            <div class="absolute top-2 left-2 z-20">
+              <input
+                type="checkbox"
+                :value="book.bookID"
+                v-model="selectedBooks"
+                class="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2"
+              />
+            </div>
+
             <!-- Product ID Badge -->
             <div
-              class="absolute top-2 left-2 bg-amber-600 text-white text-xs px-2 py-1 rounded-md font-medium z-10"
+              class="absolute top-2 left-8 bg-amber-600 text-white text-xs px-2 py-1 rounded-md font-medium z-10"
             >
               ID: {{ book.bookID }}
             </div>
@@ -1375,14 +1426,24 @@
                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
                   required
                 >
-                  <option
-                    v-for="category in allCategories"
-                    :key="category.categoryID"
-                    :value="category.categoryID"
+                  <option value="" disabled>Chọn danh mục</option>
+                  <optgroup 
+                    v-for="(subs, parent) in categoryData" 
+                    :key="parent" 
+                    :label="parent"
                   >
-                    {{ category.categoryName }}
-                  </option>
+                    <option
+                      v-for="sub in subs"
+                      :key="sub.categoryID"
+                      :value="sub.categoryID"
+                    >
+                      {{ sub.name }}
+                    </option>
+                  </optgroup>
                 </select>
+                <div v-if="currentCategoryName" class="mt-1 text-xs text-gray-600">
+                  Danh mục hiện tại: {{ currentCategoryName }}
+                </div>
               </div>
 
               <div>
@@ -1546,6 +1607,42 @@
             :disabled="isLoading"
           >
             Xóa
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Delete Confirmation Modal -->
+    <div
+      v-if="showBulkDeleteConfirmation"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto"
+    >
+      <div class="bg-white rounded-lg max-w-md w-full p-6 my-8">
+        <h3 class="text-lg font-bold mb-4 text-red-600">Xác nhận xóa hàng loạt</h3>
+        <p class="mb-4">
+          Bạn có chắc chắn muốn xóa {{ selectedBooks.length }} sản phẩm đã chọn không? Hành động này không thể hoàn tác.
+        </p>
+        <div class="mb-4 p-3 bg-gray-50 rounded-md">
+          <p class="text-sm text-gray-600 mb-2">Sản phẩm sẽ được xóa:</p>
+          <ul class="text-sm text-gray-700 max-h-32 overflow-y-auto">
+            <li v-for="bookId in selectedBooks" :key="bookId" class="py-1">
+              • ID: {{ bookId }} - {{ getBookTitle(bookId) }}
+            </li>
+          </ul>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button
+            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+            @click="showBulkDeleteConfirmation = false"
+          >
+            Hủy
+          </button>
+          <button
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            @click="bulkDeleteBooks"
+            :disabled="isLoading"
+          >
+            Xóa {{ selectedBooks.length }} sản phẩm
           </button>
         </div>
       </div>
@@ -1777,6 +1874,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { Cloudinary } from "@cloudinary/url-gen";
 import FilterAdmin from "./FilterAdmin.vue";
 import axios from "../utils/axios";
+import { useRoute } from "vue-router";
 
 const cld = new Cloudinary({
   cloud: {
@@ -1828,7 +1926,8 @@ const currentFilters = ref({
 
 // Books data
 const filteredBooks = ref([]);
-const allCategories = ref({});
+const allCategories = ref([]);
+const categoryData = ref({});
 const allBooks = ref([]);
 
 // Pagination
@@ -1893,6 +1992,10 @@ const editingBook = ref({
 // Delete confirmation
 const showDeleteConfirmation = ref(false);
 const bookToDelete = ref(null);
+
+// Bulk delete functionality
+const selectedBooks = ref([]);
+const showBulkDeleteConfirmation = ref(false);
 
 // Computed properties
 const paginatedBooks = computed(() => {
@@ -1974,9 +2077,18 @@ const isNumericSearch = computed(() => {
 });
 
 // Filter handling
-const handleFilterChange = ({ filters, _ }) => {
-  currentFilters.value = { ...filters };
-  currentPage.value = 1;
+const handleFilterChange = (payload) => {
+  console.log("Filter change payload:", payload);
+  currentFilters.value.promo = payload.filters.promo;
+  currentFilters.value.price = payload.filters.price;
+  currentFilters.value.priceMin = payload.filters.priceMin;
+  currentFilters.value.priceMax = payload.filters.priceMax;
+  currentFilters.value.age = payload.filters.age;
+  currentFilters.value.type = payload.filters.type;
+  // Đảm bảo selectedCategoryId luôn là số nguyên
+  currentFilters.value.selectedCategoryId = Number(payload.filters.selectedCategoryId); // Dòng này quan trọng
+  categoryTree.value = payload.categoryTree;
+  currentPage.value = 1; // Đặt lại về trang đầu tiên khi thay đổi bộ lọc
   fetchBooks();
 };
 
@@ -2059,8 +2171,15 @@ const getTypeFilterText = (type) => {
 };
 
 const getCategoryName = (categoryId) => {
-  const category = allCategories.value.find((c) => c.categoryID === categoryId);
-  return category ? category.categoryName : "Không xác định";
+  console.log("getCategoryName received categoryId:", categoryId);
+  console.log("allCategories.value in getCategoryName:", allCategories.value);
+  // Try to find in the flat categories array first
+  const category = allCategories.value.find(c => c.categoryID === categoryId);
+  if (category) {
+    return category.categoryName;
+  }
+  
+  return "Không xác định";
 };
 
 // Flash Sale Management Functions
@@ -2549,6 +2668,7 @@ const resetFilters = () => {
 // Enhanced fetch books function with search and filter support
 // Trong adminCRUD.vue, thay đổi hàm fetchBooks
 const fetchBooks = async () => {
+  console.log("Fetching books with current filters:", currentFilters.value); // Add this log
   try {
     isLoading.value = true;
     error.value = null;
@@ -2639,20 +2759,33 @@ const fetchCategories = async () => {
   try {
     const response = await axios.get(`/Book/category`);
 
+    // Store the original hierarchical data
+    categoryData.value = response.data;
+
     const categories = [];
     Object.entries(response.data).forEach(([parent, subs]) => {
       subs.forEach((sub) => {
+        console.log("Raw sub object in fetchCategories:", sub); // Add this log
+        // Now store the actual numeric CategoryID from the backend
         categories.push({
-          categoryID: getCategoryId(parent, sub.name), // truyền sub.name thay vì sub
-          categoryName: `${parent} - ${sub.name}`, // dùng sub.name thay vì sub
+          categoryID: Number(sub.categoryID), // Giữ nguyên dòng này để kiểm tra
+          categoryName: `${parent} - ${sub.name}`,
         });
       });
     });
 
+    console.log("Raw sub.categoryID before Number():", sub.categoryID);
     allCategories.value = categories;
+    console.log("allCategories.value populated in fetchCategories:", allCategories.value);
   } catch (err) {
     console.error("Error fetching categories:", err);
   }
+};
+
+// Helper function to generate category ID - THIS FUNCTION WILL BE REMOVED LATER
+const getCategoryId = (parent, subName) => {
+  // Create a unique ID based on parent and sub name
+  return `${parent}-${subName}`.replace(/\s+/g, '-').toLowerCase();
 };
 
 // Enhanced search books function
@@ -2729,6 +2862,17 @@ const resetImageStates = () => {
 // Open add book modal
 const openAddBookModal = () => {
   isEditMode.value = false;
+  
+  // Get the first available category as default
+  let defaultCategoryId = null;
+  if (Object.keys(categoryData.value).length > 0) {
+    const firstParent = Object.keys(categoryData.value)[0];
+    const firstSub = categoryData.value[firstParent][0];
+    if (firstSub) {
+      defaultCategoryId = firstSub.categoryID; // Use the numeric ID directly
+    }
+  }
+  
   editingBook.value = {
     bookID: null,
     title: "",
@@ -2740,7 +2884,7 @@ const openAddBookModal = () => {
     pageNum: 0,
     language: "Tiếng Việt",
     ageGroup: "all",
-    categoryID: allCategories.value[0]?.categoryID || null,
+    categoryID: defaultCategoryId,
     binding: "Bìa mềm",
     stock: 0,
     imgURL1: "",
@@ -2773,6 +2917,24 @@ const openEditBookModal = async (book) => {
     }
   }
 
+  // Handle categoryID - it should already be a number from the fetched book data
+  let categoryID = book.categoryID;
+  // Ensure it's a number, if somehow it's not (e.g., old data format or external source)
+  if (typeof categoryID !== 'number' && !isNaN(Number(categoryID))) {
+    categoryID = Number(categoryID);
+  }
+  
+  // If categoryID is still not a number or is invalid, try to find a default
+  if (typeof categoryID !== 'number' || categoryID <= 0) {
+    if (Object.keys(categoryData.value).length > 0) {
+      const firstParent = Object.keys(categoryData.value)[0];
+      const firstSub = categoryData.value[firstParent][0];
+      if (firstSub) {
+        categoryID = firstSub.categoryID; // Use the numeric ID directly
+      }
+    }
+  }
+
   editingBook.value = {
     bookID: book.bookID,
     title: book.title || "",
@@ -2780,8 +2942,7 @@ const openEditBookModal = async (book) => {
     description: book.description || "",
     price: Number(book.price) || 0,
     stock: parseInt(book.stock) || 0,
-    categoryID:
-      Number(book.categoryID) || allCategories.value[0]?.categoryID || null,
+    categoryID: categoryID,
     discount: Number(book.discount) || 0,
     imgURL1: book.imgURL1 || "",
     imgURL2: book.imgURL2 || "",
@@ -2797,6 +2958,7 @@ const openEditBookModal = async (book) => {
   };
 
   console.log("Editing book data:", editingBook.value);
+  console.log("Category ID in editingBook:", editingBook.value.categoryID); // Add this log
 
   // Set image previews for existing images
   imagePreviews.value = {
@@ -2844,7 +3006,7 @@ const saveBook = async () => {
       description: String(editingBook.value.description || "").trim(),
       price: Number(editingBook.value.price),
       stock: parseInt(editingBook.value.stock) || 0,
-      categoryID: Number(editingBook.value.categoryID),
+      categoryID: editingBook.value.categoryID, // categoryID is now directly a numeric ID
       discount: Number(editingBook.value.discount) || 0,
 
       imgURL1: String(editingBook.value.imgURL1 || ""),
@@ -2878,9 +3040,11 @@ const saveBook = async () => {
       throw new Error("Số lượng tồn kho phải là số nguyên");
     }
 
-    if (!bookData.categoryID || bookData.categoryID <= 0) {
+    if (!bookData.categoryID) { // Check if categoryID is null or 0 (invalid)
       throw new Error("Vui lòng chọn danh mục");
     }
+
+    // Removed isNaN validation as categoryID should always be a number from select input
 
     let response;
 
@@ -3015,6 +3179,31 @@ watch(searchQuery, (newValue) => {
   }
 });
 
+// Watch for filtered books changes to clear invalid selections
+watch(filteredBooks, (newBooks) => {
+  // Clear selected books that are no longer in the filtered list
+  selectedBooks.value = selectedBooks.value.filter(bookId => 
+    newBooks.some(book => book.bookID === bookId)
+  );
+});
+
+// Watch for category data changes
+watch(categoryData, (newCategoryData) => {
+  // Update the flat categories array when hierarchical data changes
+  if (newCategoryData && Object.keys(newCategoryData).length > 0) {
+    const categories = [];
+    Object.entries(newCategoryData).forEach(([parent, subs]) => {
+      subs.forEach((sub) => {
+        categories.push({
+          categoryID: getCategoryId(parent, sub.name),
+          categoryName: `${parent} - ${sub.name}`,
+        });
+      });
+    });
+    allCategories.value = categories;
+  }
+});
+
 const handleBookInputBlur = () => {
   // Delay hiding dropdown to allow click events to fire
   setTimeout(() => {
@@ -3128,6 +3317,123 @@ const addCategory = async () => {
 };
 
 const filterAdminRef = ref(null);
+
+// Bulk delete methods
+const confirmBulkDelete = () => {
+  if (selectedBooks.value.length === 0) {
+    alert("Vui lòng chọn ít nhất một sản phẩm để xóa.");
+    return;
+  }
+  showBulkDeleteConfirmation.value = true;
+};
+
+const bulkDeleteBooks = async () => {
+  if (selectedBooks.value.length === 0) return;
+
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const response = await axios.post("/admin/products/bulk-delete", selectedBooks.value);
+    
+    const result = response.data;
+    
+    // Clear selected books
+    selectedBooks.value = [];
+    
+    // Refresh the book list
+    await fetchBooks();
+    
+    // Show success message with details
+    let message = `Đã xóa thành công ${result.message}`;
+    if (result.blocked && result.blocked.length > 0) {
+      message += `\n\nKhông thể xóa ${result.blocked.length} sản phẩm vì đã có trong đơn hàng:`;
+      result.blocked.forEach(book => {
+        message += `\n- ID: ${book.bookID} - ${book.title}`;
+      });
+    }
+    
+    alert(message);
+  } catch (err) {
+    console.error("Error bulk deleting books:", err);
+
+    if (err.response) {
+      const status = err.response.status;
+      const data = err.response.data;
+
+      if (status === 400) {
+        error.value = data.message || "Dữ liệu không hợp lệ.";
+      } else if (status === 401) {
+        error.value = "Bạn không có quyền xóa sách.";
+      } else if (status === 404) {
+        error.value = "Không tìm thấy sách cần xóa.";
+      } else {
+        error.value = data.message || "Có lỗi xảy ra khi xóa sách.";
+      }
+    } else {
+      error.value = "Không thể kết nối đến server. Vui lòng thử lại.";
+    }
+  } finally {
+    isLoading.value = false;
+    showBulkDeleteConfirmation.value = false;
+  }
+};
+
+const getBookTitle = (bookId) => {
+  const book = filteredBooks.value.find(b => b.bookID === bookId);
+  return book ? book.title : `ID: ${bookId}`;
+};
+
+// Select all functionality
+const isAllSelected = computed(() => {
+  return filteredBooks.value.length > 0 && selectedBooks.value.length === filteredBooks.value.length;
+});
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedBooks.value = [];
+  } else {
+    selectedBooks.value = filteredBooks.value.map(book => book.bookID);
+  }
+};
+
+const clearSelection = () => {
+  selectedBooks.value = [];
+};
+
+// Get category name from categoryID
+const getCategoryNameFromId = (categoryId) => {
+  console.log("getCategoryNameFromId called with categoryId:", categoryId);
+  console.log("allCategories.value in getCategoryNameFromId:", allCategories.value);
+  
+  if (categoryId === null || categoryId === undefined || categoryId === "") {
+    return "Không xác định"; 
+  }
+
+  // Đảm bảo categoryId là một số
+  const numericCategoryId = Number(categoryId);
+  if (isNaN(numericCategoryId)) {
+      return "Không xác định";
+  }
+
+  // Tìm trong mảng danh mục phẳng
+  const category = allCategories.value.find(c => c.categoryID === numericCategoryId);
+  if (category) {
+    return category.categoryName;
+  }
+  
+  return "Không xác định";
+};
+
+// Computed property for current category name
+const currentCategoryName = computed(() => {
+  console.log("currentCategoryName computed - editingBook.value.categoryID:", editingBook.value.categoryID); // Add this log
+  console.log("currentCategoryName computed - allCategories.value:", allCategories.value); // Add this log
+  return getCategoryNameFromId(editingBook.value.categoryID);
+});
+
+const categoryTree = ref({}); // Khai báo categoryTree ở đây
+
 </script>
 
 <style scoped>
