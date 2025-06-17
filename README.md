@@ -1,5 +1,44 @@
-# Vue 3 + Vite
+# FriendWithBooks - Frontend
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Đây là phần Frontend của đồ án FriendwithBooks, một ứng dụng web để bán sách qua mạng Internet, có 2 phần: Admin và User
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## 🛠️ Công nghệ sử dụng
+
+- Vue 3 + Vite
+- Tailwind CSS
+- SignalR
+- Axios
+
+## 🚀 Cài đặt và chạy
+
+```bash
+# 1. Cài các gói cần thiết
+npm install
+
+# 2. Khởi động project
+npm run dev
+```
+
+## ⚙️ Cấu hình API endpoint
+
+Trước khi chạy ứng dụng, hãy sửa URL API để trỏ về đúng backend bạn đang host:
+
+- `src/axios.js`
+- `src/components/ChatInterface.vue`
+- `src/components/ChatPopup.vue`
+
+Tìm và thay:
+
+```
+https://friendwithbooks.id.vn/api
+```
+
+thành:
+
+```
+https://your-server-domain.com/api
+```
+
+⚠️ Đảm bảo backend có hỗ trợ CORS và đã mở cổng cho frontend kết nối SignalR.
+
+## 🎉 Have fun!
