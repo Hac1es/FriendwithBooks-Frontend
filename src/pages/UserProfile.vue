@@ -92,12 +92,18 @@
       <section class="flex-1 flex flex-col">
         <!-- ĐƠN HÀNG ĐANG GIAO -->
         <div class="mb-12">
-          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">ĐANG GIAO</h3>
+          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">
+            ĐANG GIAO
+          </h3>
           <div v-if="pendingOrders.length > 0">
-            <div v-for="order in pendingOrders" :key="order.orderID" class="mb-4 p-4 bg-white rounded shadow">
+            <div
+              v-for="order in pendingOrders"
+              :key="order.orderID"
+              class="mb-4 p-4 bg-white rounded shadow"
+            >
               <div>Mã đơn: {{ order.orderID }}</div>
-              <div>Ngày đặt: {{ order.orderDate }}</div>
-              <div>Tổng tiền: {{ order.totalAmount }}đ</div>
+              <div>Ngày đặt: {{ formatDateTime(order.orderDate) }}</div>
+              <div>Tổng tiền: {{ formatPrice(order.totalAmount) }}đ</div>
               <!-- ...thêm thông tin khác nếu muốn... -->
             </div>
           </div>
@@ -106,12 +112,18 @@
 
         <!-- ĐƠN HÀNG ĐÃ GIAO -->
         <div class="mb-12">
-          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">ĐÃ GIAO</h3>
+          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">
+            ĐÃ GIAO
+          </h3>
           <div v-if="deliveredOrders.length > 0">
-            <div v-for="order in deliveredOrders" :key="order.orderID" class="mb-4 p-4 bg-white rounded shadow">
+            <div
+              v-for="order in deliveredOrders"
+              :key="order.orderID"
+              class="mb-4 p-4 bg-white rounded shadow"
+            >
               <div>Mã đơn: {{ order.orderID }}</div>
-              <div>Ngày đặt: {{ order.orderDate }}</div>
-              <div>Tổng tiền: {{ order.totalAmount }}đ</div>
+              <div>Ngày đặt: {{ formatDateTime(order.orderDate) }}</div>
+              <div>Tổng tiền: {{ formatPrice(order.totalAmount) }}đ</div>
             </div>
           </div>
           <div v-else class="text-gray-500">Không có thông tin.</div>
@@ -119,12 +131,18 @@
 
         <!-- ĐƠN HÀNG ĐÃ HỦY -->
         <div class="mb-12">
-          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">ĐỔI HÀNG & TRẢ HÀNG</h3>
+          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">
+            ĐỔI HÀNG & TRẢ HÀNG
+          </h3>
           <div v-if="cancelledOrders.length > 0">
-            <div v-for="order in cancelledOrders" :key="order.orderID" class="mb-4 p-4 bg-white rounded shadow">
+            <div
+              v-for="order in cancelledOrders"
+              :key="order.orderID"
+              class="mb-4 p-4 bg-white rounded shadow"
+            >
               <div>Mã đơn: {{ order.orderID }}</div>
-              <div>Ngày đặt: {{ order.orderDate }}</div>
-              <div>Tổng tiền: {{ order.totalAmount }}đ</div>
+              <div>Ngày đặt: {{ formatDateTime(order.orderDate) }}</div>
+              <div>Tổng tiền: {{ formatPrice(order.totalAmount) }}đ</div>
             </div>
           </div>
           <div v-else class="text-gray-500">Không có thông tin.</div>
@@ -175,10 +193,14 @@ const allOrders = ref([]);
 
 // Lọc đơn hàng theo trạng thái
 const pendingOrders = computed(() =>
-  allOrders.value.filter((order) => order.status === "pending" || order.status === "paid")
+  allOrders.value.filter(
+    (order) => order.status === "pending" || order.status === "paid"
+  )
 );
 const deliveredOrders = computed(() =>
-  allOrders.value.filter((order) => order.status === "delivered" || order.status === "shipped")
+  allOrders.value.filter(
+    (order) => order.status === "delivered" || order.status === "shipped"
+  )
 );
 const cancelledOrders = computed(() =>
   allOrders.value.filter((order) => order.status === "cancelled")
@@ -197,7 +219,12 @@ onMounted(async () => {
 });
 
 async function saveProfile() {
-  if (!userProfile.fullName || !userProfile.phone || !userProfile.address || !userProfile.avatar) {
+  if (
+    !userProfile.fullName ||
+    !userProfile.phone ||
+    !userProfile.address ||
+    !userProfile.avatar
+  ) {
     alert("Vui lòng điền đầy đủ thông tin.");
     return;
   }
@@ -207,16 +234,15 @@ async function saveProfile() {
     alert("Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số.");
     return;
   }
-  
+
   try {
     // Gửi request cập nhật thông tin lên server
     const response = await axios.put("/Auth/updateProfile", {
-        FullName: userProfile.fullName,
-        Phone: userProfile.phone,
-        Address: userProfile.address,
-        Avatar: userProfile.avatar,
-      }
-    );
+      FullName: userProfile.fullName,
+      Phone: userProfile.phone,
+      Address: userProfile.address,
+      Avatar: userProfile.avatar,
+    });
     if (response.status === 200) {
       const decoded = jwtDecode(response.data.token);
       store.dispatch("setUserInfo", decoded);
@@ -244,4 +270,12 @@ function cancelEdit() {
   userProfile.address = info.address;
   userProfile.avatar = info.avatar;
 }
+
+const formatDateTime = (dateString) => {
+  return new Date(dateString).toLocaleString("vi-VN");
+};
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat("vi-VN").format(price);
+};
 </script>
