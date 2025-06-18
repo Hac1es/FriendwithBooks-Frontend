@@ -25,7 +25,7 @@
         {{ author }}
       </div>
       <div
-        class="font-inter font-normal sm:text-[14px] text-[7px] text-[#828282] md:pb-2 pb-1 md:pr-2 line-clamp-[9] max-md:line-clamp-4"
+        class="font-inter font-normal sm:text-[14px] text-[7px] text-[#828282] md:pb-2 pb-1 md:pr-2 line-clamp-5 max-md:line-clamp-4"
       >
         {{ desc }}
       </div>

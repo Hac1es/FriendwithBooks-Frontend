@@ -97,7 +97,7 @@
       :slides-per-view="getSlidesPerView2"
       draggable
       show-arrow
-      class="mx-auto w-[90%] h-[400px] md:h-[700px] md:mt-6 mt-2"
+      class="mx-auto w-[90%] h-[300px] md:h-[600px] md:mt-6 mt-2"
     >
       <n-carousel-item v-for="data in bestSellingBooks" :key="data.bookID">
         <AdCard
