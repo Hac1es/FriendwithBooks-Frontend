@@ -90,120 +90,52 @@
 
       <!-- Main Content -->
       <section class="flex-1 flex flex-col">
-        <!-- ĐÃ GIAO -->
+        <!-- ĐƠN HÀNG ĐANG GIAO -->
         <div class="mb-12">
-          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">
-            Đã giao
-          </h3>
-          <div class="flex flex-row gap-32">
-            <article
-              v-for="(book, index) in deliveredBooks"
-              :key="'delivered-' + index"
-              class="w-[180px] flex flex-col items-center"
-            >
-              <img
-                :src="book.image"
-                :alt="book.title"
-                class="w-[120px] h-[160px] object-cover rounded mb-3"
-              />
-              <h4
-                class="font-medium text-base mb-1 leading-tight break-words text-center"
-              >
-                {{ book.title }}
-              </h4>
-              <p
-                class="text-sm text-gray-600 leading-tight break-words text-center"
-              >
-                {{ book.author }}
-              </p>
-              <!-- "Xem thêm" chỉ dưới cuốn cuối cùng -->
-              <template v-if="index === deliveredBooks.length - 1">
-                <a
-                  href="#"
-                  class="text-base text-[#8b0000] hover:text-red-800 flex items-center transition mt-2"
-                >
-                  <span>Xem thêm</span>
-                  <span class="ml-1">→</span>
-                </a>
-              </template>
-            </article>
+          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">ĐANG GIAO</h3>
+          <div v-if="pendingOrders.length > 0">
+            <div v-for="order in pendingOrders" :key="order.orderID" class="mb-4 p-4 bg-white rounded shadow">
+              <div>Mã đơn: {{ order.orderID }}</div>
+              <div>Ngày đặt: {{ order.orderDate }}</div>
+              <div>Tổng tiền: {{ order.totalAmount }}đ</div>
+              <!-- ...thêm thông tin khác nếu muốn... -->
+            </div>
           </div>
+          <div v-else class="text-gray-500">Không có thông tin.</div>
         </div>
 
-        <!-- ĐANG GIAO -->
+        <!-- ĐƠN HÀNG ĐÃ GIAO -->
         <div class="mb-12">
-          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">
-            Đang giao
-          </h3>
-          <div class="flex flex-row gap-32">
-            <article
-              v-for="(book, index) in deliveringBooks"
-              :key="'delivering-' + index"
-              class="w-[180px] flex flex-col items-center"
-            >
-              <img
-                :src="book.image"
-                :alt="book.title"
-                class="w-[120px] h-[160px] object-cover rounded mb-3"
-              />
-              <h4
-                class="font-medium text-base mb-1 leading-tight break-words text-center"
-              >
-                {{ book.title }}
-              </h4>
-              <p
-                class="text-sm text-gray-600 leading-tight break-words text-center"
-              >
-                {{ book.author }}
-              </p>
-            </article>
+          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">ĐÃ GIAO</h3>
+          <div v-if="deliveredOrders.length > 0">
+            <div v-for="order in deliveredOrders" :key="order.orderID" class="mb-4 p-4 bg-white rounded shadow">
+              <div>Mã đơn: {{ order.orderID }}</div>
+              <div>Ngày đặt: {{ order.orderDate }}</div>
+              <div>Tổng tiền: {{ order.totalAmount }}đ</div>
+            </div>
           </div>
+          <div v-else class="text-gray-500">Không có thông tin.</div>
         </div>
 
-        <!-- ĐỔI HÀNG & TRẢ HÀNG -->
+        <!-- ĐƠN HÀNG ĐÃ HỦY -->
         <div class="mb-12">
-          <h3 class="text-xl font-bold text-[#8b0000] mb-4 uppercase">
-            Đổi hàng & Trả hàng
-          </h3>
-          <p class="text-base text-gray-600">Không có thông tin.</p>
+          <h3 class="text-xl font-bold text-[#8b0000] mb-6 uppercase">ĐỔI HÀNG & TRẢ HÀNG</h3>
+          <div v-if="cancelledOrders.length > 0">
+            <div v-for="order in cancelledOrders" :key="order.orderID" class="mb-4 p-4 bg-white rounded shadow">
+              <div>Mã đơn: {{ order.orderID }}</div>
+              <div>Ngày đặt: {{ order.orderDate }}</div>
+              <div>Tổng tiền: {{ order.totalAmount }}đ</div>
+            </div>
+          </div>
+          <div v-else class="text-gray-500">Không có thông tin.</div>
         </div>
       </section>
     </div>
-
-    <!-- Nút TRANG CHỦ ở góc phải dưới -->
-    <router-link
-      to="/"
-      class="absolute right-16 flex items-center cursor-pointer hover:scale-105 transition-transform z-50"
-      style="bottom: -245px"
-      title="Về trang chủ"
-    >
-      <span
-        class="flex items-center justify-center bg-white rounded-full shadow-sm p-3 text-[#8b0000] mr-3 border border-[#8b0000]"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="15 8 10 12 15 16"></polyline>
-        </svg>
-      </span>
-      <span class="font-semibold text-xl text-[#8b0000] tracking-wide"
-        >TRANG CHỦ</span
-      >
-    </router-link>
   </div>
   <Footer />
 </template>
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { useStore } from "vuex";
 import { jwtDecode } from "jwt-decode";
 import Footer from "../components/Footer.vue";
@@ -238,32 +170,31 @@ function getUserInfoFromToken() {
 
 const userProfile = reactive(getUserInfoFromToken());
 
+// Thêm biến lưu đơn hàng
+const allOrders = ref([]);
 
-const deliveredBooks = ref([
-  {
-    title: "Điều kỳ diệu của tiệm tạp hóa Namiya",
-    author: "Higashino Keigo",
-    image: "/Picture4.png",
-  },
-  {
-    title: "What is the World Cup?",
-    author: "Bonnie Bader",
-    image: "/Picture4.png",
-  },
-  {
-    title: "Cristiano Ronaldo – All About Him",
-    author: "Michael Part – Dịch Trần Giáp",
-    image: "/Picture4.png",
-  },
-]);
+// Lọc đơn hàng theo trạng thái
+const pendingOrders = computed(() =>
+  allOrders.value.filter((order) => order.status === "pending" || order.status === "paid")
+);
+const deliveredOrders = computed(() =>
+  allOrders.value.filter((order) => order.status === "delivered" || order.status === "shipped")
+);
+const cancelledOrders = computed(() =>
+  allOrders.value.filter((order) => order.status === "cancelled")
+);
 
-const deliveringBooks = ref([
-  {
-    title: "Cây cam ngọt của tôi",
-    author: "José Mauro de Vasconcelos",
-    image: "/Picture4.png",
-  },
-]);
+// Gọi API lấy đơn hàng khi trang load
+onMounted(async () => {
+  try {
+    const res = await axios.get("/Order/my");
+    console.log("Order API response:", res.data); // Thêm dòng này để kiểm tra dữ liệu trả về
+    allOrders.value = res.data.data || [];
+  } catch (err) {
+    allOrders.value = [];
+    // Có thể hiển thị thông báo lỗi nếu muốn
+  }
+});
 
 async function saveProfile() {
   if (!userProfile.fullName || !userProfile.phone || !userProfile.address || !userProfile.avatar) {

@@ -5,7 +5,7 @@ import { useStore } from "vuex";
 
 const store = useStore();
 const instance = axios.create({
-  baseURL: "https://friendwithbooks.id.vn/api",
+  baseURL: "https://localhost:7129/api",
 });
 
 instance.interceptors.request.use((config) => {
